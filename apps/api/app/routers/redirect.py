@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.rate_limit import allow_ip_action
 from app.core.redis_client import redis_client
 from app.core.security import sign_session_token
 from app.db.models.click_session import ClickSession
@@ -34,6 +35,10 @@ def hit_short_code(code: str, request: Request, db: Session = Depends(get_db)):
     if code in RESERVED_CODES:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
+    ip = client_ip(request)
+    if not allow_ip_action(ip, "start", settings.start_rate_limit_per_minute, window_seconds=60):
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
+
     cache_key = f"link:{code}"
     cached = redis_client.get(cache_key)
 
@@ -54,7 +59,6 @@ def hit_short_code(code: str, request: Request, db: Session = Depends(get_db)):
         web_steps = int(link.web_steps)
         redis_client.setex(cache_key, settings.cache_ttl_seconds, cache_payload(link.destination_url, publisher_id, web_steps))
 
-    ip = client_ip(request)
     ua = request.headers.get("user-agent", "")
 
     ip_hash = hash_value(ip)

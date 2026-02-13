@@ -42,6 +42,9 @@ Set API env:
 ```env
 PUBLIC_WEB_BASE_URL=https://urlshortener.devisuru.ggff.net
 PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
+SESSION_TOKEN_EXPIRE_MINUTES=15
+START_RATE_LIMIT_PER_MINUTE=120
+STEP_RATE_LIMIT_PER_MINUTE=60
 DATABASE_AUTO_CREATE=true
 RUN_MIGRATIONS=true
 ```

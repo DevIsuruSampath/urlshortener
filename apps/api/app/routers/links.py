@@ -14,6 +14,7 @@ from app.db.models.user import User
 from app.db.session import get_db
 from app.schemas.link import LinkCreateIn
 from app.services.link_service import cache_payload, generate_code, resolve_tier
+from app.services.url_safety import validate_public_destination_url
 
 router = APIRouter()
 
@@ -33,13 +34,18 @@ def create_link(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
+    try:
+        destination_url = validate_public_destination_url(str(payload.destination_url))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
     tier_data = resolve_tier(payload.tier)
     code = _unique_code(db)
 
     link = Link(
         user_id=user.id,
         code=code,
-        destination_url=str(payload.destination_url),
+        destination_url=destination_url,
         tier=payload.tier,
         web_steps=int(tier_data.get("web_steps", 3)),
         app_steps=int(tier_data.get("app_steps", 5)),

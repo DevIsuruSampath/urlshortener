@@ -19,11 +19,12 @@ class Settings(BaseModel):
     jwt_alg: str = os.getenv("JWT_ALG", "HS256")
 
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-    session_token_expire_minutes: int = int(os.getenv("SESSION_TOKEN_EXPIRE_MINUTES", "30"))
+    session_token_expire_minutes: int = int(os.getenv("SESSION_TOKEN_EXPIRE_MINUTES", "15"))
     redirect_token_expire_minutes: int = int(os.getenv("REDIRECT_TOKEN_EXPIRE_MINUTES", "10"))
 
     first_step_min_seconds: int = int(os.getenv("FIRST_STEP_MIN_SECONDS", "8"))
     next_step_min_seconds: int = int(os.getenv("NEXT_STEP_MIN_SECONDS", "3"))
+    start_rate_limit_per_minute: int = int(os.getenv("START_RATE_LIMIT_PER_MINUTE", "120"))
     step_rate_limit_per_minute: int = int(os.getenv("STEP_RATE_LIMIT_PER_MINUTE", "60"))
 
     cache_ttl_seconds: int = int(os.getenv("CACHE_TTL_SECONDS", "300"))
