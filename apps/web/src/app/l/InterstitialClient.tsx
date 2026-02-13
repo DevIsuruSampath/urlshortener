@@ -51,6 +51,10 @@ function mapStepError(error: unknown): { message: string; terminal: TerminalStat
     return { message: "Link expired, restart.", terminal: "expired" };
   }
 
+  if (error.status === 403 || detail.includes("blocked") || detail.includes("unavailable")) {
+    return { message: "This link is unavailable.", terminal: "unavailable" };
+  }
+
   if (error.status === 404 && detail.includes("link")) {
     return { message: "This link is unavailable.", terminal: "unavailable" };
   }
@@ -72,12 +76,16 @@ function mapStepError(error: unknown): { message: string; terminal: TerminalStat
 
 export function InterstitialClient() {
   const params = useSearchParams();
+  const isDemo = params.get("demo") === "1";
+
   const sessionId = params.get("vid") || "";
   const token = params.get("st") || "";
-  const step = Number(params.get("step") || 1);
-  const totalSteps = decodeBase64Int(params.get("pages"), 1);
   const code = decodeBase64Text(params.get("lid"));
 
+  const initialStep = Number(params.get("step") || 1);
+  const totalSteps = decodeBase64Int(params.get("pages"), isDemo ? 3 : 1);
+
+  const [activeStep, setActiveStep] = useState(Number.isFinite(initialStep) && initialStep > 0 ? initialStep : 1);
   const [timerDone, setTimerDone] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
@@ -85,21 +93,43 @@ export function InterstitialClient() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [terminal, setTerminal] = useState<TerminalState>("none");
+  const [demoDone, setDemoDone] = useState(false);
 
-  const requiresCaptcha = useMemo(() => forceCaptcha || step >= totalSteps, [forceCaptcha, step, totalSteps]);
-  const waitSeconds = step <= 1 ? 8 : 3;
+  const requiresCaptcha = useMemo(() => forceCaptcha || activeStep >= totalSteps, [forceCaptcha, activeStep, totalSteps]);
+  const waitSeconds = activeStep <= 1 ? 8 : 3;
   const canContinue = timerDone && scrolled && (!requiresCaptcha || !!captchaToken) && terminal === "none";
 
-  const restartHref = code ? `/${code}` : "/";
+  const restartHref = code ? `/${code}` : isDemo ? "/l?demo=1" : "/";
+
+  function resetGatesForNextStep(nextStep: number) {
+    setActiveStep(nextStep);
+    setTimerDone(false);
+    setScrolled(false);
+    setCaptchaToken("");
+    setForceCaptcha(false);
+    setLoading(false);
+    setError("");
+    setTerminal("none");
+  }
 
   async function onContinue() {
     setError("");
+
+    if (isDemo) {
+      if (activeStep < totalSteps) {
+        resetGatesForNextStep(activeStep + 1);
+        return;
+      }
+      setDemoDone(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await postStepComplete({
         session_id: sessionId,
-        step,
+        step: activeStep,
         token,
         captcha_token: captchaToken || undefined,
       });
@@ -130,15 +160,20 @@ export function InterstitialClient() {
     }
   }
 
-  if (!sessionId || !token || !Number.isFinite(step) || step < 1) {
+  if ((!sessionId || !token || !Number.isFinite(initialStep) || initialStep < 1) && !isDemo) {
     return (
       <main className="container interstitial-shell">
         <section className="interstitial-card card">
           <h1>Link expired, restart.</h1>
           <p className="muted">Your session is invalid or expired.</p>
-          <Link href={restartHref} className="btn">
-            Try again
-          </Link>
+          <div className="inline-actions">
+            <Link href={restartHref} className="btn">
+              Try again
+            </Link>
+            <Link href="/l?demo=1" className="btn btn-ghost">
+              Open demo flow
+            </Link>
+          </div>
         </section>
       </main>
     );
@@ -151,15 +186,17 @@ export function InterstitialClient() {
         <p className="muted">Safe redirect</p>
       </header>
 
-      <StepProgress step={step} totalSteps={totalSteps} />
+      {isDemo ? <p className="interstitial-demo-chip">Demo mode</p> : null}
+
+      <StepProgress step={activeStep} totalSteps={totalSteps} />
 
       <section className="interstitial-card card">
-        <h1>{step <= 1 ? "Please wait 8 seconds…" : "Please wait 3 seconds…"}</h1>
+        <h1>{activeStep <= 1 ? "Please wait 8 seconds…" : "Please wait 3 seconds…"}</h1>
         <p className="muted">Quick safety check.</p>
 
-        <StepTimer seconds={waitSeconds} resetKey={`${step}-${waitSeconds}`} onDone={() => setTimerDone(true)} />
-        <ScrollGate onPass={() => setScrolled(true)} />
-        <CaptchaGate required={requiresCaptcha} onToken={setCaptchaToken} />
+        <StepTimer key={`timer-${activeStep}`} seconds={waitSeconds} resetKey={`${activeStep}-${waitSeconds}`} onDone={() => setTimerDone(true)} />
+        <ScrollGate key={`scroll-${activeStep}`} onPass={() => setScrolled(true)} />
+        <CaptchaGate key={`captcha-${activeStep}`} required={requiresCaptcha} onToken={setCaptchaToken} />
 
         {terminal === "expired" ? (
           <div className="interstitial-terminal">
@@ -181,14 +218,16 @@ export function InterstitialClient() {
 
         {error && terminal === "none" ? <p className="auth-error">{error}</p> : null}
 
+        {demoDone ? <p className="auth-success">Demo complete. In production, step 3 redirects to destination.</p> : null}
+
         <div className="interstitial-bottom">
-          <ContinueButton disabled={!canContinue} loading={loading} onClick={onContinue} />
+          <ContinueButton disabled={!canContinue || demoDone} loading={loading} onClick={onContinue} />
           <p className="muted">You will be redirected to your destination.</p>
         </div>
       </section>
 
-      <AdTemplateSwitcher variantSeed={step} />
-      <AdTemplateSwitcher variantSeed={step + 1} />
+      <AdTemplateSwitcher variantSeed={activeStep} />
+      <AdTemplateSwitcher variantSeed={activeStep + 1} />
 
       <div className="scroll-spacer" aria-hidden />
     </main>
