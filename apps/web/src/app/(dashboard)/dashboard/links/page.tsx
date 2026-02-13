@@ -1,73 +1,99 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { useToast } from "@/components/ui/Toast";
+import { DashboardLink, getStoredLinks } from "@/lib/links-store";
 
-type LinkRow = {
-  title: string;
-  shortUrl: string;
-  destination: string;
-  status: "active" | "paused" | "blocked";
-  tier: string;
-  steps: string;
-  clicks: number;
-  valid: number;
-  invalid: number;
-};
-
-const rows: LinkRow[] = [
+const defaultRows: DashboardLink[] = [
   {
+    id: "seed-a9x3k",
     title: "Main Offer - Global",
+    code: "a9x3k",
     shortUrl: "https://urlshortener.devisuru.ggff.net/a9x3k",
     destination: "https://partner.example.com/offer/main",
     status: "active",
-    tier: "Standard",
-    steps: "Web 3 / App 5",
-    clicks: 640,
-    valid: 486,
-    invalid: 154,
+    webSteps: 3,
+    appSteps: 5,
+    clicks: null,
+    valid: null,
+    invalid: null,
+    createdAt: new Date().toISOString(),
   },
   {
+    id: "seed-pro77",
     title: "App Install Campaign",
+    code: "pro77",
     shortUrl: "https://urlshortener.devisuru.ggff.net/pro77",
     destination: "https://m.example.com/install",
     status: "paused",
-    tier: "Professional",
-    steps: "Web 2 / App 3",
-    clicks: 401,
-    valid: 289,
-    invalid: 112,
+    webSteps: 2,
+    appSteps: 3,
+    clicks: null,
+    valid: null,
+    invalid: null,
+    createdAt: new Date().toISOString(),
   },
   {
+    id: "seed-mobi2",
     title: "Utility Download",
+    code: "mobi2",
     shortUrl: "https://urlshortener.devisuru.ggff.net/mobi2",
     destination: "https://downloads.example.com/tool",
     status: "blocked",
-    tier: "Advanced",
-    steps: "Web 1 / App 2",
-    clicks: 311,
-    valid: 245,
-    invalid: 66,
+    webSteps: 1,
+    appSteps: 2,
+    clicks: null,
+    valid: null,
+    invalid: null,
+    createdAt: new Date().toISOString(),
   },
 ];
 
-function statusBadge(status: LinkRow["status"]) {
+function statusBadge(status: DashboardLink["status"]) {
   return <span className={`status-badge ${status}`}>{status}</span>;
+}
+
+function statValue(value: number | null) {
+  return value === null ? "—" : String(value);
+}
+
+function destinationPreview(url: string) {
+  try {
+    const parsed = new URL(url);
+    const text = `${parsed.hostname}${parsed.pathname}`;
+    return text.length > 34 ? `${text.slice(0, 34)}…` : text;
+  } catch {
+    return url.length > 34 ? `${url.slice(0, 34)}…` : url;
+  }
 }
 
 export default function LinksPage() {
   const { push } = useToast();
+  const [query, setQuery] = useState("");
+  const [storedRows, setStoredRows] = useState<DashboardLink[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [selected, setSelected] = useState<LinkRow | null>(null);
+  const [selected, setSelected] = useState<DashboardLink | null>(null);
 
-  const columns = useMemo<DataTableColumn<LinkRow>[]>(
+  useEffect(() => {
+    setStoredRows(getStoredLinks());
+  }, []);
+
+  const allRows = useMemo(() => [...storedRows, ...defaultRows], [storedRows]);
+
+  const filteredRows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return allRows;
+    return allRows.filter((row) => row.title.toLowerCase().includes(q) || row.code.toLowerCase().includes(q));
+  }, [allRows, query]);
+
+  const columns = useMemo<DataTableColumn<DashboardLink>[]>(
     () => [
-      { key: "title", header: "Link name", render: (row) => row.title },
+      { key: "title", header: "Name", render: (row) => row.title || "Untitled" },
       {
         key: "shortUrl",
         header: "Short URL",
@@ -82,51 +108,49 @@ export default function LinksPage() {
       },
       {
         key: "destination",
-        header: "Destination URL",
+        header: "Destination",
         render: (row) => (
           <p className="truncate-cell" title={row.destination}>
-            {row.destination}
+            {destinationPreview(row.destination)}
           </p>
         ),
       },
       { key: "status", header: "Status", render: (row) => statusBadge(row.status) },
       {
-        key: "tier",
-        header: "Tier / required steps",
-        render: (row) => (
-          <>
-            <p>{row.tier}</p>
-            <p className="muted">{row.steps}</p>
-          </>
-        ),
+        key: "steps",
+        header: "Steps (web/app)",
+        render: (row) => `Web ${row.webSteps} / App ${row.appSteps}`,
       },
       {
         key: "stats",
         header: "Clicks / Valid / Invalid",
-        render: (row) => `${row.clicks} / ${row.valid} / ${row.invalid}`,
+        render: (row) => `${statValue(row.clicks)} / ${statValue(row.valid)} / ${statValue(row.invalid)}`,
       },
       {
         key: "actions",
         header: "Actions",
         render: (row) => (
-          <div className="table-actions">
-            <button type="button" className="btn btn-ghost btn-small" onClick={() => push(row.status === "paused" ? "Link resumed" : "Link paused", "info")}>
-              {row.status === "paused" ? "Resume" : "Pause"}
-            </button>
-            <button type="button" className="btn btn-ghost btn-small" onClick={() => push("Edit drawer coming soon", "info")}>
-              Edit
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost btn-small danger"
-              onClick={() => {
-                setSelected(row);
-                setConfirmOpen(true);
-              }}
-            >
-              Soft delete
-            </button>
-          </div>
+          <details className="actions-menu">
+            <summary className="btn btn-ghost btn-small">Actions</summary>
+            <div className="actions-menu-list">
+              <button type="button" className="btn btn-ghost btn-small" onClick={() => push(row.status === "paused" ? "Link resumed" : "Link paused", "info")}>
+                {row.status === "paused" ? "Resume" : "Pause"}
+              </button>
+              <button type="button" className="btn btn-ghost btn-small" onClick={() => push("Edit drawer coming soon", "info")}>
+                Edit destination
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-small danger"
+                onClick={() => {
+                  setSelected(row);
+                  setConfirmOpen(true);
+                }}
+              >
+                Soft delete
+              </button>
+            </div>
+          </details>
         ),
       },
     ],
@@ -138,15 +162,24 @@ export default function LinksPage() {
       <header className="dash-page-head dash-page-head-actions">
         <div>
           <h1>Links</h1>
-          <p className="muted">Manage short links, destination URLs, and traffic quality.</p>
+          <p className="muted">Create links and manage status, safety, and traffic quality.</p>
         </div>
-        <Link href="/dashboard/links/new" className="btn">
-          Create Link
-        </Link>
+
+        <div className="links-toolbar">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by name or code"
+            aria-label="Search links"
+          />
+          <Link href="/dashboard/links/new" className="btn">
+            Create Link
+          </Link>
+        </div>
       </header>
 
       <section className="card section">
-        <DataTable columns={columns} rows={rows} rowKey={(row) => row.shortUrl} />
+        <DataTable columns={columns} rows={filteredRows} rowKey={(row) => row.id} emptyText="No links found" />
       </section>
 
       <ConfirmDialog

@@ -603,6 +603,13 @@ a { color: inherit; text-decoration: none; }
   font-size: 0.82rem;
 }
 
+.btn-big {
+  min-height: 52px;
+  width: 100%;
+  max-width: 340px;
+  font-size: 1rem;
+}
+
 .mono-link {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   font-size: 0.85rem;
@@ -613,6 +620,40 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.links-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.links-toolbar input {
+  min-width: 220px;
+  border: 1px solid #2f2f2f;
+  background: #0f0f0f;
+  color: #f2f2f2;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.actions-menu {
+  position: relative;
+}
+
+.actions-menu summary {
+  list-style: none;
+}
+
+.actions-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.actions-menu-list {
+  margin-top: 6px;
+  display: grid;
+  gap: 6px;
 }
 
 .table-actions {
@@ -741,6 +782,19 @@ a { color: inherit; text-decoration: none; }
   .btn-small {
     min-height: 40px;
     padding: 9px 12px;
+  }
+
+  .links-toolbar {
+    width: 100%;
+  }
+
+  .links-toolbar input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .actions-menu-list .btn {
+    width: 100%;
   }
 
   .dash-responsive-table {
