@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { DataTable, type DataTableColumn } from "@/components/data/DataTable";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input } from "@/components/ui/Input";
 import { Stack } from "@/components/ui/Stack";

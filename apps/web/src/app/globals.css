@@ -443,6 +443,29 @@ a { color: inherit; text-decoration: none; }
   justify-self: end;
 }
 
+.ui-pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.ui-pagination p {
+  margin: 0;
+}
+
+.ui-empty-state {
+  text-align: center;
+}
+
+.ui-empty-title {
+  margin: 0;
+  font-size: var(--text-lg);
+}
+
+.ui-empty-action {
+  margin-top: var(--space-3);
+}
+
 /* Shared UI components */
 .toast-stack {
   position: fixed;

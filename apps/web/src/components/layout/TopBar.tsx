@@ -22,7 +22,7 @@ function getBarMeta(pathname: string): BarMeta {
   return { title: "Overview" };
 }
 
-export function DashboardTopBar() {
+export function TopBar() {
   const pathname = usePathname();
   const meta = getBarMeta(pathname);
 
