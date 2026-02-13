@@ -2,6 +2,8 @@
 
 import { FormEvent, useMemo, useState } from "react";
 
+import { CopyButton } from "@/components/ui/CopyButton";
+
 const WEB_BASE = "https://urlshortener.devisuru.ggff.net";
 
 function randomCode() {
@@ -20,11 +22,6 @@ export default function NewLinkPage() {
     e.preventDefault();
     if (!destinationUrl.trim()) return;
     setGeneratedCode(randomCode());
-  }
-
-  async function copyShortUrl() {
-    if (!shortUrl) return;
-    await navigator.clipboard.writeText(shortUrl);
   }
 
   const qrUrl = shortUrl
@@ -75,9 +72,7 @@ export default function NewLinkPage() {
             <a href={shortUrl} target="_blank" rel="noreferrer" className="mono-link">
               {shortUrl}
             </a>
-            <button className="btn btn-ghost btn-small" onClick={copyShortUrl} type="button">
-              Copy
-            </button>
+            <CopyButton value={shortUrl} />
           </div>
 
           <div className="result-meta muted">

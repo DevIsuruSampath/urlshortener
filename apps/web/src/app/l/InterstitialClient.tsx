@@ -4,14 +4,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+import { AdTemplateSwitcher } from "@/components/flow/AdTemplateSwitcher";
+import { CaptchaGate } from "@/components/flow/CaptchaGate";
+import { ContinueButton } from "@/components/flow/ContinueButton";
+import { ScrollGate } from "@/components/flow/ScrollGate";
+import { StepProgress } from "@/components/flow/StepProgress";
+import { StepTimer } from "@/components/flow/StepTimer";
 import { ApiError, postStepComplete } from "@/lib/api";
-
-import { CaptchaGate } from "./components/CaptchaGate";
-import { ContinueButton } from "./components/ContinueButton";
-import { ScrollGate } from "./components/ScrollGate";
-import { StepTimer } from "./components/StepTimer";
-import { TemplateA } from "./templates/TemplateA";
-import { TemplateB } from "./templates/TemplateB";
 
 type TerminalState = "none" | "expired" | "unavailable";
 
@@ -152,14 +151,7 @@ export function InterstitialClient() {
         <p className="muted">Safe redirect</p>
       </header>
 
-      <section className="interstitial-progress card" aria-live="polite">
-        <p>
-          Step {Math.min(step, totalSteps)}/{totalSteps}
-        </p>
-        <div className="progress-track" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={totalSteps}>
-          <span style={{ width: `${Math.min(100, Math.round((step / totalSteps) * 100))}%` }} />
-        </div>
-      </section>
+      <StepProgress step={step} totalSteps={totalSteps} />
 
       <section className="interstitial-card card">
         <h1>{step <= 1 ? "Please wait 8 seconds…" : "Please wait 3 seconds…"}</h1>
@@ -195,15 +187,8 @@ export function InterstitialClient() {
         </div>
       </section>
 
-      <section className="interstitial-ads card" aria-label="Advertisements">
-        <p className="ad-label">Advertisement</p>
-        <TemplateA />
-      </section>
-
-      <section className="interstitial-ads card" aria-label="Advertisements">
-        <p className="ad-label">Advertisement</p>
-        <TemplateB />
-      </section>
+      <AdTemplateSwitcher variantSeed={step} />
+      <AdTemplateSwitcher variantSeed={step + 1} />
 
       <div className="scroll-spacer" aria-hidden />
     </main>

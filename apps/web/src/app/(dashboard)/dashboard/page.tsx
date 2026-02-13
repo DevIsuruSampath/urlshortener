@@ -1,3 +1,5 @@
+import { StatCard } from "@/components/ui/StatCard";
+
 const overviewCards = [
   { label: "Today clicks", value: "2,184" },
   { label: "Valid completions", value: "1,602" },
@@ -44,20 +46,14 @@ export default function DashboardHome() {
 
       <section className="dash-cards-grid">
         {overviewCards.map((card) => (
-          <article key={card.label} className="card dash-stat-card">
-            <p className="muted">{card.label}</p>
-            <h2>{card.value}</h2>
-          </article>
+          <StatCard key={card.label} label={card.label} value={card.value} />
         ))}
 
-        <article className="card dash-stat-card progress-card">
-          <p className="muted">Next payout threshold</p>
-          <h2>${threshold.toFixed(0)}</h2>
-          <p className="muted">${balance.toFixed(2)} / ${threshold.toFixed(0)}</p>
+        <StatCard label="Next payout threshold" value={`$${threshold.toFixed(0)}`} hint={`$${balance.toFixed(2)} / $${threshold.toFixed(0)}`}>
           <div className="progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
             <span style={{ width: `${progress}%` }} />
           </div>
-        </article>
+        </StatCard>
       </section>
 
       <section className="card section">

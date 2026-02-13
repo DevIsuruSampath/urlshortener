@@ -1,12 +1,7 @@
 import type { ReactNode } from "react";
 
-import { DashboardNav } from "@/components/dashboard/DashboardNav";
+import { AppShell } from "@/components/layout/AppShell";
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  return (
-    <section className="container dash-shell">
-      <DashboardNav />
-      <div className="dash-content">{children}</div>
-    </section>
-  );
+  return <AppShell>{children}</AppShell>;
 }

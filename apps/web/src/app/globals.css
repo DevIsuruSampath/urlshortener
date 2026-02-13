@@ -273,6 +273,59 @@ a { color: inherit; text-decoration: none; }
   color: #fff;
 }
 
+/* Shared UI components */
+.toast-stack {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 120;
+  display: grid;
+  gap: 8px;
+  max-width: min(92vw, 360px);
+}
+
+.toast {
+  border: 1px solid #2d2d2d;
+  border-radius: 10px;
+  background: #111;
+  color: #f2f2f2;
+  padding: 10px 12px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.28);
+}
+
+.toast-success {
+  border-color: rgba(127, 232, 160, 0.4);
+}
+
+.toast-error {
+  border-color: rgba(255, 127, 127, 0.45);
+}
+
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: grid;
+  place-items: center;
+  z-index: 130;
+  padding: 16px;
+}
+
+.confirm-panel {
+  width: min(100%, 460px);
+}
+
+.confirm-panel h3 {
+  margin-top: 0;
+}
+
+.confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
 /* Interstitial */
 .interstitial-shell {
   display: grid;
