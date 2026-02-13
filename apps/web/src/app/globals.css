@@ -203,6 +203,10 @@ a { color: inherit; text-decoration: none; }
   font-weight: 600;
 }
 
+.dash-responsive-table {
+  min-width: unset;
+}
+
 .faq-list {
   display: grid;
   gap: 16px;
@@ -366,6 +370,8 @@ a { color: inherit; text-decoration: none; }
 
 .interstitial-continue {
   width: 100%;
+  min-height: 52px;
+  font-size: 1rem;
 }
 
 .interstitial-terminal {
@@ -393,6 +399,11 @@ a { color: inherit; text-decoration: none; }
 
 .captcha-gate p {
   margin: 0 0 6px;
+}
+
+.captcha-gate .btn {
+  width: 100%;
+  min-height: 48px;
 }
 
 .scroll-spacer {
@@ -727,7 +738,57 @@ a { color: inherit; text-decoration: none; }
     flex-direction: column;
   }
 
+  .btn-small {
+    min-height: 40px;
+    padding: 9px 12px;
+  }
+
+  .dash-responsive-table {
+    border-collapse: separate;
+    min-width: 100%;
+  }
+
+  .dash-responsive-table thead {
+    display: none;
+  }
+
+  .dash-responsive-table tbody,
+  .dash-responsive-table tr,
+  .dash-responsive-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .dash-responsive-table tr {
+    margin-bottom: 10px;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    background: #101010;
+    overflow: hidden;
+  }
+
+  .dash-responsive-table td {
+    border-bottom: 1px solid #1f1f1f;
+    padding: 10px 12px;
+  }
+
+  .dash-responsive-table td:last-child {
+    border-bottom: 0;
+  }
+
+  .dash-responsive-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.72rem;
+    color: #a5a5a5;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
   .truncate-cell {
-    max-width: 180px;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
   }
 }

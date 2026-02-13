@@ -79,7 +79,7 @@ export default function DashboardHome() {
         <article className="card section">
           <h2>Top links</h2>
           <div className="table-wrap">
-            <table className="tier-table">
+            <table className="tier-table dash-responsive-table">
               <thead>
                 <tr>
                   <th>Code</th>
@@ -91,10 +91,10 @@ export default function DashboardHome() {
               <tbody>
                 {topLinks.map((row) => (
                   <tr key={row.code}>
-                    <td>{row.code}</td>
-                    <td>{row.clicks}</td>
-                    <td>{row.valid}</td>
-                    <td>{row.earnings}</td>
+                    <td data-label="Code">{row.code}</td>
+                    <td data-label="Clicks">{row.clicks}</td>
+                    <td data-label="Valid">{row.valid}</td>
+                    <td data-label="Earnings">{row.earnings}</td>
                   </tr>
                 ))}
               </tbody>

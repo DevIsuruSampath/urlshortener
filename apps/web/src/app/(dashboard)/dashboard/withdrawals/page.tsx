@@ -48,7 +48,7 @@ export default function WithdrawalsPage() {
       <section className="card section">
         <h2>Withdrawal history</h2>
         <div className="table-wrap">
-          <table className="tier-table">
+          <table className="tier-table dash-responsive-table">
             <thead>
               <tr>
                 <th>Date</th>
@@ -61,13 +61,13 @@ export default function WithdrawalsPage() {
             <tbody>
               {history.map((row) => (
                 <tr key={`${row.date}-${row.amount}`}>
-                  <td>{row.date}</td>
-                  <td>{row.method}</td>
-                  <td>{row.amount}</td>
-                  <td>
+                  <td data-label="Date">{row.date}</td>
+                  <td data-label="Method">{row.method}</td>
+                  <td data-label="Amount">{row.amount}</td>
+                  <td data-label="Status">
                     <span className={`status-badge ${row.status}`}>{row.status}</span>
                   </td>
-                  <td>{row.note}</td>
+                  <td data-label="Note">{row.note}</td>
                 </tr>
               ))}
             </tbody>

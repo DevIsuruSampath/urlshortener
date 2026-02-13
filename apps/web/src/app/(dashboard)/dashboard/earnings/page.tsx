@@ -43,7 +43,7 @@ export default function EarningsPage() {
         <article className="card section">
           <h2>By date</h2>
           <div className="table-wrap">
-            <table className="tier-table">
+            <table className="tier-table dash-responsive-table">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -53,8 +53,8 @@ export default function EarningsPage() {
               <tbody>
                 {byDate.map((row) => (
                   <tr key={row.date}>
-                    <td>{row.date}</td>
-                    <td>{row.earnings}</td>
+                    <td data-label="Date">{row.date}</td>
+                    <td data-label="Earnings">{row.earnings}</td>
                   </tr>
                 ))}
               </tbody>
@@ -88,7 +88,7 @@ export default function EarningsPage() {
       <section className="card section">
         <h2>Invalid reasons breakdown (important)</h2>
         <div className="table-wrap">
-          <table className="tier-table">
+          <table className="tier-table dash-responsive-table">
             <thead>
               <tr>
                 <th>Reason</th>
@@ -98,8 +98,8 @@ export default function EarningsPage() {
             <tbody>
               {invalidReasons.map((row) => (
                 <tr key={row.reason}>
-                  <td>{row.reason}</td>
-                  <td>{row.count}</td>
+                  <td data-label="Reason">{row.reason}</td>
+                  <td data-label="Count">{row.count}</td>
                 </tr>
               ))}
             </tbody>

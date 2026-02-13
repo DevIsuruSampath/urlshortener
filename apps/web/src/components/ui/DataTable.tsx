@@ -19,7 +19,7 @@ export function DataTable<T>({
 }) {
   return (
     <div className="table-wrap">
-      <table className="tier-table">
+      <table className="tier-table dash-responsive-table">
         <thead>
           <tr>
             {columns.map((column) => (
@@ -30,7 +30,7 @@ export function DataTable<T>({
         <tbody>
           {rows.length === 0 ? (
             <tr>
-              <td colSpan={columns.length} className="muted">
+              <td colSpan={columns.length} className="muted" data-label="Status">
                 {emptyText}
               </td>
             </tr>
@@ -38,7 +38,9 @@ export function DataTable<T>({
             rows.map((row, index) => (
               <tr key={rowKey(row, index)}>
                 {columns.map((column) => (
-                  <td key={column.key}>{column.render(row)}</td>
+                  <td key={column.key} data-label={column.header}>
+                    {column.render(row)}
+                  </td>
                 ))}
               </tr>
             ))

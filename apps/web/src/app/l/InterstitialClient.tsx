@@ -155,7 +155,7 @@ export function InterstitialClient() {
 
       <section className="interstitial-card card">
         <h1>{step <= 1 ? "Please wait 8 seconds…" : "Please wait 3 seconds…"}</h1>
-        <p className="muted">Complete this quick safety check to continue.</p>
+        <p className="muted">Quick safety check.</p>
 
         <StepTimer seconds={waitSeconds} resetKey={`${step}-${waitSeconds}`} onDone={() => setTimerDone(true)} />
         <ScrollGate onPass={() => setScrolled(true)} />
