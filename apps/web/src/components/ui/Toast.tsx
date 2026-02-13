@@ -46,9 +46,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             <motion.div
               key={toast.id}
               className={`toast toast-${toast.type}`}
-              initial={reduce ? false : { opacity: 0, y: 10, scale: 0.98 }}
-              animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
-              exit={reduce ? undefined : { opacity: 0, y: 8, scale: 0.98 }}
+              initial={reduce ? false : { opacity: 0, x: 18, scale: 0.98 }}
+              animate={reduce ? undefined : { opacity: 1, x: 0, scale: 1 }}
+              exit={reduce ? undefined : { opacity: 0, x: 18, scale: 0.98 }}
               transition={reduce ? undefined : { duration: 0.2, ease: "easeOut" }}
               layout
             >

@@ -48,7 +48,13 @@ export function Modal({
                   initial={reduce ? false : mode === "drawer" ? { y: 28, opacity: 0.98 } : { y: 12, opacity: 0 }}
                   animate={reduce ? undefined : { y: 0, opacity: 1 }}
                   exit={reduce ? undefined : mode === "drawer" ? { y: 28, opacity: 0.98 } : { y: 8, opacity: 0 }}
-                  transition={reduce ? undefined : { duration: 0.22, ease: "easeOut" }}
+                  transition={
+                    reduce
+                      ? undefined
+                      : mode === "drawer"
+                        ? { type: "spring", stiffness: 420, damping: 34, mass: 0.9 }
+                        : { type: "spring", stiffness: 380, damping: 30, mass: 0.85 }
+                  }
                 >
                   <header className="ui-modal-head">
                     <Dialog.Title asChild>

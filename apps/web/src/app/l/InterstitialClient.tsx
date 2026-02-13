@@ -209,27 +209,65 @@ export function InterstitialClient() {
           <ScrollGate key={`scroll-${activeStep}`} onPass={() => setScrolled(true)} />
           <CaptchaGate key={`captcha-${activeStep}`} required={requiresCaptcha} onToken={setCaptchaToken} />
 
-          {terminal === "expired" ? (
-            <div className="interstitial-terminal">
-              <p className="auth-error">Link expired, restart.</p>
-              <Link href={restartHref} className="btn btn-ghost">
-                Try again
-              </Link>
-            </div>
-          ) : null}
+          <AnimatePresence mode="wait" initial={false}>
+            {terminal === "expired" ? (
+              <motion.div
+                key="expired"
+                className="interstitial-terminal"
+                initial={reduce ? false : { opacity: 0, y: 6 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                exit={reduce ? undefined : { opacity: 0, y: -4 }}
+                transition={reduce ? undefined : { duration: 0.18 }}
+              >
+                <p className="auth-error">Link expired, restart.</p>
+                <Link href={restartHref} className="btn btn-ghost">
+                  Try again
+                </Link>
+              </motion.div>
+            ) : null}
 
-          {terminal === "unavailable" ? (
-            <div className="interstitial-terminal">
-              <p className="auth-error">This link is unavailable.</p>
-              <Link href="/" className="btn btn-ghost">
-                Go home
-              </Link>
-            </div>
-          ) : null}
+            {terminal === "unavailable" ? (
+              <motion.div
+                key="unavailable"
+                className="interstitial-terminal"
+                initial={reduce ? false : { opacity: 0, y: 6 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                exit={reduce ? undefined : { opacity: 0, y: -4 }}
+                transition={reduce ? undefined : { duration: 0.18 }}
+              >
+                <p className="auth-error">This link is unavailable.</p>
+                <Link href="/" className="btn btn-ghost">
+                  Go home
+                </Link>
+              </motion.div>
+            ) : null}
 
-          {error && terminal === "none" ? <p className="auth-error">{error}</p> : null}
+            {error && terminal === "none" ? (
+              <motion.p
+                key="error"
+                className="auth-error"
+                initial={reduce ? false : { opacity: 0, y: 4 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                exit={reduce ? undefined : { opacity: 0, y: -3 }}
+                transition={reduce ? undefined : { duration: 0.16 }}
+              >
+                {error}
+              </motion.p>
+            ) : null}
 
-          {demoDone ? <p className="auth-success">Demo complete. In production, step 3 redirects to destination.</p> : null}
+            {demoDone ? (
+              <motion.p
+                key="demo-done"
+                className="auth-success"
+                initial={reduce ? false : { opacity: 0, y: 4 }}
+                animate={reduce ? undefined : { opacity: 1, y: 0 }}
+                exit={reduce ? undefined : { opacity: 0, y: -3 }}
+                transition={reduce ? undefined : { duration: 0.16 }}
+              >
+                Demo complete. In production, step 3 redirects to destination.
+              </motion.p>
+            ) : null}
+          </AnimatePresence>
 
           <div className="interstitial-bottom">
             <ContinueButton disabled={!canContinue || demoDone} loading={loading} onClick={onContinue} />
