@@ -18,9 +18,20 @@ const RESERVED = new Set([
 ]);
 
 function getApiBase() {
-  const raw = process.env.API_INTERNAL_BASE_URL || process.env.NEXT_PUBLIC_API_BASE;
+  const raw = process.env.NEXT_PUBLIC_API_BASE || process.env.PUBLIC_API_BASE_URL;
   if (!raw) return null;
-  return raw.replace(/\/$/, "");
+
+  try {
+    const url = new URL(raw);
+    // Smart local fallback for docker-compose split services:
+    // browser uses localhost, server-side in web container should talk to api service.
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+      url.hostname = "api";
+    }
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return raw.replace(/\/$/, "");
+  }
 }
 
 export async function GET(req: NextRequest, context: { params: Promise<{ code: string }> }) {

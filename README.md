@@ -32,7 +32,6 @@ Deploy two services:
 Set web env:
 ```env
 NEXT_PUBLIC_API_BASE=https://api.urlshortener.devisuru.ggff.net
-API_INTERNAL_BASE_URL=https://api.urlshortener.devisuru.ggff.net
 ```
 
 Set API env:
@@ -42,3 +41,4 @@ PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
 ```
 
 A Next route handler (`apps/web/src/app/[code]/route.ts`) forwards short-code hits from `urlshortener.../{code}` to API, so short links work on main domain without nginx.
+It auto-handles local docker-compose (`localhost` -> internal `api` service) to keep env setup minimal.
