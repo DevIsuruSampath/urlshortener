@@ -1,8 +1,60 @@
+import Link from "next/link";
+
 export default function LandingPage() {
   return (
-    <main className="container">
-      <h1>PaidLink Shortener</h1>
-      <p className="muted">Create monetized short links with secure multi-step interstitial flow.</p>
-    </main>
+    <div className="container landing">
+      <section className="hero card">
+        <p className="eyebrow">Monetized Link Platform</p>
+        <h1>Short links, safer flow, real payout tracking.</h1>
+        <p className="muted">
+          PaidLink helps publishers monetize traffic with anti-bypass controls, server-verified steps, and transparent
+          stats.
+        </p>
+        <div className="hero-actions">
+          <Link href="/register" className="btn">
+            Create Account
+          </Link>
+          <Link href="/login" className="btn btn-ghost">
+            Sign In
+          </Link>
+        </div>
+      </section>
+
+      <section className="section card">
+        <h2>How it works (3 steps)</h2>
+        <div className="steps-grid">
+          <article>
+            <h3>1) Create short link</h3>
+            <p className="muted">Generate a short code and select your tier logic.</p>
+          </article>
+          <article>
+            <h3>2) User completes flow</h3>
+            <p className="muted">Timer + scroll + captcha are verified server-side to prevent bypass.</p>
+          </article>
+          <article>
+            <h3>3) Redirect and earn</h3>
+            <p className="muted">Valid completions are counted, deduped, and tracked in your dashboard.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="section card">
+        <h2>Payout highlights</h2>
+        <ul className="highlights">
+          <li>24h duplicate protection by code + IP hash + UA hash</li>
+          <li>Redis abuse protection for flow start and step-complete endpoints</li>
+          <li>Configurable steps by tier for web and app traffic</li>
+          <li>Server-signed session/redirect tokens for flow integrity</li>
+        </ul>
+      </section>
+
+      <section className="section card cta-strip">
+        <h2>Ready to launch your monetized links?</h2>
+        <p className="muted">Start in minutes with secure defaults and scalable flow validation.</p>
+        <Link href="/register" className="btn">
+          Get Started
+        </Link>
+      </section>
+    </div>
   );
 }
