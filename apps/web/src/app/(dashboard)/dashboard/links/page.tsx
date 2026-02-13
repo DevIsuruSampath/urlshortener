@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { Badge } from "@/components/ui/Badge";
@@ -220,12 +219,9 @@ export default function LinksPage() {
             placeholder="Search by name or code"
             aria-label="Search links"
           />
-          <Button type="button" onClick={() => setDrawerOpen(true)}>
-            Create Link
+          <Button type="button" variant="secondary" onClick={() => setDrawerOpen(true)}>
+            Quick create
           </Button>
-          <Link href="/dashboard/links/new" className="btn btn-ghost">
-            Full page
-          </Link>
         </div>
       </header>
 
