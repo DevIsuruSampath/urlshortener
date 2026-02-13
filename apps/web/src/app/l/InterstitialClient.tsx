@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+
 import { AdTemplateSwitcher } from "@/components/flow/AdTemplateSwitcher";
 import { CaptchaGate } from "@/components/flow/CaptchaGate";
 import { ContinueButton } from "@/components/flow/ContinueButton";
@@ -94,6 +96,7 @@ export function InterstitialClient() {
   const [error, setError] = useState("");
   const [terminal, setTerminal] = useState<TerminalState>("none");
   const [demoDone, setDemoDone] = useState(false);
+  const reduce = useReducedMotion();
 
   const requiresCaptcha = useMemo(() => forceCaptcha || activeStep >= totalSteps, [forceCaptcha, activeStep, totalSteps]);
   const waitSeconds = activeStep <= 1 ? 8 : 3;
@@ -190,41 +193,50 @@ export function InterstitialClient() {
 
       <StepProgress step={activeStep} totalSteps={totalSteps} />
 
-      <section className="interstitial-card card">
-        <h1>{activeStep <= 1 ? "Please wait 8 seconds…" : "Please wait 3 seconds…"}</h1>
-        <p className="muted">Quick safety check.</p>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.section
+          key={`flow-step-${activeStep}`}
+          className="interstitial-card card"
+          initial={reduce ? false : { opacity: 0, y: 10 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0 }}
+          exit={reduce ? undefined : { opacity: 0, y: -8 }}
+          transition={reduce ? undefined : { duration: 0.2, ease: "easeOut" }}
+        >
+          <h1>{activeStep <= 1 ? "Please wait 8 seconds…" : "Please wait 3 seconds…"}</h1>
+          <p className="muted">Quick safety check.</p>
 
-        <StepTimer key={`timer-${activeStep}`} seconds={waitSeconds} resetKey={`${activeStep}-${waitSeconds}`} onDone={() => setTimerDone(true)} />
-        <ScrollGate key={`scroll-${activeStep}`} onPass={() => setScrolled(true)} />
-        <CaptchaGate key={`captcha-${activeStep}`} required={requiresCaptcha} onToken={setCaptchaToken} />
+          <StepTimer key={`timer-${activeStep}`} seconds={waitSeconds} resetKey={`${activeStep}-${waitSeconds}`} onDone={() => setTimerDone(true)} />
+          <ScrollGate key={`scroll-${activeStep}`} onPass={() => setScrolled(true)} />
+          <CaptchaGate key={`captcha-${activeStep}`} required={requiresCaptcha} onToken={setCaptchaToken} />
 
-        {terminal === "expired" ? (
-          <div className="interstitial-terminal">
-            <p className="auth-error">Link expired, restart.</p>
-            <Link href={restartHref} className="btn btn-ghost">
-              Try again
-            </Link>
+          {terminal === "expired" ? (
+            <div className="interstitial-terminal">
+              <p className="auth-error">Link expired, restart.</p>
+              <Link href={restartHref} className="btn btn-ghost">
+                Try again
+              </Link>
+            </div>
+          ) : null}
+
+          {terminal === "unavailable" ? (
+            <div className="interstitial-terminal">
+              <p className="auth-error">This link is unavailable.</p>
+              <Link href="/" className="btn btn-ghost">
+                Go home
+              </Link>
+            </div>
+          ) : null}
+
+          {error && terminal === "none" ? <p className="auth-error">{error}</p> : null}
+
+          {demoDone ? <p className="auth-success">Demo complete. In production, step 3 redirects to destination.</p> : null}
+
+          <div className="interstitial-bottom">
+            <ContinueButton disabled={!canContinue || demoDone} loading={loading} onClick={onContinue} />
+            <p className="muted">You will be redirected to your destination.</p>
           </div>
-        ) : null}
-
-        {terminal === "unavailable" ? (
-          <div className="interstitial-terminal">
-            <p className="auth-error">This link is unavailable.</p>
-            <Link href="/" className="btn btn-ghost">
-              Go home
-            </Link>
-          </div>
-        ) : null}
-
-        {error && terminal === "none" ? <p className="auth-error">{error}</p> : null}
-
-        {demoDone ? <p className="auth-success">Demo complete. In production, step 3 redirects to destination.</p> : null}
-
-        <div className="interstitial-bottom">
-          <ContinueButton disabled={!canContinue || demoDone} loading={loading} onClick={onContinue} />
-          <p className="muted">You will be redirected to your destination.</p>
-        </div>
-      </section>
+        </motion.section>
+      </AnimatePresence>
 
       <AdTemplateSwitcher variantSeed={activeStep} />
       <AdTemplateSwitcher variantSeed={activeStep + 1} />

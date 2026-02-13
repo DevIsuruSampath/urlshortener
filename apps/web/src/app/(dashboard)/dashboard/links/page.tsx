@@ -10,6 +10,7 @@ import { CopyButton } from "@/components/ui/CopyButton";
 import { DataTable, type DataTableColumn } from "@/components/data/DataTable";
 import { Drawer } from "@/components/ui/Drawer";
 import { Input } from "@/components/ui/Input";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { useToast } from "@/components/ui/Toast";
 import { DashboardLink, appendStoredLink, getStoredLinks, makeCode } from "@/lib/links-store";
@@ -85,6 +86,7 @@ export default function LinksPage() {
 
   const [query, setQuery] = useState("");
   const [storedRows, setStoredRows] = useState<DashboardLink[]>([]);
+  const [loadingRows, setLoadingRows] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selected, setSelected] = useState<DashboardLink | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -95,6 +97,7 @@ export default function LinksPage() {
 
   useEffect(() => {
     setStoredRows(getStoredLinks());
+    setLoadingRows(false);
   }, []);
 
   const allRows = useMemo(() => [...storedRows, ...defaultRows], [storedRows]);
@@ -229,7 +232,16 @@ export default function LinksPage() {
       </header>
 
       <Card className="section">
-        <DataTable columns={columns} rows={filteredRows} rowKey={(row) => row.id} emptyText="No links found" />
+        {loadingRows ? (
+          <Stack gap={2}>
+            <Skeleton className="ui-skeleton-line" />
+            <Skeleton className="ui-skeleton-line" />
+            <Skeleton className="ui-skeleton-line" />
+            <Skeleton className="ui-skeleton-line" />
+          </Stack>
+        ) : (
+          <DataTable columns={columns} rows={filteredRows} rowKey={(row) => row.id} emptyText="No links found" />
+        )}
       </Card>
 
       <Drawer open={drawerOpen} title="Create link" onClose={() => setDrawerOpen(false)}>

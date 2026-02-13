@@ -45,11 +45,11 @@ export default function DashboardHome() {
       </header>
 
       <section className="dash-cards-grid">
-        {overviewCards.map((card) => (
-          <StatCard key={card.label} label={card.label} value={card.value} />
+        {overviewCards.map((card, index) => (
+          <StatCard key={card.label} label={card.label} value={card.value} index={index} />
         ))}
 
-        <StatCard label="Next payout threshold" value={`$${threshold.toFixed(0)}`} hint={`$${balance.toFixed(2)} / $${threshold.toFixed(0)}`}>
+        <StatCard label="Next payout threshold" value={`$${threshold.toFixed(0)}`} hint={`$${balance.toFixed(2)} / $${threshold.toFixed(0)}`} index={overviewCards.length}>
           <div className="progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
             <span style={{ width: `${progress}%` }} />
           </div>

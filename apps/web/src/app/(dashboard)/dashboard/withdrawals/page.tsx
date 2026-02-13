@@ -20,15 +20,15 @@ export default function WithdrawalsPage() {
       </header>
 
       <section className="dash-cards-grid payouts-grid">
-        <StatCard label="Current balance" value={`$${balance.toFixed(2)}`} />
+        <StatCard label="Current balance" value={`$${balance.toFixed(2)}`} index={0} />
 
-        <StatCard label="Threshold" value={`$${threshold.toFixed(2)}`} hint={`${progress}% reached`}>
+        <StatCard label="Threshold" value={`$${threshold.toFixed(2)}`} hint={`${progress}% reached`} index={1}>
           <div className="progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
             <span style={{ width: `${progress}%` }} />
           </div>
         </StatCard>
 
-        <StatCard label="Request payout" value={balance >= threshold ? "Available" : "Locked"} hint="Enabled once threshold is reached">
+        <StatCard label="Request payout" value={balance >= threshold ? "Available" : "Locked"} hint="Enabled once threshold is reached" index={2}>
           <button className="btn" disabled={balance < threshold} type="button">
             Request payout
           </button>

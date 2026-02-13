@@ -25,9 +25,9 @@ export default function EarningsPage() {
       </header>
 
       <section className="dash-cards-grid payouts-grid">
-        <StatCard label="Today" value={summary.today} hint="Estimated" />
-        <StatCard label="Last 7 days" value={summary.sevenDays} hint="Estimated" />
-        <StatCard label="Last 30 days" value={summary.thirtyDays} hint="Estimated" />
+        <StatCard label="Today" value={summary.today} hint="Estimated" index={0} />
+        <StatCard label="Last 7 days" value={summary.sevenDays} hint="Estimated" index={1} />
+        <StatCard label="Last 30 days" value={summary.thirtyDays} hint="Estimated" index={2} />
       </section>
 
       <section className="card section">
