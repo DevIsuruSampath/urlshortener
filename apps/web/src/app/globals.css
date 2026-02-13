@@ -273,6 +273,79 @@ a { color: inherit; text-decoration: none; }
   color: #fff;
 }
 
+/* Interstitial */
+.interstitial-shell {
+  display: grid;
+  gap: 12px;
+  max-width: 640px;
+}
+
+.interstitial-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #242424;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #111;
+}
+
+.interstitial-progress {
+  display: grid;
+  gap: 8px;
+}
+
+.interstitial-progress p {
+  margin: 0;
+  font-weight: 600;
+}
+
+.interstitial-card h1 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.interstitial-bottom {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.interstitial-continue {
+  width: 100%;
+}
+
+.interstitial-terminal {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.interstitial-ads {
+  display: grid;
+  gap: 8px;
+}
+
+.ad-label {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #a5a5a5;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.captcha-gate {
+  margin-top: 10px;
+}
+
+.captcha-gate p {
+  margin: 0 0 6px;
+}
+
+.scroll-spacer {
+  height: 34vh;
+}
+
 /* Dashboard */
 .dash-shell {
   display: grid;

@@ -8,9 +8,11 @@ export function CaptchaGate({ required, onToken }: { required: boolean; onToken:
   if (!required) return null;
 
   return (
-    <div className="card" style={{ marginTop: 12 }}>
-      <p><strong>Cloudflare Turnstile (stub)</strong></p>
-      <p className="muted">Demo only. Replace with real Turnstile widget in production.</p>
+    <div className="captcha-gate card">
+      <p>
+        <strong>Verify</strong>
+      </p>
+      <p className="muted">Complete verification to continue.</p>
       <button
         className="btn"
         onClick={() => {
@@ -18,6 +20,7 @@ export function CaptchaGate({ required, onToken }: { required: boolean; onToken:
           onToken(token);
           setDone(true);
         }}
+        type="button"
       >
         {done ? "Verified" : "I'm human"}
       </button>

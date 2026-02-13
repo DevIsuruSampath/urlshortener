@@ -10,14 +10,15 @@ export function ScrollGate({ onPass }: { onPass: () => void }) {
       const total = document.documentElement.scrollHeight - window.innerHeight;
       if (total <= 0) return;
       const ratio = window.scrollY / total;
-      if (ratio >= 0.35 && !passed) {
+      if (ratio >= 0.3 && !passed) {
         setPassed(true);
         onPass();
       }
     };
+
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [onPass, passed]);
 
-  return <p className="muted">{passed ? "✅ Scroll gate passed" : "Scroll down to unlock Continue"}</p>;
+  return <p className="muted">{passed ? "✅ Scroll check complete" : "Scroll down to continue"}</p>;
 }

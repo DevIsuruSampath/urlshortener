@@ -8,5 +8,5 @@ export function TemplateB() {
     safeLoadAdScript("https://example-ad-network.invalid/ad2.js", "monetag-slot-b");
   }, []);
 
-  return <div className="ad-slot">Ad Placeholder B (safe slot)</div>;
+  return <div className="ad-slot">Ad slot B (non-interactive)</div>;
 }

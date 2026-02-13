@@ -8,5 +8,5 @@ export function TemplateA() {
     safeLoadAdScript("https://example-ad-network.invalid/ad.js", "adsterra-slot-a");
   }, []);
 
-  return <div className="ad-slot">Ad Placeholder A (safe slot)</div>;
+  return <div className="ad-slot">Ad slot A (non-interactive)</div>;
 }
