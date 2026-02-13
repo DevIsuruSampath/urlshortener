@@ -179,11 +179,14 @@ export default function LinksPage() {
           <details className="actions-menu">
             <summary className="btn btn-ghost btn-small">Actions</summary>
             <div className="actions-menu-list">
-              <Button type="button" variant="secondary" className="btn-small" onClick={() => push(row.status === "paused" ? "Link resumed" : "Link paused", "info")}>
-                {row.status === "paused" ? "Resume" : "Pause"}
+              <Button type="button" variant="secondary" className="btn-small" onClick={() => push("View page coming soon", "info")}>
+                View
               </Button>
               <Button type="button" variant="secondary" className="btn-small" onClick={() => push("Edit drawer coming soon", "info")}>
-                Edit destination
+                Edit
+              </Button>
+              <Button type="button" variant="secondary" className="btn-small" onClick={() => push(row.status === "paused" ? "Link resumed" : "Link paused", "info")}>
+                {row.status === "paused" ? "Resume" : "Pause"}
               </Button>
               <Button
                 type="button"
@@ -194,7 +197,7 @@ export default function LinksPage() {
                   setConfirmOpen(true);
                 }}
               >
-                Soft delete
+                Delete
               </Button>
             </div>
           </details>
@@ -262,14 +265,14 @@ export default function LinksPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Soft delete link"
-        message={selected ? `Move ${selected.title} to deleted state?` : "Move this link to deleted state?"}
-        confirmLabel="Soft delete"
+        title="Delete link (placeholder)"
+        message={selected ? `Mark ${selected.title} as deleted?` : "Mark this link as deleted?"}
+        confirmLabel="Delete"
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
           setConfirmOpen(false);
           if (selected) {
-            push(`Soft-deleted ${selected.title}`, "success");
+            push(`Deleted ${selected.title} (placeholder)`, "success");
           }
         }}
       />
