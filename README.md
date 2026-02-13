@@ -29,6 +29,10 @@ Deploy two services:
 1. `apps/web` (port `3000`) -> `urlshortener.devisuru.ggff.net`
 2. `apps/api` (port `8000`) -> `api.urlshortener.devisuru.ggff.net`
 
+You can use either:
+- service-specific Dockerfiles (`apps/web/Dockerfile`, `apps/api/Dockerfile`), or
+- root `Dockerfile` with `RUN_SERVICE` env (`web` or `api`).
+
 Set web env:
 ```env
 NEXT_PUBLIC_API_BASE=https://api.urlshortener.devisuru.ggff.net
