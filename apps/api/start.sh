@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 set -e
 
+cd /app
+export PYTHONPATH=/app
+
 if [ "${DATABASE_AUTO_CREATE:-true}" = "true" ]; then
   python -m app.db.bootstrap
 fi
