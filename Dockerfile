@@ -3,7 +3,7 @@ FROM node:22-bookworm-slim
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     python3 \
-    python3-pip \
+    python3-venv \
     nginx \
     supervisor \
     ca-certificates \
@@ -11,9 +11,15 @@ RUN apt-get update \
 
 WORKDIR /app
 
+# Python virtualenv (avoids Debian PEP 668 "externally-managed-environment" error)
+ENV VIRTUAL_ENV=/opt/venv
+RUN python3 -m venv ${VIRTUAL_ENV}
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+
 # API dependencies
 COPY apps/api/requirements.txt /app/apps/api/requirements.txt
-RUN pip3 install --no-cache-dir -r /app/apps/api/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
+  && pip install --no-cache-dir -r /app/apps/api/requirements.txt
 
 # Web dependencies
 COPY apps/web/package*.json /app/apps/web/
