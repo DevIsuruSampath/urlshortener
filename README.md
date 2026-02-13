@@ -10,7 +10,7 @@ Monorepo for a paid-link URL shortener with step-based interstitial flow.
 
 ## Run locally (no nginx)
 ```bash
-cp .env.example .env
+cp example.env .env
 docker compose -f infra/docker-compose.yml up --build
 ```
 
