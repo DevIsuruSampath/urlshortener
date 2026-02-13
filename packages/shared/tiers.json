@@ -1,4 +1,30 @@
 {
-  "free": {"pages": 1, "threshold": 10},
-  "pro": {"pages": 3, "threshold": 5}
+  "standard_pro": {
+    "name": "Standard (Pro)",
+    "web_steps": 5,
+    "app_steps": 5,
+    "game_enabled": false,
+    "threshold": 0
+  },
+  "standard": {
+    "name": "Standard",
+    "web_steps": 3,
+    "app_steps": 5,
+    "game_enabled": false,
+    "threshold": 0
+  },
+  "professional": {
+    "name": "Professional",
+    "web_steps": 2,
+    "app_steps": 3,
+    "game_enabled": false,
+    "threshold": 0
+  },
+  "advanced": {
+    "name": "Advanced",
+    "web_steps": 1,
+    "app_steps": 2,
+    "game_enabled": false,
+    "threshold": 0
+  }
 }
