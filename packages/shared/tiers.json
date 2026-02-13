@@ -1,0 +1,4 @@
+{
+  "free": {"pages": 1, "threshold": 10},
+  "pro": {"pages": 3, "threshold": 5}
+}
