@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-# TODO: seed initial data
+set -euo pipefail
+echo "TODO: seed script"

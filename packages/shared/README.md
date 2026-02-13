@@ -1,3 +1,3 @@
 # shared
 
-Shared constants and tier configuration.
+Shared runtime config for web/api.

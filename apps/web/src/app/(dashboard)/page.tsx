@@ -1,1 +1,1 @@
-export default function DashboardHomePage() { return <main>Dashboard home</main>; }
+export default function DashboardHome(){return <main><h1>Dashboard</h1></main>;}

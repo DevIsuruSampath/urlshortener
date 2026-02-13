@@ -1,7 +1,7 @@
-dev:
+up:
 	docker compose -f infra/docker-compose.yml up --build
 
-stop:
+down:
 	docker compose -f infra/docker-compose.yml down
 
 logs:

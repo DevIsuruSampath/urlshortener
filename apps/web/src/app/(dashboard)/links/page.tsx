@@ -1,1 +1,1 @@
-export default function LinksPage() { return <main>Links manager</main>; }
+export default function LinksPage(){return <main><h1>Links</h1></main>;}

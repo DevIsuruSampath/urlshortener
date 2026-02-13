@@ -1,1 +1,1 @@
-export default function StatsPage() { return <main>Stats page</main>; }
+export default function StatsPage(){return <main><h1>Stats</h1></main>;}

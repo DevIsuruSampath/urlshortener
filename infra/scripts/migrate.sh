@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-# TODO: alembic upgrade head
+set -euo pipefail
+docker compose -f ../docker-compose.yml exec api alembic upgrade head

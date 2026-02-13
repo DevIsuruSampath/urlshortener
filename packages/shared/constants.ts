@@ -1,1 +1,2 @@
-export const DEFAULT_STEP_SECONDS = 10;
+export const DEFAULT_FIRST_STEP_SECONDS = 8;
+export const DEFAULT_NEXT_STEP_SECONDS = 3;

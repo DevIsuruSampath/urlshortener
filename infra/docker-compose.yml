@@ -1,31 +1,61 @@
 services:
   web:
     build: ../apps/web
-    ports:
-      - "3000:3000"
+    container_name: paidlink-web
     environment:
-      - NEXT_PUBLIC_API_BASE=http://localhost:8000
+      - NEXT_PUBLIC_API_BASE=/api
+    volumes:
+      - ../apps/web:/app
+      - /app/node_modules
+    command: npm run dev -- --hostname 0.0.0.0 --port 3000
+    expose:
+      - "3000"
 
   api:
     build: ../apps/api
-    ports:
-      - "8000:8000"
+    container_name: paidlink-api
     env_file:
       - ../.env
+    environment:
+      - TIERS_FILE_PATH=/packages/shared/tiers.json
+    volumes:
+      - ../apps/api:/app
+      - ../packages/shared:/packages/shared:ro
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    expose:
+      - "8000"
     depends_on:
       - postgres
       - redis
 
   postgres:
     image: postgres:16-alpine
+    container_name: paidlink-postgres
     environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=paidlink
+      - POSTGRES_DB=${POSTGRES_DB:-paidlink}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
+    container_name: paidlink-redis
     ports:
       - "6379:6379"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: paidlink-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - web
+      - api
+
+volumes:
+  pgdata:

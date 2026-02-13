@@ -1,1 +1,1 @@
-export default function WithdrawalsPage() { return <main>Withdrawals page</main>; }
+export default function WithdrawalsPage(){return <main><h1>Withdrawals</h1></main>;}

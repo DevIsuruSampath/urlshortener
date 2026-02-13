@@ -1,15 +1,28 @@
-# paidlink-shortener
+# Paid Link Shortener (GPLinks-style)
 
-Monorepo scaffold for a paid-link shortener platform.
+Monorepo for a paid-link URL shortener with step-based interstitial flow.
 
-## Structure
-- `apps/web`: Next.js App Router frontend (landing + auth + dashboard + interstitial flow)
-- `apps/api`: FastAPI backend (auth, links, flow tracking, stats)
-- `packages/shared`: shared config/constants
-- `infra`: docker + nginx + helper scripts
+## Tech
+- Frontend: Next.js App Router + TypeScript
+- Backend: FastAPI + SQLAlchemy + Alembic
+- Cache/Rate Limit: Redis
+- DB: PostgreSQL
+- Reverse proxy: Nginx
 
-## Quick start
-1. Copy env: `cp .env.example .env`
-2. Start stack: `make dev`
-3. Open web: `http://localhost:3000`
-4. API docs: `http://localhost:8000/docs`
+## Run locally
+```bash
+cp .env.example .env
+docker compose -f infra/docker-compose.yml up --build
+```
+
+Open: <http://localhost>
+
+- `/` -> Next.js
+- `/api/*` -> FastAPI
+- `/{code}` -> FastAPI redirect hot path
+
+## Monorepo
+- `apps/web` – frontend
+- `apps/api` – backend
+- `packages/shared/tiers.json` – tier/step rules
+- `infra` – docker-compose + nginx
