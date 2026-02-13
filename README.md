@@ -26,3 +26,16 @@ Open: <http://localhost>
 - `apps/api` – backend
 - `packages/shared/tiers.json` – tier/step rules
 - `infra` – docker-compose + nginx
+
+## Single-container Dockerfile (optional)
+A root `Dockerfile` is included for platforms that require one container.
+It runs:
+- FastAPI on `127.0.0.1:8000`
+- Next.js on `127.0.0.1:3000`
+- Nginx on `:80` (routes `/`, `/api`, and `/{code}`)
+
+Build/run:
+```bash
+docker build -t paidlink-shortener .
+docker run --rm -p 80:80 --env-file .env paidlink-shortener
+```
