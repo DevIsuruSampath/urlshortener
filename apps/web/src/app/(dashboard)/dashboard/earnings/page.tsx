@@ -1,34 +1,19 @@
-const byDate = [
-  { date: "2026-02-07", earnings: "$12.14" },
-  { date: "2026-02-08", earnings: "$10.02" },
-  { date: "2026-02-09", earnings: "$17.58" },
-  { date: "2026-02-10", earnings: "$14.22" },
-  { date: "2026-02-11", earnings: "$16.37" },
-  { date: "2026-02-12", earnings: "$19.44" },
-  { date: "2026-02-13", earnings: "$18.42" },
-];
+import { StatCard } from "@/components/ui/StatCard";
 
-const byCountry = [
-  { country: "US", value: "38%" },
-  { country: "IN", value: "17%" },
-  { country: "PK", value: "11%" },
-  { country: "BR", value: "9%" },
-  { country: "Other", value: "25%" },
-];
+const summary = {
+  today: "$18.42",
+  sevenDays: "$108.19",
+  thirtyDays: "$432.87",
+};
 
-const byDevice = [
-  { device: "Android", value: "54%" },
-  { device: "Desktop", value: "26%" },
-  { device: "iOS", value: "18%" },
-  { device: "Other", value: "2%" },
-];
-
-const invalidReasons = [
-  { reason: "duplicate", count: 182 },
-  { reason: "too fast", count: 96 },
-  { reason: "rate limit", count: 75 },
-  { reason: "captcha failed", count: 54 },
-  { reason: "suspicious", count: 39 },
+const rows = [
+  { date: "2026-02-13", valid: 242, invalid: 69, earnings: "$18.42" },
+  { date: "2026-02-12", valid: 236, invalid: 71, earnings: "$19.44" },
+  { date: "2026-02-11", valid: 220, invalid: 64, earnings: "$16.37" },
+  { date: "2026-02-10", valid: 213, invalid: 59, earnings: "$14.22" },
+  { date: "2026-02-09", valid: 226, invalid: 63, earnings: "$17.58" },
+  { date: "2026-02-08", valid: 187, invalid: 52, earnings: "$10.02" },
+  { date: "2026-02-07", valid: 198, invalid: 55, earnings: "$12.14" },
 ];
 
 export default function EarningsPage() {
@@ -36,70 +21,34 @@ export default function EarningsPage() {
     <main className="dash-page">
       <header className="dash-page-head">
         <h1>Earnings</h1>
-        <p className="muted">Performance and quality analytics for valid traffic and payout safety.</p>
+        <p className="muted">Mock analytics view until API metrics are wired.</p>
       </header>
 
-      <section className="dash-two-col">
-        <article className="card section">
-          <h2>By date</h2>
-          <div className="table-wrap">
-            <table className="tier-table dash-responsive-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Earnings</th>
-                </tr>
-              </thead>
-              <tbody>
-                {byDate.map((row) => (
-                  <tr key={row.date}>
-                    <td data-label="Date">{row.date}</td>
-                    <td data-label="Earnings">{row.earnings}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </article>
-
-        <article className="card section">
-          <h2>By country</h2>
-          <ul className="simple-list">
-            {byCountry.map((row) => (
-              <li key={row.country}>
-                <span>{row.country}</span>
-                <strong>{row.value}</strong>
-              </li>
-            ))}
-          </ul>
-
-          <h2 className="section-subhead">By device</h2>
-          <ul className="simple-list">
-            {byDevice.map((row) => (
-              <li key={row.device}>
-                <span>{row.device}</span>
-                <strong>{row.value}</strong>
-              </li>
-            ))}
-          </ul>
-        </article>
+      <section className="dash-cards-grid payouts-grid">
+        <StatCard label="Today" value={summary.today} hint="Estimated" />
+        <StatCard label="Last 7 days" value={summary.sevenDays} hint="Estimated" />
+        <StatCard label="Last 30 days" value={summary.thirtyDays} hint="Estimated" />
       </section>
 
       <section className="card section">
-        <h2>Invalid reasons breakdown (important)</h2>
+        <h2>Earnings breakdown</h2>
         <div className="table-wrap">
           <table className="tier-table dash-responsive-table">
             <thead>
               <tr>
-                <th>Reason</th>
-                <th>Count</th>
+                <th>Date</th>
+                <th>Valid</th>
+                <th>Invalid</th>
+                <th>Earnings</th>
               </tr>
             </thead>
             <tbody>
-              {invalidReasons.map((row) => (
-                <tr key={row.reason}>
-                  <td data-label="Reason">{row.reason}</td>
-                  <td data-label="Count">{row.count}</td>
+              {rows.map((row) => (
+                <tr key={row.date}>
+                  <td data-label="Date">{row.date}</td>
+                  <td data-label="Valid">{row.valid}</td>
+                  <td data-label="Invalid">{row.invalid}</td>
+                  <td data-label="Earnings">{row.earnings}</td>
                 </tr>
               ))}
             </tbody>

@@ -1,8 +1,10 @@
+import { StatCard } from "@/components/ui/StatCard";
+
 const history = [
-  { date: "2026-02-01", method: "USDT (TRC20)", amount: "$120.00", status: "paid", note: "Txn confirmed" },
-  { date: "2026-01-17", method: "PayPal", amount: "$95.00", status: "paid", note: "Processed" },
-  { date: "2026-01-03", method: "USDT (TRC20)", amount: "$80.00", status: "rejected", note: "Payment details mismatch" },
-  { date: "2025-12-20", method: "PayPal", amount: "$102.00", status: "pending", note: "Under review" },
+  { date: "2026-02-01", method: "USDT (TRC20)", amount: "$120.00", status: "paid" },
+  { date: "2026-01-17", method: "PayPal", amount: "$95.00", status: "paid" },
+  { date: "2026-01-03", method: "USDT (TRC20)", amount: "$80.00", status: "rejected" },
+  { date: "2025-12-20", method: "PayPal", amount: "$102.00", status: "pending" },
 ];
 
 export default function WithdrawalsPage() {
@@ -14,35 +16,23 @@ export default function WithdrawalsPage() {
     <main className="dash-page">
       <header className="dash-page-head">
         <h1>Withdrawals</h1>
-        <p className="muted">Review payout eligibility and your withdrawal history.</p>
+        <p className="muted">Mock payout view with threshold gating.</p>
       </header>
 
       <section className="dash-cards-grid payouts-grid">
-        <article className="card dash-stat-card">
-          <p className="muted">Current balance</p>
-          <h2>${balance.toFixed(2)}</h2>
-        </article>
+        <StatCard label="Current balance" value={`$${balance.toFixed(2)}`} />
 
-        <article className="card dash-stat-card">
-          <p className="muted">Threshold</p>
-          <h2>${threshold.toFixed(2)}</h2>
-        </article>
-
-        <article className="card dash-stat-card">
-          <p className="muted">Progress</p>
-          <h2>{progress}%</h2>
+        <StatCard label="Threshold" value={`$${threshold.toFixed(2)}`} hint={`${progress}% reached`}>
           <div className="progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
             <span style={{ width: `${progress}%` }} />
           </div>
-        </article>
+        </StatCard>
 
-        <article className="card dash-stat-card">
-          <p className="muted">Request payout</p>
+        <StatCard label="Request payout" value={balance >= threshold ? "Available" : "Locked"} hint="Enabled once threshold is reached">
           <button className="btn" disabled={balance < threshold} type="button">
             Request payout
           </button>
-          <p className="muted">Enabled once your balance crosses threshold.</p>
-        </article>
+        </StatCard>
       </section>
 
       <section className="card section">
@@ -55,7 +45,6 @@ export default function WithdrawalsPage() {
                 <th>Method</th>
                 <th>Amount</th>
                 <th>Status</th>
-                <th>Note</th>
               </tr>
             </thead>
             <tbody>
@@ -67,7 +56,6 @@ export default function WithdrawalsPage() {
                   <td data-label="Status">
                     <span className={`status-badge ${row.status}`}>{row.status}</span>
                   </td>
-                  <td data-label="Note">{row.note}</td>
                 </tr>
               ))}
             </tbody>
