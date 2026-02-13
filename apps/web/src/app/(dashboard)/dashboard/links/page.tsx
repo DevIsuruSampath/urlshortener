@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { DataTable, type DataTableColumn } from "@/components/data/DataTable";
 import { Drawer } from "@/components/ui/Drawer";
+import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
@@ -179,31 +180,24 @@ export default function LinksPage() {
         key: "actions",
         header: "Actions",
         render: (row) => (
-          <details className="actions-menu">
-            <summary className="btn btn-ghost btn-small">Actions</summary>
-            <div className="actions-menu-list">
-              <Button type="button" variant="secondary" className="btn-small" onClick={() => push("View page coming soon", "info")}>
-                View
-              </Button>
-              <Button type="button" variant="secondary" className="btn-small" onClick={() => push("Edit drawer coming soon", "info")}>
-                Edit
-              </Button>
-              <Button type="button" variant="secondary" className="btn-small" onClick={() => push(row.status === "paused" ? "Link resumed" : "Link paused", "info")}>
-                {row.status === "paused" ? "Resume" : "Pause"}
-              </Button>
-              <Button
-                type="button"
-                variant="danger"
-                className="btn-small danger"
-                onClick={() => {
+          <DropdownMenu
+            items={[
+              { label: "View", onSelect: () => push("View page coming soon", "info") },
+              { label: "Edit", onSelect: () => push("Edit drawer coming soon", "info") },
+              {
+                label: row.status === "paused" ? "Resume" : "Pause",
+                onSelect: () => push(row.status === "paused" ? "Link resumed" : "Link paused", "info"),
+              },
+              {
+                label: "Delete",
+                tone: "danger",
+                onSelect: () => {
                   setSelected(row);
                   setConfirmOpen(true);
-                }}
-              >
-                Delete
-              </Button>
-            </div>
-          </details>
+                },
+              },
+            ]}
+          />
         ),
       },
     ],
