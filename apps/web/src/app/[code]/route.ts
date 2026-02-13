@@ -7,6 +7,8 @@ const RESERVED = new Set([
   "l",
   "login",
   "register",
+  "forgot-password",
+  "verify-email",
   "pricing",
   "faq",
   "terms",

@@ -1,1 +1,5 @@
-export default function LoginPage(){return <main className="container"><h1>Login</h1></main>;}
+import { AuthForm } from "@/components/auth/AuthForm";
+
+export default function LoginPage() {
+  return <AuthForm mode="login" />;
+}

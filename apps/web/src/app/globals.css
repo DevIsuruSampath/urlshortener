@@ -212,6 +212,67 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.65;
 }
 
+/* Auth area */
+.auth-shell {
+  min-height: calc(100vh - 40px);
+  display: grid;
+  place-items: center;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+}
+
+.auth-form {
+  margin-top: 12px;
+  display: grid;
+  gap: 12px;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.auth-form input {
+  width: 100%;
+  border: 1px solid #2f2f2f;
+  background: #0f0f0f;
+  color: #f2f2f2;
+  border-radius: 10px;
+  padding: 11px 12px;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: #e50914;
+  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.2);
+}
+
+.auth-error {
+  color: #ff7f7f;
+  margin: 0;
+}
+
+.auth-success {
+  color: #7fe8a0;
+  margin: 0;
+}
+
+.auth-links {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.auth-links a:hover {
+  color: #fff;
+}
+
 @media (max-width: 860px) {
   .steps-grid {
     grid-template-columns: 1fr;

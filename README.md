@@ -45,9 +45,16 @@ PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
 SESSION_TOKEN_EXPIRE_MINUTES=15
 START_RATE_LIMIT_PER_MINUTE=120
 STEP_RATE_LIMIT_PER_MINUTE=60
+AUTH_RATE_LIMIT_PER_MINUTE=20
 DATABASE_AUTO_CREATE=true
 RUN_MIGRATIONS=true
 ```
 
 A Next route handler (`apps/web/src/app/[code]/route.ts`) forwards short-code hits from `urlshortener.../{code}` to API, so short links work on main domain without nginx.
 It auto-handles local docker-compose (`localhost` -> internal `api` service) to keep env setup minimal.
+
+Auth UI pages:
+- `/login`
+- `/register`
+- `/forgot-password`
+- `/verify-email`

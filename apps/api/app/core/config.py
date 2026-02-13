@@ -26,6 +26,7 @@ class Settings(BaseModel):
     next_step_min_seconds: int = int(os.getenv("NEXT_STEP_MIN_SECONDS", "3"))
     start_rate_limit_per_minute: int = int(os.getenv("START_RATE_LIMIT_PER_MINUTE", "120"))
     step_rate_limit_per_minute: int = int(os.getenv("STEP_RATE_LIMIT_PER_MINUTE", "60"))
+    auth_rate_limit_per_minute: int = int(os.getenv("AUTH_RATE_LIMIT_PER_MINUTE", "20"))
 
     cache_ttl_seconds: int = int(os.getenv("CACHE_TTL_SECONDS", "300"))
 

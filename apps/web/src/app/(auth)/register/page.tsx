@@ -1,1 +1,5 @@
-export default function RegisterPage(){return <main className="container"><h1>Register</h1></main>;}
+import { AuthForm } from "@/components/auth/AuthForm";
+
+export default function RegisterPage() {
+  return <AuthForm mode="register" />;
+}
