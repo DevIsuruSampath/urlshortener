@@ -1,13 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { Drawer } from "@/components/ui/Drawer";
+import { Input } from "@/components/ui/Input";
+import { Stack } from "@/components/ui/Stack";
 import { useToast } from "@/components/ui/Toast";
-import { DashboardLink, getStoredLinks } from "@/lib/links-store";
+import { DashboardLink, appendStoredLink, getStoredLinks, makeCode } from "@/lib/links-store";
+
+const WEB_BASE = "https://urlshortener.devisuru.ggff.net";
 
 const defaultRows: DashboardLink[] = [
   {
@@ -55,7 +63,8 @@ const defaultRows: DashboardLink[] = [
 ];
 
 function statusBadge(status: DashboardLink["status"]) {
-  return <span className={`status-badge ${status}`}>{status}</span>;
+  const tone = status === "active" ? "success" : status === "paused" ? "warning" : "danger";
+  return <Badge tone={tone}>{status}</Badge>;
 }
 
 function statValue(value: number | null) {
@@ -74,10 +83,16 @@ function destinationPreview(url: string) {
 
 export default function LinksPage() {
   const { push } = useToast();
+
   const [query, setQuery] = useState("");
   const [storedRows, setStoredRows] = useState<DashboardLink[]>([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selected, setSelected] = useState<DashboardLink | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const [destinationUrl, setDestinationUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [campaignTag, setCampaignTag] = useState("");
 
   useEffect(() => {
     setStoredRows(getStoredLinks());
@@ -90,6 +105,38 @@ export default function LinksPage() {
     if (!q) return allRows;
     return allRows.filter((row) => row.title.toLowerCase().includes(q) || row.code.toLowerCase().includes(q));
   }, [allRows, query]);
+
+  function onCreateFromDrawer(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!destinationUrl.trim()) return;
+
+    const code = makeCode();
+    const link: DashboardLink = {
+      id: `local-${Date.now()}`,
+      title: title.trim() || "Untitled link",
+      code,
+      shortUrl: `${WEB_BASE}/${code}`,
+      destination: destinationUrl.trim(),
+      status: "active",
+      webSteps: 3,
+      appSteps: 5,
+      clicks: null,
+      valid: null,
+      invalid: null,
+      campaignTag: campaignTag.trim() || undefined,
+      createdAt: new Date().toISOString(),
+    };
+
+    appendStoredLink(link);
+    setStoredRows((prev) => [link, ...prev]);
+
+    setDrawerOpen(false);
+    setDestinationUrl("");
+    setTitle("");
+    setCampaignTag("");
+
+    push("Link created", "success");
+  }
 
   const columns = useMemo<DataTableColumn<DashboardLink>[]>(
     () => [
@@ -133,22 +180,23 @@ export default function LinksPage() {
           <details className="actions-menu">
             <summary className="btn btn-ghost btn-small">Actions</summary>
             <div className="actions-menu-list">
-              <button type="button" className="btn btn-ghost btn-small" onClick={() => push(row.status === "paused" ? "Link resumed" : "Link paused", "info")}>
+              <Button type="button" variant="secondary" className="btn-small" onClick={() => push(row.status === "paused" ? "Link resumed" : "Link paused", "info")}>
                 {row.status === "paused" ? "Resume" : "Pause"}
-              </button>
-              <button type="button" className="btn btn-ghost btn-small" onClick={() => push("Edit drawer coming soon", "info")}>
+              </Button>
+              <Button type="button" variant="secondary" className="btn-small" onClick={() => push("Edit drawer coming soon", "info")}>
                 Edit destination
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="btn btn-ghost btn-small danger"
+                variant="danger"
+                className="btn-small danger"
                 onClick={() => {
                   setSelected(row);
                   setConfirmOpen(true);
                 }}
               >
                 Soft delete
-              </button>
+              </Button>
             </div>
           </details>
         ),
@@ -166,21 +214,55 @@ export default function LinksPage() {
         </div>
 
         <div className="links-toolbar">
-          <input
+          <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search by name or code"
             aria-label="Search links"
           />
-          <Link href="/dashboard/links/new" className="btn">
+          <Button type="button" onClick={() => setDrawerOpen(true)}>
             Create Link
+          </Button>
+          <Link href="/dashboard/links/new" className="btn btn-ghost">
+            Full page
           </Link>
         </div>
       </header>
 
-      <section className="card section">
+      <Card className="section">
         <DataTable columns={columns} rows={filteredRows} rowKey={(row) => row.id} emptyText="No links found" />
-      </section>
+      </Card>
+
+      <Drawer open={drawerOpen} title="Create link" onClose={() => setDrawerOpen(false)}>
+        <form className="auth-form" onSubmit={onCreateFromDrawer}>
+          <Stack gap={3}>
+            <Input
+              label="Destination URL *"
+              value={destinationUrl}
+              onChange={(e) => setDestinationUrl(e.target.value)}
+              placeholder="https://example.com/landing"
+              type="url"
+              required
+            />
+
+            <Input
+              label="Title (optional)"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Main campaign"
+            />
+
+            <Input
+              label="Campaign tag (optional)"
+              value={campaignTag}
+              onChange={(e) => setCampaignTag(e.target.value)}
+              placeholder="fb-cpc"
+            />
+
+            <Button type="submit">Create link</Button>
+          </Stack>
+        </form>
+      </Drawer>
 
       <ConfirmDialog
         open={confirmOpen}
