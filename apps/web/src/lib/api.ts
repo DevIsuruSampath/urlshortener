@@ -16,8 +16,8 @@ export type StepCompleteResponse = {
   message?: string;
 };
 
-export type AuthPayload = {
-  email: string;
+export type AdminLoginPayload = {
+  username: string;
   password: string;
 };
 
@@ -59,11 +59,12 @@ export async function postStepComplete(payload: StepCompleteRequest): Promise<St
   return (await res.json()) as StepCompleteResponse;
 }
 
-export async function register(payload: AuthPayload): Promise<AuthResponse> {
-  const res = await fetch(`${env.apiBase}/auth/register`, {
+export async function adminLogin(payload: AdminLoginPayload): Promise<AuthResponse> {
+  const res = await fetch(`${env.apiBase}/admin/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -73,16 +74,26 @@ export async function register(payload: AuthPayload): Promise<AuthResponse> {
   return (await res.json()) as AuthResponse;
 }
 
-export async function login(payload: AuthPayload): Promise<AuthResponse> {
-  const res = await fetch(`${env.apiBase}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+export async function adminMe(): Promise<{ username: string; user_id: string }> {
+  const res = await fetch(`${env.apiBase}/admin/auth/me`, {
+    method: "GET",
+    credentials: "include",
   });
 
   if (!res.ok) {
     throw await parseError(res);
   }
 
-  return (await res.json()) as AuthResponse;
+  return (await res.json()) as { username: string; user_id: string };
+}
+
+export async function adminLogout(): Promise<void> {
+  const res = await fetch(`${env.apiBase}/admin/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
 }

@@ -14,11 +14,8 @@ export function SiteHeader() {
         </nav>
 
         <div className="auth-actions">
-          <Link href="/login" className="btn btn-ghost">
-            Login
-          </Link>
-          <Link href="/register" className="btn">
-            Register
+          <Link href="/login" className="btn">
+            Admin Login
           </Link>
         </div>
       </div>

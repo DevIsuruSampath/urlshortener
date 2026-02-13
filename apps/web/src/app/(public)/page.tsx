@@ -11,11 +11,11 @@ export default function LandingPage() {
           stats.
         </p>
         <div className="hero-actions">
-          <Link href="/register" className="btn">
-            Create Account
+          <Link href="/login" className="btn">
+            Admin Login
           </Link>
-          <Link href="/login" className="btn btn-ghost">
-            Sign In
+          <Link href="/admin" className="btn btn-ghost">
+            Open Admin
           </Link>
         </div>
       </section>
@@ -49,10 +49,10 @@ export default function LandingPage() {
       </section>
 
       <section className="section card cta-strip">
-        <h2>Ready to launch your monetized links?</h2>
-        <p className="muted">Start in minutes with secure defaults and scalable flow validation.</p>
-        <Link href="/register" className="btn">
-          Get Started
+        <h2>Ready to manage links in admin mode?</h2>
+        <p className="muted">Sign in and control links, flow rules, and analytics from one dashboard.</p>
+        <Link href="/login" className="btn">
+          Go to Admin Login
         </Link>
       </section>
     </div>

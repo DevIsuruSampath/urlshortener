@@ -6,6 +6,7 @@ const RESERVED = new Set([
   "health",
   "l",
   "login",
+  "admin",
   "register",
   "forgot-password",
   "verify-email",

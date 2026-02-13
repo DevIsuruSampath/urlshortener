@@ -5,10 +5,10 @@ export type DashboardNavItem = {
 };
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
-  { href: "/dashboard", label: "Overview", icon: "🏠" },
-  { href: "/dashboard/links", label: "Links", icon: "🔗" },
-  { href: "/dashboard/earnings", label: "Earnings", icon: "💰" },
-  { href: "/dashboard/withdrawals", label: "Withdrawals", icon: "🏦" },
-  { href: "/dashboard/tools", label: "Tools", icon: "🧰" },
-  { href: "/dashboard/settings", label: "Settings", icon: "⚙️" },
+  { href: "/admin", label: "Overview", icon: "🏠" },
+  { href: "/admin/links", label: "Links", icon: "🔗" },
+  { href: "/admin/earnings", label: "Earnings", icon: "💰" },
+  { href: "/admin/withdrawals", label: "Withdrawals", icon: "🏦" },
+  { href: "/admin/tools", label: "Tools", icon: "🧰" },
+  { href: "/admin/settings", label: "Settings", icon: "⚙️" },
 ];

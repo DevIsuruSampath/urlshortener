@@ -1,11 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 
-import { ApiError, login, register } from "@/lib/api";
-
-type Mode = "login" | "register";
+import { adminLogin, ApiError } from "@/lib/api";
 
 function friendlyAuthError(error: unknown): string {
   if (error instanceof TypeError) {
@@ -14,30 +11,25 @@ function friendlyAuthError(error: unknown): string {
 
   if (!(error instanceof ApiError)) return "Something went wrong. Please try again.";
 
-  if (error.status === 401) return "Invalid email or password.";
-  if (error.status === 409) return "Email already exists. Try logging in.";
+  if (error.status === 401) return "Invalid admin username or password.";
   if (error.status === 429) return "Too many attempts. Please wait one minute and try again.";
   if (error.status === 400) return error.message;
 
   return error.message || "Request failed. Please try again.";
 }
 
-export function AuthForm({ mode }: { mode: Mode }) {
-  const [email, setEmail] = useState("");
+export function AuthForm() {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  const isLogin = mode === "login";
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
-    if (!email.trim()) {
-      setError("Email is required.");
+    if (!username.trim()) {
+      setError("Username is required.");
       return;
     }
     if (!password.trim()) {
@@ -47,10 +39,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
     setLoading(true);
     try {
-      const res = isLogin ? await login({ email, password }) : await register({ email, password });
+      const res = await adminLogin({ username, password });
       localStorage.setItem("paidlink_access_token", res.access_token);
-      setSuccess(isLogin ? "Logged in successfully." : "Account created successfully.");
-      window.location.href = "/dashboard";
+      window.location.href = "/admin";
     } catch (err) {
       setError(friendlyAuthError(err));
     } finally {
@@ -60,18 +51,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <section className="card auth-card">
-      <h1>{isLogin ? "Login" : "Create account"}</h1>
-      <p className="muted">{isLogin ? "Access your dashboard securely." : "Start creating protected paid links."}</p>
+      <h1>Admin login</h1>
+      <p className="muted">Single-user admin access.</p>
 
       <form className="auth-form" onSubmit={onSubmit}>
         <label>
-          <span>Email</span>
+          <span>Username</span>
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            placeholder="you@example.com"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            placeholder="admin"
             required
           />
         </label>
@@ -82,36 +73,18 @@ export function AuthForm({ mode }: { mode: Mode }) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoComplete={isLogin ? "current-password" : "new-password"}
+            autoComplete="current-password"
             placeholder="••••••••"
-            minLength={8}
             required
           />
         </label>
 
         {error ? <p className="auth-error">{error}</p> : null}
-        {success ? <p className="auth-success">{success}</p> : null}
 
         <button className="btn" disabled={loading} type="submit">
-          {loading ? "Please wait..." : isLogin ? "Login" : "Register"}
+          {loading ? "Please wait..." : "Login"}
         </button>
       </form>
-
-      <div className="auth-links muted">
-        {isLogin ? (
-          <>
-            <Link href="/forgot-password">Forgot password?</Link>
-            <span>·</span>
-            <Link href="/register">Create account</Link>
-          </>
-        ) : (
-          <>
-            <Link href="/login">Already have an account?</Link>
-            <span>·</span>
-            <Link href="/verify-email">Verify email</Link>
-          </>
-        )}
-      </div>
     </section>
   );
 }

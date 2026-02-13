@@ -9,16 +9,16 @@ type BarMeta = {
 };
 
 function getBarMeta(pathname: string): BarMeta {
-  if (pathname.startsWith("/dashboard/links/new")) {
-    return { title: "Create Link", action: { href: "/dashboard/links", label: "Back to Links" } };
+  if (pathname.startsWith("/admin/links/new")) {
+    return { title: "Create Link", action: { href: "/admin/links", label: "Back to Links" } };
   }
-  if (pathname.startsWith("/dashboard/links")) {
-    return { title: "Links", action: { href: "/dashboard/links/new", label: "Create Link" } };
+  if (pathname.startsWith("/admin/links")) {
+    return { title: "Links", action: { href: "/admin/links/new", label: "Create Link" } };
   }
-  if (pathname.startsWith("/dashboard/earnings")) return { title: "Earnings" };
-  if (pathname.startsWith("/dashboard/withdrawals")) return { title: "Withdrawals" };
-  if (pathname.startsWith("/dashboard/settings")) return { title: "Settings" };
-  if (pathname.startsWith("/dashboard/tools")) return { title: "Tools" };
+  if (pathname.startsWith("/admin/earnings")) return { title: "Earnings" };
+  if (pathname.startsWith("/admin/withdrawals")) return { title: "Withdrawals" };
+  if (pathname.startsWith("/admin/settings")) return { title: "Settings" };
+  if (pathname.startsWith("/admin/tools")) return { title: "Tools" };
   return { title: "Overview" };
 }
 
