@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from logging.config import fileConfig
+import os
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
@@ -9,6 +10,11 @@ from app.db.base import Base
 from app.db.models import *  # noqa: F401,F403
 
 config = context.config
+
+# Prefer runtime DATABASE_URL when available
+runtime_db_url = os.getenv("DATABASE_URL")
+if runtime_db_url:
+    config.set_main_option("sqlalchemy.url", runtime_db_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

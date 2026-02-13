@@ -42,6 +42,8 @@ Set API env:
 ```env
 PUBLIC_WEB_BASE_URL=https://urlshortener.devisuru.ggff.net
 PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
+DATABASE_AUTO_CREATE=true
+RUN_MIGRATIONS=true
 ```
 
 A Next route handler (`apps/web/src/app/[code]/route.ts`) forwards short-code hits from `urlshortener.../{code}` to API, so short links work on main domain without nginx.
