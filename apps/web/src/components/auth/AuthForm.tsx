@@ -8,6 +8,10 @@ import { ApiError, login, register } from "@/lib/api";
 type Mode = "login" | "register";
 
 function friendlyAuthError(error: unknown): string {
+  if (error instanceof TypeError) {
+    return "Network error contacting API. Please try again in a minute.";
+  }
+
   if (!(error instanceof ApiError)) return "Something went wrong. Please try again.";
 
   if (error.status === 401) return "Invalid email or password.";

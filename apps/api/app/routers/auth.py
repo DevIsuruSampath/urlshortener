@@ -1,5 +1,8 @@
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -10,6 +13,7 @@ from app.db.session import get_db
 from app.schemas.auth import LoginIn, RegisterIn, TokenOut
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def client_ip(request: Request) -> str:
@@ -40,9 +44,32 @@ def register(payload: RegisterIn, request: Request, db: Session = Depends(get_db
     if len(payload.password) < 8:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters")
 
-    user = User(email=payload.email, password_hash=hash_password(payload.password))
+    try:
+        password_hash = hash_password(payload.password)
+    except Exception as exc:  # pragma: no cover - runtime guard
+        logger.exception("Password hashing failed during registration")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Registration is temporarily unavailable. Please try again.",
+        ) from exc
+
+    user = User(email=payload.email, password_hash=password_hash)
     db.add(user)
-    db.commit()
+
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        # Defensive fallback for race conditions on email uniqueness.
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered") from exc
+    except SQLAlchemyError as exc:  # pragma: no cover - runtime guard
+        db.rollback()
+        logger.exception("Database error during registration")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Registration is temporarily unavailable. Please try again.",
+        ) from exc
+
     db.refresh(user)
 
     token = create_access_token(str(user.id))
