@@ -52,10 +52,7 @@ class Settings(BaseModel):
         os.getenv("APP_ENV", "development").lower() == "production",
     )
 
-    admin_email: str = os.getenv("ADMIN_EMAIL", "admin@urlshortener.local")
     admin_setup_token: str = os.getenv("ADMIN_SETUP_TOKEN", "")
-    admin_password_hash: str = os.getenv("ADMIN_PASSWORD_HASH", "")
-    admin_password: str = os.getenv("ADMIN_PASSWORD", "change_this_admin_password")  # compatibility fallback
     admin_session_cookie_name: str = os.getenv("ADMIN_SESSION_COOKIE_NAME", "paidlink_admin_session")
 
     cookie_secure: bool = _parse_bool(os.getenv("COOKIE_SECURE"), os.getenv("APP_ENV", "development").lower() == "production")

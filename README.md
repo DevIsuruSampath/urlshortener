@@ -46,9 +46,7 @@ PUBLIC_WEB_BASE_URL=https://urlshortener.devisuru.ggff.net
 PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
 CORS_ORIGINS=https://urlshortener.devisuru.ggff.net
 ADMIN_API_TOKENS=replace_token_1,replace_token_2
-ADMIN_EMAIL=admin@urlshortener.local
 ADMIN_SETUP_TOKEN=replace_with_long_random_bootstrap_token
-ADMIN_PASSWORD_HASH=replace_with_bcrypt_or_argon2_hash
 ADMIN_SESSION_COOKIE_NAME=paidlink_admin_session
 COOKIE_SECURE=true
 COOKIE_SAMESITE=none
@@ -119,6 +117,7 @@ Admin auth security rules:
   - Recommended for cross-subdomain reliability: `COOKIE_SAMESITE=none` + `COOKIE_SECURE=true`
 - Admin account is stored with secure password hash only (no plain password in DB):
   - `email`, `password_hash`, `created_at`, `updated_at`
+- Admin credentials are not read from env; bootstrap + reset operate through DB (`/admin/setup` or CLI reset).
 - Setup issues 10 one-time recovery codes (shown once, hashed in DB); login can use recovery code when password is unavailable.
 - Security audit events are persisted and visible on `/admin/settings` (latest 50):
   - `admin_setup_completed`, `admin_login_success`, `admin_login_failed`, `admin_password_reset_cli`, `developer_api_token_used`, `link_blocked`, `link_unblocked`, `settings_changed`
