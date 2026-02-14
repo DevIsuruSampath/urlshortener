@@ -59,7 +59,7 @@ export async function postStepComplete(payload: StepCompleteRequest): Promise<St
   return (await res.json()) as StepCompleteResponse;
 }
 
-const ADMIN_AUTH_BASE = "/api/admin/auth";
+const ADMIN_AUTH_BASE = `${env.apiBase}/admin/auth`;
 
 export async function adminLogin(payload: AdminLoginPayload): Promise<AuthResponse> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/login`, {
