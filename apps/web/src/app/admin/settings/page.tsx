@@ -12,7 +12,6 @@ import {
   adminFinalizeDeveloperTokenRotation,
   adminListSecurityEvents,
   adminMe,
-  adminRecordSecurityEvent,
   adminRegenerateDeveloperToken,
   ApiError,
   type AdminSecurityEvent,
@@ -137,15 +136,6 @@ export default function SettingsPage() {
     };
   }, []);
 
-  async function trackSecurityEvent(event_type: "settings_changed" | "link_blocked" | "link_unblocked", details: Record<string, unknown>) {
-    try {
-      const row = await adminRecordSecurityEvent({ event_type, details });
-      setSecurityEvents((prev) => [row, ...prev].slice(0, 50));
-    } catch {
-      // best-effort audit event logging
-    }
-  }
-
   async function onRegenerateDeveloperToken() {
     setRotatingToken(true);
     try {
@@ -184,7 +174,7 @@ export default function SettingsPage() {
     }
   }
 
-  async function onPasswordChange(e: FormEvent<HTMLFormElement>) {
+  function onPasswordChange(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
@@ -197,29 +187,22 @@ export default function SettingsPage() {
       return;
     }
 
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-    push("Password change saved (UI placeholder).", "success");
-    await trackSecurityEvent("settings_changed", { section: "admin_access", action: "change_password_placeholder" });
+    push("Password change API is not implemented yet.", "info");
   }
 
-  async function onFlowDefaultsSave(e: FormEvent<HTMLFormElement>) {
+  function onFlowDefaultsSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    push("Flow defaults updated.", "success");
-    await trackSecurityEvent("settings_changed", { section: "flow_defaults" });
+    push("Flow defaults API is not implemented yet.", "info");
   }
 
-  async function onAntiAbuseSave(e: FormEvent<HTMLFormElement>) {
+  function onAntiAbuseSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    push("Anti-abuse rules updated.", "success");
-    await trackSecurityEvent("settings_changed", { section: "anti_abuse" });
+    push("Anti-abuse settings API is not implemented yet.", "info");
   }
 
-  async function onMonetizationSave(e: FormEvent<HTMLFormElement>) {
+  function onMonetizationSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    push("Monetization settings updated.", "success");
-    await trackSecurityEvent("settings_changed", { section: "monetization" });
+    push("Monetization settings API is not implemented yet.", "info");
   }
 
   return (

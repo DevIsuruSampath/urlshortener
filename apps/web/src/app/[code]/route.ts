@@ -30,9 +30,8 @@ function getApiBase() {
 
   try {
     const url = new URL(raw);
-    // Smart local fallback for docker-compose split services:
-    // browser uses localhost, server-side in web container should talk to api service.
-    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+    const isDockerWeb = process.env.HOSTNAME === "web" || process.env.DOCKER_ENV === "1";
+    if (isDockerWeb && (url.hostname === "localhost" || url.hostname === "127.0.0.1")) {
       url.hostname = "api";
     }
     return url.toString().replace(/\/$/, "");
@@ -54,18 +53,25 @@ export async function GET(req: NextRequest, context: { params: Promise<{ code: s
   }
 
   const target = `${apiBase}/${encodeURIComponent(code)}`;
+  const headers: Record<string, string> = {
+    "user-agent": req.headers.get("user-agent") || "",
+    "x-forwarded-proto": req.headers.get("x-forwarded-proto") || "https",
+  };
 
-  const upstream = await fetch(target, {
-    method: "GET",
-    redirect: "manual",
-    headers: {
-      "user-agent": req.headers.get("user-agent") || "",
-      "x-forwarded-for": req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "",
-      "x-forwarded-proto": req.headers.get("x-forwarded-proto") || "https",
-      host: req.headers.get("host") || "",
-    },
-    cache: "no-store",
-  });
+  const fwdFor = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "";
+  if (fwdFor) headers["x-forwarded-for"] = fwdFor;
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(target, {
+      method: "GET",
+      redirect: "manual",
+      headers,
+      cache: "no-store",
+    });
+  } catch {
+    return new Response("Bad Gateway", { status: 502 });
+  }
 
   if (upstream.status >= 300 && upstream.status < 400) {
     const location = upstream.headers.get("location");
@@ -74,8 +80,10 @@ export async function GET(req: NextRequest, context: { params: Promise<{ code: s
     }
   }
 
-  if (upstream.status === 404) {
-    return new Response("Not Found", { status: 404 });
+  if (upstream.status === 404) return new Response("Not Found", { status: 404 });
+  if (upstream.status === 429) return new Response("Too Many Requests", { status: 429 });
+  if (upstream.status === 400 || upstream.status === 401 || upstream.status === 409) {
+    return new Response("Link expired, restart.", { status: 410 });
   }
 
   return new Response("Bad Gateway", { status: 502 });

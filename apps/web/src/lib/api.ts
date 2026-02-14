@@ -119,7 +119,12 @@ async function parseError(res: Response): Promise<ApiError> {
     const data = await res.json();
     return new ApiError(res.status, data?.detail || data?.message || "Request failed");
   } catch {
-    return new ApiError(res.status, `Request failed (${res.status})`);
+    try {
+      const text = (await res.text()).trim();
+      return new ApiError(res.status, text || `Request failed (${res.status})`);
+    } catch {
+      return new ApiError(res.status, `Request failed (${res.status})`);
+    }
   }
 }
 

@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { useToast } from "@/components/ui/Toast";
-import { adminCreateLink, adminListLinks, adminRecordSecurityEvent, AdminLinkResponse, ApiError } from "@/lib/api";
+import { adminCreateLink, adminListLinks, AdminLinkResponse, ApiError } from "@/lib/api";
 
 type BlockedReason = "url safety" | "manual" | "abuse report";
 
@@ -99,13 +99,6 @@ function validateDestinationInput(value: string): string {
   return "";
 }
 
-function normalizeBlockedReason(value: string | null | undefined): BlockedReason {
-  const normalized = (value || "").trim().toLowerCase();
-  if (normalized === "url safety") return "url safety";
-  if (normalized === "abuse report") return "abuse report";
-  return "manual";
-}
-
 async function copyText(text: string): Promise<void> {
   if (typeof navigator === "undefined" || !navigator.clipboard) {
     throw new Error("Clipboard not available");
@@ -175,23 +168,6 @@ export default function LinksPage() {
         row.destination.toLowerCase().includes(q)
     );
   }, [rows, query]);
-
-  function updateRow(id: string, patch: Partial<LinkRow>) {
-    setRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
-  }
-
-  function logLinkSecurityEvent(type: "link_blocked" | "link_unblocked", row: LinkRow, reason?: string) {
-    void adminRecordSecurityEvent({
-      event_type: type,
-      details: {
-        link_id: row.id,
-        code: row.code,
-        reason: reason || "",
-      },
-    }).catch(() => {
-      // best-effort logging only
-    });
-  }
 
   async function onCreateInline(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -263,57 +239,25 @@ export default function LinksPage() {
               {
                 label: "Edit title",
                 onSelect: () => {
-                  const next = window.prompt("Edit title", row.title);
-                  if (next === null) return;
-                  updateRow(row.id, { title: next.trim() || "Untitled link" });
-                  push("Title updated", "success");
+                  push("Edit title API is not implemented yet.", "info");
                 },
               },
               {
                 label: "Edit destination",
                 onSelect: () => {
-                  const next = window.prompt("Edit destination URL", row.destination);
-                  if (next === null) return;
-                  const validation = validateDestinationInput(next);
-                  if (validation) {
-                    push(validation, "error");
-                    return;
-                  }
-                  updateRow(row.id, { destination: next.trim() });
-                  push("Destination updated", "success");
+                  push("Edit destination API is not implemented yet.", "info");
                 },
               },
               {
-                label: row.status === "paused" ? "Resume" : "Pause",
+                label: "Pause / Resume",
                 onSelect: () => {
-                  if (row.status === "blocked") {
-                    push("Unblock this link before pausing/resuming.", "info");
-                    return;
-                  }
-
-                  const nextStatus = row.status === "paused" ? "active" : "paused";
-                  updateRow(row.id, { status: nextStatus });
-                  push(nextStatus === "active" ? "Link resumed" : "Link paused", "success");
+                  push("Pause/resume API is not implemented yet.", "info");
                 },
               },
               {
-                label: row.status === "blocked" ? "Unblock" : "Block",
+                label: "Block / Unblock",
                 onSelect: () => {
-                  if (row.status === "blocked") {
-                    updateRow(row.id, { status: "active", blockedReason: undefined });
-                    push("Link unblocked", "success");
-                    logLinkSecurityEvent("link_unblocked", row);
-                    return;
-                  }
-
-                  const reasonInput = window.prompt(
-                    "Block reason (url safety / manual / abuse report)",
-                    "manual"
-                  );
-                  const reason = normalizeBlockedReason(reasonInput);
-                  updateRow(row.id, { status: "blocked", blockedReason: reason });
-                  push(`Link blocked (${reason})`, "info");
-                  logLinkSecurityEvent("link_blocked", row, reason);
+                  push("Block/unblock API is not implemented yet.", "info");
                 },
               },
               {
@@ -416,15 +360,13 @@ export default function LinksPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Delete link (placeholder)"
-        message={selected ? `Mark ${selected.title} as deleted?` : "Mark this link as deleted?"}
-        confirmLabel="Delete"
+        title="Delete link"
+        message={selected ? `Delete ${selected.title}?` : "Delete this link?"}
+        confirmLabel="OK"
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
           setConfirmOpen(false);
-          if (selected) {
-            push(`Deleted ${selected.title} (placeholder)`, "success");
-          }
+          push("Delete API is not implemented yet.", "info");
         }}
       />
     </main>
