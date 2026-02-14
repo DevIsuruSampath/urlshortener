@@ -13,10 +13,15 @@ type CreatedLinkView = {
 };
 
 function friendlyLinkError(error: unknown): string {
+  if (error instanceof TypeError) {
+    return "Network error contacting API. Please try again in a minute.";
+  }
+
   if (!(error instanceof ApiError)) return "Request failed. Please try again.";
 
   if (error.status === 401) return "Admin session expired. Please login again.";
   if (error.status === 400) return error.message;
+  if (error.status === 409) return error.message || "Alias already exists.";
   if (error.status === 429) return "Too many requests. Please wait and retry.";
 
   return error.message || "Request failed. Please try again.";

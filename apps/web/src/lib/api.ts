@@ -67,9 +67,21 @@ function authHeaders(contentType = false): HeadersInit {
 async function parseError(res: Response): Promise<ApiError> {
   try {
     const data = await res.json();
-    return new ApiError(res.status, data?.detail || "Request failed");
+    return new ApiError(res.status, data?.detail || data?.message || "Request failed");
   } catch {
     return new ApiError(res.status, `Request failed (${res.status})`);
+  }
+}
+
+async function fetchAdminLinksWithFallback(init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(ADMIN_LINKS_BASE, init);
+  } catch (error) {
+    if (!(error instanceof TypeError)) {
+      throw error;
+    }
+
+    return await fetch(ADMIN_LINKS_PROXY_BASE, init);
   }
 }
 
@@ -90,6 +102,7 @@ export async function postStepComplete(payload: StepCompleteRequest): Promise<St
 
 const ADMIN_AUTH_BASE = `${env.apiBase}/admin/auth`;
 const ADMIN_LINKS_BASE = `${env.apiBase}/admin/links`;
+const ADMIN_LINKS_PROXY_BASE = `/api/admin/links`;
 
 export async function adminLogin(payload: AdminLoginPayload): Promise<AuthResponse> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/login`, {
@@ -133,7 +146,7 @@ export async function adminLogout(): Promise<void> {
 }
 
 export async function adminCreateLink(payload: AdminLinkCreatePayload): Promise<AdminLinkResponse> {
-  const res = await fetch(ADMIN_LINKS_BASE, {
+  const res = await fetchAdminLinksWithFallback({
     method: "POST",
     headers: authHeaders(true),
     body: JSON.stringify({ destination_url: payload.destination_url, tier: payload.tier || "standard" }),
@@ -148,7 +161,7 @@ export async function adminCreateLink(payload: AdminLinkCreatePayload): Promise<
 }
 
 export async function adminListLinks(): Promise<AdminLinkResponse[]> {
-  const res = await fetch(ADMIN_LINKS_BASE, {
+  const res = await fetchAdminLinksWithFallback({
     method: "GET",
     headers: authHeaders(),
     credentials: "include",
