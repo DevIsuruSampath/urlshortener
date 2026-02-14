@@ -77,22 +77,31 @@ settings = Settings()
 
 def tiers_file_path() -> Path | None:
     env_path = os.getenv("TIERS_FILE_PATH")
-    candidates = []
+    candidates: list[Path] = []
     if env_path:
         candidates.append(Path(env_path))
 
     resolved = Path(__file__).resolve()
+
+    # Try parent-relative package paths safely (works in both local repo and container layouts).
+    for parent in resolved.parents:
+        candidates.append(parent / "packages" / "shared" / "tiers.json")
+
+    # Explicit container mount fallbacks.
     candidates.extend(
         [
-            # host workspace layout
-            resolved.parents[4] / "packages" / "shared" / "tiers.json",
-            # container mounts
             Path("/packages/shared/tiers.json"),
             Path("/app/packages/shared/tiers.json"),
         ]
     )
 
+    seen: set[str] = set()
     for path in candidates:
+        key = str(path)
+        if key in seen:
+            continue
+        seen.add(key)
+
         if path.exists():
             return path
     return None
