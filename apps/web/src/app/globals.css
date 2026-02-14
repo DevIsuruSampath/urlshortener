@@ -1011,6 +1011,35 @@ a { color: inherit; text-decoration: none; }
   padding: var(--space-2) var(--space-3);
 }
 
+.quick-create-row {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr auto;
+  gap: var(--space-3);
+  align-items: end;
+  margin-bottom: var(--space-3);
+}
+
+.quick-create-actions {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 170px;
+}
+
+.quick-create-actions p {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+.status-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.status-cell p {
+  margin: 0;
+  font-size: 0.74rem;
+}
+
 .actions-menu {
   position: relative;
 }
@@ -1163,6 +1192,14 @@ a { color: inherit; text-decoration: none; }
 
   .links-toolbar input {
     flex: 1;
+    min-width: 0;
+  }
+
+  .quick-create-row {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-create-actions {
     min-width: 0;
   }
 

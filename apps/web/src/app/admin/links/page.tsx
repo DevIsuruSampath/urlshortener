@@ -8,13 +8,14 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { Drawer } from "@/components/ui/Drawer";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { useToast } from "@/components/ui/Toast";
 import { adminCreateLink, adminListLinks, AdminLinkResponse, ApiError } from "@/lib/api";
+
+type BlockedReason = "url safety" | "manual" | "abuse report";
 
 type LinkRow = {
   id: string;
@@ -23,19 +24,19 @@ type LinkRow = {
   shortUrl: string;
   destination: string;
   status: "active" | "paused" | "blocked";
+  blockedReason?: BlockedReason;
   webSteps: number;
   appSteps: number;
   clicks: number | null;
   valid: number | null;
   invalid: number | null;
-  campaignTag?: string;
   createdAt: string;
 };
 
 function mapApiRow(row: AdminLinkResponse): LinkRow {
   return {
     id: row.id,
-    title: `Link ${row.code}`,
+    title: `Untitled link`,
     code: row.code,
     shortUrl: row.short_url,
     destination: row.destination_url,
@@ -49,9 +50,23 @@ function mapApiRow(row: AdminLinkResponse): LinkRow {
   };
 }
 
-function statusBadge(status: LinkRow["status"]) {
-  const tone = status === "active" ? "success" : status === "paused" ? "warning" : "danger";
-  return <Badge tone={tone}>{status}</Badge>;
+function statusBadge(row: LinkRow) {
+  const tone = row.status === "active" ? "success" : row.status === "paused" ? "warning" : "danger";
+  const tooltip =
+    row.status === "blocked"
+      ? `Blocked (reason: ${row.blockedReason || "manual"})`
+      : row.status === "paused"
+        ? "Paused by admin"
+        : "Active";
+
+  return (
+    <div className="status-cell">
+      <Badge tone={tone} className={`status-badge ${row.status}`} title={tooltip}>
+        {row.status}
+      </Badge>
+      {row.status === "blocked" ? <p className="muted">reason: {row.blockedReason || "manual"}</p> : null}
+    </div>
+  );
 }
 
 function statValue(value: number | null) {
@@ -66,6 +81,36 @@ function destinationPreview(url: string) {
   } catch {
     return url.length > 34 ? `${url.slice(0, 34)}…` : url;
   }
+}
+
+function validateDestinationInput(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "Destination URL is required.";
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "Destination URL must use http:// or https:// only.";
+    }
+  } catch {
+    return "Enter a valid destination URL (http/https only).";
+  }
+
+  return "";
+}
+
+function normalizeBlockedReason(value: string | null | undefined): BlockedReason {
+  const normalized = (value || "").trim().toLowerCase();
+  if (normalized === "url safety") return "url safety";
+  if (normalized === "abuse report") return "abuse report";
+  return "manual";
+}
+
+async function copyText(text: string): Promise<void> {
+  if (typeof navigator === "undefined" || !navigator.clipboard) {
+    throw new Error("Clipboard not available");
+  }
+  await navigator.clipboard.writeText(text);
 }
 
 function friendlyLinkError(error: unknown): string {
@@ -86,12 +131,11 @@ export default function LinksPage() {
   const [loadingRows, setLoadingRows] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [selected, setSelected] = useState<LinkRow | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  const [destinationUrl, setDestinationUrl] = useState("");
   const [title, setTitle] = useState("");
-  const [campaignTag, setCampaignTag] = useState("");
+  const [destinationUrl, setDestinationUrl] = useState("");
+  const [destinationError, setDestinationError] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -119,28 +163,37 @@ export default function LinksPage() {
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return rows;
-    return rows.filter((row) => row.title.toLowerCase().includes(q) || row.code.toLowerCase().includes(q));
+    return rows.filter(
+      (row) =>
+        row.title.toLowerCase().includes(q) ||
+        row.code.toLowerCase().includes(q) ||
+        row.destination.toLowerCase().includes(q)
+    );
   }, [rows, query]);
 
-  async function onCreateFromDrawer(e: FormEvent<HTMLFormElement>) {
+  function updateRow(id: string, patch: Partial<LinkRow>) {
+    setRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  }
+
+  async function onCreateInline(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!destinationUrl.trim()) return;
+
+    const validation = validateDestinationInput(destinationUrl);
+    setDestinationError(validation);
+    if (validation) return;
 
     setCreating(true);
     try {
       const created = await adminCreateLink({ destination_url: destinationUrl.trim(), tier: "standard" });
       const mapped = mapApiRow(created);
-      mapped.title = title.trim() || mapped.title;
-      mapped.campaignTag = campaignTag.trim() || undefined;
+      mapped.title = title.trim() || "Untitled link";
 
       setRows((prev) => [mapped, ...prev]);
-
-      setDrawerOpen(false);
       setDestinationUrl("");
       setTitle("");
-      setCampaignTag("");
+      setDestinationError("");
 
-      push("Link created", "success");
+      push("Link created successfully", "success");
     } catch (error) {
       push(friendlyLinkError(error), "error");
     } finally {
@@ -150,7 +203,7 @@ export default function LinksPage() {
 
   const columns = useMemo<DataTableColumn<LinkRow>[]>(
     () => [
-      { key: "title", header: "Name", render: (row) => row.title || "Untitled" },
+      { key: "title", header: "Title", render: (row) => row.title || "Untitled link" },
       {
         key: "shortUrl",
         header: "Short URL",
@@ -172,7 +225,7 @@ export default function LinksPage() {
           </p>
         ),
       },
-      { key: "status", header: "Status", render: (row) => statusBadge(row.status) },
+      { key: "status", header: "Status", render: (row) => statusBadge(row) },
       {
         key: "steps",
         header: "Steps (web/app)",
@@ -189,11 +242,81 @@ export default function LinksPage() {
         render: (row) => (
           <DropdownMenu
             items={[
-              { label: "View", onSelect: () => push("View page coming soon", "info") },
-              { label: "Edit", onSelect: () => push("Edit drawer coming soon", "info") },
+              {
+                label: "Edit title",
+                onSelect: () => {
+                  const next = window.prompt("Edit title", row.title);
+                  if (next === null) return;
+                  updateRow(row.id, { title: next.trim() || "Untitled link" });
+                  push("Title updated", "success");
+                },
+              },
+              {
+                label: "Edit destination",
+                onSelect: () => {
+                  const next = window.prompt("Edit destination URL", row.destination);
+                  if (next === null) return;
+                  const validation = validateDestinationInput(next);
+                  if (validation) {
+                    push(validation, "error");
+                    return;
+                  }
+                  updateRow(row.id, { destination: next.trim() });
+                  push("Destination updated", "success");
+                },
+              },
               {
                 label: row.status === "paused" ? "Resume" : "Pause",
-                onSelect: () => push(row.status === "paused" ? "Link resumed" : "Link paused", "info"),
+                onSelect: () => {
+                  if (row.status === "blocked") {
+                    push("Unblock this link before pausing/resuming.", "info");
+                    return;
+                  }
+
+                  const nextStatus = row.status === "paused" ? "active" : "paused";
+                  updateRow(row.id, { status: nextStatus });
+                  push(nextStatus === "active" ? "Link resumed" : "Link paused", "success");
+                },
+              },
+              {
+                label: row.status === "blocked" ? "Unblock" : "Block",
+                onSelect: () => {
+                  if (row.status === "blocked") {
+                    updateRow(row.id, { status: "active", blockedReason: undefined });
+                    push("Link unblocked", "success");
+                    return;
+                  }
+
+                  const reasonInput = window.prompt(
+                    "Block reason (url safety / manual / abuse report)",
+                    "manual"
+                  );
+                  const reason = normalizeBlockedReason(reasonInput);
+                  updateRow(row.id, { status: "blocked", blockedReason: reason });
+                  push(`Link blocked (${reason})`, "info");
+                },
+              },
+              {
+                label: "Copy short link",
+                onSelect: () => {
+                  copyText(row.shortUrl)
+                    .then(() => push("Short link copied", "success"))
+                    .catch(() => push("Could not copy short link", "error"));
+                },
+              },
+              {
+                label: "Copy destination",
+                onSelect: () => {
+                  copyText(row.destination)
+                    .then(() => push("Destination copied", "success"))
+                    .catch(() => push("Could not copy destination", "error"));
+                },
+              },
+              {
+                label: "View stats",
+                onSelect: () => {
+                  window.location.href = `/admin/stats?code=${encodeURIComponent(row.code)}`;
+                },
               },
               {
                 label: "Delete",
@@ -216,23 +339,49 @@ export default function LinksPage() {
       <header className="dash-page-head dash-page-head-actions">
         <div>
           <h1>Links</h1>
-          <p className="muted">Create links and manage status, safety, and traffic quality.</p>
+          <p className="muted">Admin control panel for link safety, quality, and status.</p>
         </div>
 
         <div className="links-toolbar">
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name or code"
+            placeholder="Search by title, code, or destination"
             aria-label="Search links"
           />
-          <Button type="button" variant="secondary" onClick={() => setDrawerOpen(true)}>
-            Quick create
-          </Button>
         </div>
       </header>
 
       <Card className="section">
+        <form className="quick-create-row" onSubmit={onCreateInline}>
+          <Input
+            label="Title (optional)"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Untitled link"
+          />
+
+          <Input
+            label="Destination URL *"
+            value={destinationUrl}
+            onChange={(e) => {
+              const next = e.target.value;
+              setDestinationUrl(next);
+              setDestinationError(next.trim() ? validateDestinationInput(next) : "");
+            }}
+            placeholder="https://example.com/landing"
+            type="url"
+            required
+          />
+
+          <div className="quick-create-actions">
+            <Button type="submit" loading={creating}>
+              Quick create
+            </Button>
+            {destinationError ? <p className="auth-error">{destinationError}</p> : <p className="muted">http/https only</p>}
+          </div>
+        </form>
+
         {loadingRows ? (
           <Stack gap={2}>
             <Skeleton className="ui-skeleton-line" />
@@ -244,39 +393,6 @@ export default function LinksPage() {
           <DataTable columns={columns} rows={filteredRows} rowKey={(row) => row.id} emptyText="No links found" />
         )}
       </Card>
-
-      <Drawer open={drawerOpen} title="Create link" onClose={() => setDrawerOpen(false)}>
-        <form className="auth-form" onSubmit={onCreateFromDrawer}>
-          <Stack gap={3}>
-            <Input
-              label="Destination URL *"
-              value={destinationUrl}
-              onChange={(e) => setDestinationUrl(e.target.value)}
-              placeholder="https://example.com/landing"
-              type="url"
-              required
-            />
-
-            <Input
-              label="Title (optional)"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Main campaign"
-            />
-
-            <Input
-              label="Campaign tag (optional)"
-              value={campaignTag}
-              onChange={(e) => setCampaignTag(e.target.value)}
-              placeholder="fb-cpc"
-            />
-
-            <Button type="submit" loading={creating}>
-              Create link
-            </Button>
-          </Stack>
-        </form>
-      </Drawer>
 
       <ConfirmDialog
         open={confirmOpen}
