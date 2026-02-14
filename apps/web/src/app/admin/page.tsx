@@ -41,7 +41,7 @@ export default function DashboardHome() {
     <main className="dash-page">
       <header className="dash-page-head">
         <h1>Overview</h1>
-        <p className="muted">Monitor click quality, conversion health, and payout readiness.</p>
+        <p className="muted">Monitor traffic quality, conversion health, and withdrawal readiness.</p>
       </header>
 
       <section className="dash-cards-grid">

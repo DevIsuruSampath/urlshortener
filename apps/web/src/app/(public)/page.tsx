@@ -7,8 +7,8 @@ export default function LandingPage() {
         <p className="eyebrow">Monetized Link Platform</p>
         <h1>Short links, safer flow, real payout tracking.</h1>
         <p className="muted">
-          PaidLink helps publishers monetize traffic with anti-bypass controls, server-verified steps, and transparent
-          stats.
+          PaidLink gives admins tighter control over monetized traffic with anti-bypass controls, server-verified steps,
+          and transparent stats.
         </p>
         <div className="hero-actions">
           <Link href="/login" className="btn">

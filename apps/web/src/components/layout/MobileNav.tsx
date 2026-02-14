@@ -12,7 +12,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="dash-bottom-nav" aria-label="Dashboard mobile navigation">
+    <nav className="dash-bottom-nav" aria-label="Admin mobile navigation">
       {MOBILE_NAV_ITEMS.map((item) => (
         <Link key={item.href} href={item.href} className={`dash-bottom-item ${isActivePath(pathname, item.href) ? "active" : ""}`}>
           <span aria-hidden>{item.icon}</span>

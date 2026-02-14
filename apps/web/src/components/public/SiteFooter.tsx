@@ -6,7 +6,7 @@ export function SiteFooter() {
       <div className="container footer-grid">
         <div>
           <p className="brand">PaidLink</p>
-          <p className="muted">Secure paid-link shortener for publishers and performance marketers.</p>
+          <p className="muted">Secure paid-link shortener for admin-managed campaigns and performance traffic.</p>
         </div>
 
         <nav className="footer-links" aria-label="Legal">

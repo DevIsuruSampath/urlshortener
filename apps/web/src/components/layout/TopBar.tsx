@@ -25,7 +25,7 @@ export function TopBar() {
   const meta = getBarMeta(pathname);
 
   return (
-    <header className="dash-topbar card" aria-label="Dashboard page header">
+    <header className="dash-topbar card" aria-label="Admin page header">
       <p className="dash-topbar-title">{meta.title}</p>
       {meta.action ? (
         <div className="dash-topbar-actions">
