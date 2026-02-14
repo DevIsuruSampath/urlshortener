@@ -33,11 +33,11 @@ const chartRows = [
 ];
 
 const topLinks = [
-  { code: "a9x3k", clicks: 640, valid: 486, earnings: "$5.21" },
-  { code: "pro77", clicks: 401, valid: 289, earnings: "$3.60" },
-  { code: "mobi2", clicks: 311, valid: 245, earnings: "$2.94" },
-  { code: "dlp20", clicks: 268, valid: 198, earnings: "$2.41" },
-];
+  { code: "a9x3k", clicks: 640, valid: 486, invalid: 96, earnings: "$5.21", status: "active" },
+  { code: "pro77", clicks: 401, valid: 289, invalid: 78, earnings: "$3.60", status: "active" },
+  { code: "mobi2", clicks: 311, valid: 245, invalid: 51, earnings: "$2.94", status: "paused" },
+  { code: "dlp20", clicks: 268, valid: 198, invalid: 49, earnings: "$2.41", status: "blocked" },
+] as const;
 
 const activity = [
   { time: "16:02", event: "Flow complete", detail: "a9x3k · valid completion" },
@@ -45,6 +45,11 @@ const activity = [
   { time: "15:56", event: "Invalid", detail: "duplicate within 24h · mobi2" },
   { time: "15:52", event: "Flow started", detail: "new session · dlp20" },
 ];
+
+function percent(part: number, total: number): string {
+  if (total <= 0) return "0.0%";
+  return `${((part / total) * 100).toFixed(1)}%`;
+}
 
 export default function DashboardHome() {
   const threshold = 250;
@@ -122,8 +127,11 @@ export default function DashboardHome() {
               <thead>
                 <tr>
                   <th>Code</th>
+                  <th>Status</th>
                   <th>Clicks</th>
                   <th>Valid</th>
+                  <th>CVR</th>
+                  <th>Invalid %</th>
                   <th>Earnings</th>
                 </tr>
               </thead>
@@ -131,8 +139,13 @@ export default function DashboardHome() {
                 {topLinks.map((row) => (
                   <tr key={row.code}>
                     <td data-label="Code">{row.code}</td>
+                    <td data-label="Status">
+                      <span className={`status-badge ${row.status}`}>{row.status}</span>
+                    </td>
                     <td data-label="Clicks">{row.clicks}</td>
                     <td data-label="Valid">{row.valid}</td>
+                    <td data-label="CVR">{percent(row.valid, row.clicks)}</td>
+                    <td data-label="Invalid %">{percent(row.invalid, row.clicks)}</td>
                     <td data-label="Earnings">{row.earnings}</td>
                   </tr>
                 ))}
