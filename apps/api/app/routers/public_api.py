@@ -18,7 +18,7 @@ from app.services.url_safety import validate_public_destination_url
 
 router = APIRouter()
 
-ALIAS_RE = re.compile(r"^[A-Za-z0-9_-]{4,32}$")
+ALIAS_RE = re.compile(r"^[A-Za-z0-9_-]{4,20}$")
 
 
 def _error(message: str, status_code: int = 400) -> JSONResponse:
@@ -37,7 +37,7 @@ def _unique_code(db: Session) -> str:
 def _normalized_format(value: str | None) -> str:
     fmt = (value or "json").strip().lower()
     if fmt not in {"json", "text"}:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="format must be 'json' or 'text'")
+        raise ValueError("format must be 'json' or 'text'")
     return fmt
 
 
@@ -50,10 +50,7 @@ def _validate_alias(alias: str | None) -> str | None:
         return None
 
     if not ALIAS_RE.fullmatch(value):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="alias must be 4-32 chars: letters, numbers, _ or -",
-        )
+        raise ValueError("alias must be 4-20 chars: letters, numbers, _ or -")
 
     return value
 
@@ -79,8 +76,8 @@ def _create_short_link(
 
     try:
         final_alias = _validate_alias(alias)
-    except HTTPException as exc:
-        return _error(str(exc.detail), status_code=exc.status_code)
+    except ValueError as exc:
+        return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
 
     if final_alias:
         exists = db.execute(select(Link).where(Link.code == final_alias)).scalar_one_or_none()
@@ -135,7 +132,10 @@ def public_api_get(
     format: str | None = Query(default=None),
     db: Session = Depends(get_db),
 ):
-    output_format = _normalized_format(format)
+    try:
+        output_format = _normalized_format(format)
+    except ValueError as exc:
+        return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
 
     if not api:
         return _error("Missing required query param: api")
@@ -155,7 +155,10 @@ async def _parse_post_payload(request: Request) -> dict[str, Any]:
     ctype = (request.headers.get("content-type") or "").lower()
 
     if "application/json" in ctype:
-        payload = await request.json()
+        try:
+            payload = await request.json()
+        except ValueError:
+            return {}
         return payload if isinstance(payload, dict) else {}
 
     if "application/x-www-form-urlencoded" in ctype or "multipart/form-data" in ctype:
@@ -173,7 +176,10 @@ async def public_api_post(request: Request, db: Session = Depends(get_db)):
     api_token = str(query.get("api") or body.get("api") or "").strip()
     destination_url = str(query.get("url") or body.get("url") or "").strip()
     alias = query.get("alias") or body.get("alias")
-    output_format = _normalized_format((query.get("format") or body.get("format") or "json"))
+    try:
+        output_format = _normalized_format((query.get("format") or body.get("format") or "json"))
+    except ValueError as exc:
+        return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
 
     if not api_token:
         return _error("Missing required param: api")

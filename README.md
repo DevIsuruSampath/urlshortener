@@ -77,3 +77,9 @@ GPLinks-style shortener API (`/api`):
   - `GET /api?api=TOKEN&url=https://example.com&alias=myalias&format=text`
 - POST support (json or form):
   - `POST /api` with `api`, `url`, optional `alias`, optional `format=text|json`
+
+Validation rules:
+- `api` must match `ADMIN_API_TOKEN`
+- `url` must be `http://` or `https://` and pass public URL safety checks (no localhost/private/internal targets)
+- `alias` (optional) must be `4-20` chars (`A-Z`, `a-z`, `0-9`, `_`, `-`) and unique
+- `format` (optional) must be `json` or `text`
