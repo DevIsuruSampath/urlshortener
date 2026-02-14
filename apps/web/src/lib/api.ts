@@ -18,7 +18,8 @@ export type StepCompleteResponse = {
 
 export type AdminLoginPayload = {
   email: string;
-  password: string;
+  password?: string;
+  recovery_code?: string;
 };
 
 export type AdminLoginResponse = {
@@ -37,6 +38,12 @@ export type AdminSetupPayload = {
   email: string;
   password: string;
   confirm_password: string;
+  setup_token?: string;
+};
+
+export type AdminSetupResponse = {
+  initialized: boolean;
+  recovery_codes: string[];
 };
 
 export type AdminLinkCreatePayload = {
@@ -154,11 +161,20 @@ export async function adminStatus(): Promise<AdminStatusResponse> {
   return (await res.json()) as AdminStatusResponse;
 }
 
-export async function adminSetup(payload: AdminSetupPayload): Promise<AdminStatusResponse> {
+export async function adminSetup(payload: AdminSetupPayload): Promise<AdminSetupResponse> {
+  const headers = authHeaders(true) as Record<string, string>;
+  if (payload.setup_token) {
+    headers["x-admin-setup-token"] = payload.setup_token;
+  }
+
   const res = await fetch(`${ADMIN_AUTH_BASE}/setup`, {
     method: "POST",
-    headers: authHeaders(true),
-    body: JSON.stringify(payload),
+    headers,
+    body: JSON.stringify({
+      email: payload.email,
+      password: payload.password,
+      confirm_password: payload.confirm_password,
+    }),
     credentials: "include",
   });
 
@@ -166,7 +182,7 @@ export async function adminSetup(payload: AdminSetupPayload): Promise<AdminStatu
     throw await parseError(res);
   }
 
-  return (await res.json()) as AdminStatusResponse;
+  return (await res.json()) as AdminSetupResponse;
 }
 
 export async function adminLogout(): Promise<void> {

@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.core.security import hash_password
 from app.db.models.app_setting import AppSetting
 from app.db.models.user import User
+from app.services.admin_recovery_service import issue_recovery_codes
 
 ADMIN_INITIALIZED_KEY = "admin_initialized"
 
@@ -53,7 +54,7 @@ def is_admin_initialized(db: Session) -> bool:
     return get_primary_admin_user(db) is not None
 
 
-def create_admin_user_once(db: Session, *, email: str, password: str) -> User:
+def create_admin_user_once(db: Session, *, email: str, password: str) -> tuple[User, list[str]]:
     if is_admin_initialized(db) or get_primary_admin_user(db):
         raise ValueError("Admin already initialized")
 
@@ -63,6 +64,9 @@ def create_admin_user_once(db: Session, *, email: str, password: str) -> User:
 
     user = User(email=normalized_email, password_hash=hash_password(password))
     db.add(user)
+    db.flush()
+
+    recovery_codes = issue_recovery_codes(db, user, count=10)
     _set_admin_initialized(db, True)
 
     try:
@@ -72,7 +76,7 @@ def create_admin_user_once(db: Session, *, email: str, password: str) -> User:
         raise ValueError("Admin already initialized") from exc
 
     db.refresh(user)
-    return user
+    return user, recovery_codes
 
 
 def ensure_admin_user(db: Session) -> User:

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import secrets
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
@@ -16,8 +18,10 @@ from app.schemas.admin_auth import (
     AdminLoginOut,
     AdminMeOut,
     AdminSetupIn,
+    AdminSetupOut,
     DeveloperTokenOut,
 )
+from app.services.admin_recovery_service import consume_recovery_code
 from app.services.admin_user_service import create_admin_user_once, get_primary_admin_user, is_admin_initialized
 
 router = APIRouter()
@@ -43,6 +47,24 @@ def _require_https_for_setup(request: Request) -> None:
     if _is_https_request(request):
         return
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="HTTPS is required for admin setup")
+
+
+def _require_setup_token(request: Request) -> None:
+    required = settings.admin_setup_token.strip()
+    if not required:
+        return
+
+    provided = (
+        request.query_params.get("token")
+        or request.headers.get("x-admin-setup-token")
+        or request.headers.get("x-setup-token")
+        or ""
+    ).strip()
+
+    if provided and secrets.compare_digest(provided, required):
+        return
+
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid setup token")
 
 
 def _enforce_action_rate_limit(request: Request, action: str, per_minute: int) -> None:
@@ -116,9 +138,10 @@ def admin_bootstrap_status(db: Session = Depends(get_db)):
     return AdminBootstrapStatusOut(initialized=is_admin_initialized(db))
 
 
-@router.post("/setup", response_model=AdminBootstrapStatusOut)
+@router.post("/setup", response_model=AdminSetupOut)
 def admin_setup(payload: AdminSetupIn, request: Request, db: Session = Depends(get_db)):
     _require_https_for_setup(request)
+    _require_setup_token(request)
     _enforce_action_rate_limit(request, "setup", settings.admin_setup_rate_limit_per_minute)
 
     if is_admin_initialized(db):
@@ -131,11 +154,11 @@ def admin_setup(payload: AdminSetupIn, request: Request, db: Session = Depends(g
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters")
 
     try:
-        create_admin_user_once(db, email=str(payload.email), password=payload.password)
+        _, recovery_codes = create_admin_user_once(db, email=str(payload.email), password=payload.password)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
-    return AdminBootstrapStatusOut(initialized=True)
+    return AdminSetupOut(initialized=True, recovery_codes=recovery_codes)
 
 
 @router.post("/login", response_model=AdminLoginOut)
@@ -152,9 +175,25 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Admin user not found")
 
     email_ok = payload.email.strip().lower() == user.email.strip().lower()
-    password_ok = verify_password(payload.password, user.password_hash)
 
-    if not (email_ok and password_ok):
+    password = (payload.password or "").strip()
+    recovery_code = (payload.recovery_code or "").strip()
+    if not password and not recovery_code:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide password or recovery code")
+
+    if not email_ok:
+        _record_login_failure(ip)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
+
+    credential_ok = False
+    if recovery_code:
+        credential_ok = consume_recovery_code(db, user, recovery_code)
+        if credential_ok:
+            db.commit()
+    else:
+        credential_ok = verify_password(password, user.password_hash)
+
+    if not credential_ok:
         _record_login_failure(ip)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
 

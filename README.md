@@ -47,6 +47,7 @@ PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
 CORS_ORIGINS=https://urlshortener.devisuru.ggff.net
 ADMIN_API_TOKENS=replace_token_1,replace_token_2
 ADMIN_USERNAME=admin
+ADMIN_SETUP_TOKEN=replace_with_long_random_bootstrap_token
 ADMIN_PASSWORD_HASH=replace_with_bcrypt_or_argon2_hash
 ADMIN_SESSION_COOKIE_NAME=paidlink_admin_session
 COOKIE_SECURE=true
@@ -85,15 +86,18 @@ API routing (clean split):
   - bootstrap endpoints:
     - `GET /admin/auth/status` -> `{ "initialized": true|false }`
     - `POST /admin/auth/setup` (only when initialized=false)
+      - requires setup token when `ADMIN_SETUP_TOKEN` is set (`?token=...` or `x-admin-setup-token` header)
       - body: `{ "email": "...", "password": "...", "confirm_password": "..." }`
+      - response includes one-time recovery codes
   - login endpoint:
     - `POST /admin/auth/login`
-      - body: `{ "email": "...", "password": "..." }`
+      - body: `{ "email": "...", "password": "..." }` or `{ "email": "...", "recovery_code": "ABCD-EFGH-IJKL" }`
   - logout endpoint:
     - `POST /admin/auth/logout`
 
 Admin auth security rules:
 - Setup endpoint is one-time (only when `initialized=false`)
+- Optional setup lock token (`ADMIN_SETUP_TOKEN`) prevents public admin-claim during first deploy
 - Setup endpoint has per-IP rate limit (default `5/min`) and can require HTTPS in production
 - Login endpoint has per-IP rate limit (default `10/min`)
 - Optional login lockout can be enabled via `ADMIN_LOGIN_LOCKOUT_THRESHOLD`
@@ -105,6 +109,7 @@ Admin auth security rules:
   - Recommended for cross-subdomain reliability: `COOKIE_SAMESITE=none` + `COOKIE_SECURE=true`
 - Admin account is stored with secure password hash only (no plain password in DB):
   - `email`, `password_hash`, `created_at`, `updated_at`
+- Setup issues 10 one-time recovery codes (shown once, hashed in DB); login can use recovery code when password is unavailable.
 
 Admin password reset (Dokploy-style):
 - This is intentionally terminal-only (not exposed via web API).

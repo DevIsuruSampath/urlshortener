@@ -3,7 +3,8 @@ from pydantic import BaseModel, EmailStr
 
 class AdminLoginIn(BaseModel):
     email: EmailStr
-    password: str
+    password: str | None = None
+    recovery_code: str | None = None
 
 
 class AdminSetupIn(BaseModel):
@@ -14,6 +15,11 @@ class AdminSetupIn(BaseModel):
 
 class AdminLoginOut(BaseModel):
     ok: bool = True
+
+
+class AdminSetupOut(BaseModel):
+    initialized: bool
+    recovery_codes: list[str] = []
 
 
 class AdminMeOut(BaseModel):
