@@ -90,6 +90,12 @@ export function AuthForm() {
           {loading ? "Please wait..." : "Login"}
         </button>
       </form>
+
+      <div className="auth-help muted">
+        <p>Lost password? Reset requires server terminal access.</p>
+        <code>python -m app.cli reset-admin-password</code>
+        <code>./start.sh reset-admin-password</code>
+      </div>
     </section>
   );
 }

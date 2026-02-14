@@ -4,6 +4,11 @@ set -e
 cd /app
 export PYTHONPATH=/app
 
+if [ "$1" = "reset-admin-password" ]; then
+  python -m app.cli reset-admin-password
+  exit $?
+fi
+
 if [ "${DATABASE_AUTO_CREATE:-true}" = "true" ]; then
   python -m app.db.bootstrap
 fi

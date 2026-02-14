@@ -84,6 +84,15 @@ API routing (clean split):
   - login endpoint:
     - `POST /admin/auth/login`
       - body: `{ "email": "...", "password": "..." }`
+  - logout endpoint:
+    - `POST /admin/auth/logout`
+
+Admin password reset (Dokploy-style):
+- This is intentionally terminal-only (not exposed via web API).
+- Run inside API container:
+  - `python -m app.cli reset-admin-password`
+  - or `./start.sh reset-admin-password`
+- Output prints the new password to terminal.
 
 GPLinks-style shortener API (`/api`):
 - JSON (default):
