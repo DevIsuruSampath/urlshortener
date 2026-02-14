@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routers import flow, redirect
+from app.routers import flow, public_api, redirect
 from app.routers.admin import auth as admin_auth
 from app.routers.admin import links as admin_links
 from app.routers.admin import stats as admin_stats
@@ -37,6 +37,7 @@ def health():
 
 
 # Public routes (no auth)
+app.include_router(public_api.router, tags=["public-api"])
 app.include_router(flow.router, prefix="/flow", tags=["flow"])
 
 # Admin routes (auth required)

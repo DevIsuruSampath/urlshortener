@@ -44,6 +44,7 @@ Set API env:
 ```env
 PUBLIC_WEB_BASE_URL=https://urlshortener.devisuru.ggff.net
 PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
+PUBLIC_API_TOKEN=replace_with_long_api_token
 SESSION_TOKEN_EXPIRE_MINUTES=15
 START_RATE_LIMIT_PER_MINUTE=120
 STEP_RATE_LIMIT_PER_MINUTE=60
@@ -66,5 +67,13 @@ App routes:
 - `/{code}` (short-code forwarder)
 
 API routing (clean split):
-- Public: `GET /{code}`, `POST /flow/step-complete`, `GET /flow/go`
+- Public: `GET /api`, `POST /api`, `GET /{code}`, `POST /flow/step-complete`, `GET /flow/go`
 - Admin: `/admin/auth/*`, `/admin/links/*`, `/admin/stats/*`
+
+GPLinks-style shortener API (`/api`):
+- JSON (default):
+  - `GET /api?api=TOKEN&url=https://example.com&alias=myalias`
+- Text response:
+  - `GET /api?api=TOKEN&url=https://example.com&alias=myalias&format=text`
+- POST support (json or form):
+  - `POST /api` with `api`, `url`, optional `alias`, optional `format=text|json`
