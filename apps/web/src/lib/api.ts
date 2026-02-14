@@ -123,16 +123,8 @@ async function parseError(res: Response): Promise<ApiError> {
   }
 }
 
-async function fetchAdminLinksWithFallback(init: RequestInit): Promise<Response> {
-  try {
-    return await fetch(ADMIN_LINKS_BASE, init);
-  } catch (error) {
-    if (!(error instanceof TypeError)) {
-      throw error;
-    }
-
-    return await fetch(ADMIN_LINKS_PROXY_BASE, init);
-  }
+async function fetchAdminLinks(init: RequestInit): Promise<Response> {
+  return await fetch(ADMIN_LINKS_BASE, init);
 }
 
 export async function postStepComplete(payload: StepCompleteRequest): Promise<StepCompleteResponse> {
@@ -152,7 +144,6 @@ export async function postStepComplete(payload: StepCompleteRequest): Promise<St
 
 const ADMIN_AUTH_BASE = `${env.apiBase}/admin/auth`;
 const ADMIN_LINKS_BASE = `${env.apiBase}/admin/links`;
-const ADMIN_LINKS_PROXY_BASE = `/api/admin/links`;
 
 export async function adminLogin(payload: AdminLoginPayload): Promise<AdminLoginResponse> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/login`, {
@@ -276,7 +267,7 @@ export async function adminFinalizeDeveloperTokenRotation(): Promise<AdminDevelo
 }
 
 export async function adminCreateLink(payload: AdminLinkCreatePayload): Promise<AdminLinkResponse> {
-  const res = await fetchAdminLinksWithFallback({
+  const res = await fetchAdminLinks({
     method: "POST",
     headers: authHeaders(true),
     body: JSON.stringify({ destination_url: payload.destination_url, tier: payload.tier || "standard" }),
@@ -291,7 +282,7 @@ export async function adminCreateLink(payload: AdminLinkCreatePayload): Promise<
 }
 
 export async function adminListLinks(): Promise<AdminLinkResponse[]> {
-  const res = await fetchAdminLinksWithFallback({
+  const res = await fetchAdminLinks({
     method: "GET",
     headers: authHeaders(),
     credentials: "include",
