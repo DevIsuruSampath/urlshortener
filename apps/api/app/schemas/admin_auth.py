@@ -18,3 +18,7 @@ class AdminMeOut(BaseModel):
 
 class DeveloperTokenOut(BaseModel):
     masked_token: str
+
+
+class AdminBootstrapStatusOut(BaseModel):
+    initialized: bool

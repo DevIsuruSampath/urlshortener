@@ -11,8 +11,8 @@ from app.core.rate_limit import allow_ip_action
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models.user import User
 from app.db.session import get_db
-from app.schemas.admin_auth import AdminLoginIn, AdminMeOut, DeveloperTokenOut, TokenOut
-from app.services.admin_user_service import ensure_admin_user
+from app.schemas.admin_auth import AdminBootstrapStatusOut, AdminLoginIn, AdminMeOut, DeveloperTokenOut, TokenOut
+from app.services.admin_user_service import ensure_admin_user, is_admin_initialized
 
 router = APIRouter()
 
@@ -50,6 +50,11 @@ def _mask_token(token: str) -> str:
     if len(token) <= 8:
         return token
     return f"{token[:4]}...{token[-4:]}"
+
+
+@router.get("/bootstrap-status", response_model=AdminBootstrapStatusOut)
+def admin_bootstrap_status(db: Session = Depends(get_db)):
+    return AdminBootstrapStatusOut(initialized=is_admin_initialized(db))
 
 
 @router.post("/login", response_model=TokenOut)

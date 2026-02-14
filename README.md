@@ -75,6 +75,7 @@ App routes:
 API routing (clean split):
 - Public: `GET /api`, `POST /api`, `GET /{code}`, `POST /flow/step-complete`, `GET /flow/go`
 - Admin: `/admin/auth/*`, `/admin/links/*`, `/admin/stats/*`
+  - includes bootstrap detection endpoint: `GET /admin/auth/bootstrap-status`
 
 GPLinks-style shortener API (`/api`):
 - JSON (default):
