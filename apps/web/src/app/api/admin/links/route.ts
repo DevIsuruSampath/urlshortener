@@ -18,6 +18,9 @@ async function proxyToApi(request: NextRequest) {
   const auth = request.headers.get("authorization");
   if (auth) headers.authorization = auth;
 
+  const cookie = request.headers.get("cookie");
+  if (cookie) headers.cookie = cookie;
+
   const init: RequestInit = {
     method: request.method,
     headers,

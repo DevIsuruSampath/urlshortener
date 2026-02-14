@@ -50,7 +50,7 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=replace_with_bcrypt_or_argon2_hash
 ADMIN_SESSION_COOKIE_NAME=paidlink_admin_session
 COOKIE_SECURE=true
-COOKIE_SAMESITE=lax
+COOKIE_SAMESITE=none
 COOKIE_HTTPONLY=true
 FLOW_SIGNING_SECRET=replace_with_long_random_secret
 ADMIN_JWT_SECRET=replace_with_long_random_secret
@@ -98,6 +98,11 @@ Admin auth security rules:
 - Login endpoint has per-IP rate limit (default `10/min`)
 - Optional login lockout can be enabled via `ADMIN_LOGIN_LOCKOUT_THRESHOLD`
 - `/admin/links/*` and `/admin/stats/*` always require admin auth
+- Admin auth uses HTTP-only session cookie for split deploy:
+  - API sets cookie on `api.*` domain
+  - Web sends requests with `credentials: include`
+  - `CORS_ORIGINS` must include web origin and `allow_credentials=true` is enabled in API middleware
+  - Recommended for cross-subdomain reliability: `COOKIE_SAMESITE=none` + `COOKIE_SECURE=true`
 - Admin account is stored with secure password hash only (no plain password in DB):
   - `email`, `password_hash`, `created_at`, `updated_at`
 

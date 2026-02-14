@@ -21,9 +21,8 @@ export type AdminLoginPayload = {
   password: string;
 };
 
-export type AuthResponse = {
-  access_token: string;
-  token_type: string;
+export type AdminLoginResponse = {
+  ok: boolean;
 };
 
 export type AdminDeveloperTokenInfo = {
@@ -69,12 +68,6 @@ export class ApiError extends Error {
 function authHeaders(contentType = false): HeadersInit {
   const headers: Record<string, string> = {};
   if (contentType) headers["Content-Type"] = "application/json";
-
-  if (typeof window !== "undefined") {
-    const token = window.localStorage.getItem("paidlink_access_token");
-    if (token) headers.Authorization = `Bearer ${token}`;
-  }
-
   return headers;
 }
 
@@ -118,7 +111,7 @@ const ADMIN_AUTH_BASE = `${env.apiBase}/admin/auth`;
 const ADMIN_LINKS_BASE = `${env.apiBase}/admin/links`;
 const ADMIN_LINKS_PROXY_BASE = `/api/admin/links`;
 
-export async function adminLogin(payload: AdminLoginPayload): Promise<AuthResponse> {
+export async function adminLogin(payload: AdminLoginPayload): Promise<AdminLoginResponse> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/login`, {
     method: "POST",
     headers: authHeaders(true),
@@ -130,7 +123,7 @@ export async function adminLogin(payload: AdminLoginPayload): Promise<AuthRespon
     throw await parseError(res);
   }
 
-  return (await res.json()) as AuthResponse;
+  return (await res.json()) as AdminLoginResponse;
 }
 
 export async function adminMe(): Promise<{ username: string; user_id: string }> {

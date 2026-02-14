@@ -12,9 +12,8 @@ class AdminSetupIn(BaseModel):
     confirm_password: str
 
 
-class TokenOut(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
+class AdminLoginOut(BaseModel):
+    ok: bool = True
 
 
 class AdminMeOut(BaseModel):

@@ -40,8 +40,7 @@ export function AuthForm() {
 
     setLoading(true);
     try {
-      const res = await adminLogin({ email, password });
-      localStorage.setItem("paidlink_access_token", res.access_token);
+      await adminLogin({ email, password });
       window.location.href = "/admin";
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {

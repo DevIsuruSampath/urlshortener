@@ -13,10 +13,10 @@ from app.db.session import get_db
 from app.schemas.admin_auth import (
     AdminBootstrapStatusOut,
     AdminLoginIn,
+    AdminLoginOut,
     AdminMeOut,
     AdminSetupIn,
     DeveloperTokenOut,
-    TokenOut,
 )
 from app.services.admin_user_service import create_admin_user_once, get_primary_admin_user, is_admin_initialized
 
@@ -138,7 +138,7 @@ def admin_setup(payload: AdminSetupIn, request: Request, db: Session = Depends(g
     return AdminBootstrapStatusOut(initialized=True)
 
 
-@router.post("/login", response_model=TokenOut)
+@router.post("/login", response_model=AdminLoginOut)
 def admin_login(payload: AdminLoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
     ip = client_ip(request)
     _check_login_lockout(ip)
@@ -173,7 +173,7 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
         path="/",
     )
 
-    return TokenOut(access_token=token)
+    return AdminLoginOut(ok=True)
 
 
 @router.post("/logout")
