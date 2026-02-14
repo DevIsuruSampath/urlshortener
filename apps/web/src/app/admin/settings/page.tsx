@@ -11,6 +11,7 @@ import {
   adminDeveloperTokenInfo,
   adminFinalizeDeveloperTokenRotation,
   adminListSecurityEvents,
+  adminMe,
   adminRecordSecurityEvent,
   adminRegenerateDeveloperToken,
   ApiError,
@@ -48,7 +49,7 @@ function eventDetailsText(details: Record<string, unknown> | undefined): string 
 export default function SettingsPage() {
   const { push } = useToast();
 
-  const [adminEmail] = useState("admin@urlshortener.local");
+  const [adminEmail, setAdminEmail] = useState("admin@urlshortener.local");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -90,6 +91,16 @@ export default function SettingsPage() {
 
   useEffect(() => {
     let alive = true;
+
+    adminMe()
+      .then((res) => {
+        if (!alive) return;
+        setAdminEmail(res.email || "admin@urlshortener.local");
+      })
+      .catch(() => {
+        if (!alive) return;
+        setAdminEmail("admin@urlshortener.local");
+      });
 
     adminDeveloperTokenInfo()
       .then((res) => {

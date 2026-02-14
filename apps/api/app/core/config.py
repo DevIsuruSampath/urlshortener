@@ -52,7 +52,7 @@ class Settings(BaseModel):
         os.getenv("APP_ENV", "development").lower() == "production",
     )
 
-    admin_username: str = os.getenv("ADMIN_USERNAME", "admin")
+    admin_email: str = os.getenv("ADMIN_EMAIL", "admin@urlshortener.local")
     admin_setup_token: str = os.getenv("ADMIN_SETUP_TOKEN", "")
     admin_password_hash: str = os.getenv("ADMIN_PASSWORD_HASH", "")
     admin_password: str = os.getenv("ADMIN_PASSWORD", "change_this_admin_password")  # compatibility fallback

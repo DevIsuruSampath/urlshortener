@@ -294,7 +294,7 @@ def admin_logout(response: Response):
 
 @router.get("/me", response_model=AdminMeOut)
 def admin_me(user: User = Depends(get_current_admin)):
-    return AdminMeOut(username=settings.admin_username, user_id=str(user.id))
+    return AdminMeOut(email=user.email, user_id=str(user.id))
 
 
 @router.get("/developer-token", response_model=DeveloperTokenOut)

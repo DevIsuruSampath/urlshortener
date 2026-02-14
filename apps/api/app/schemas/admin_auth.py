@@ -23,7 +23,7 @@ class AdminSetupOut(BaseModel):
 
 
 class AdminMeOut(BaseModel):
-    username: str
+    email: EmailStr
     user_id: str
 
 

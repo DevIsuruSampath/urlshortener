@@ -169,7 +169,7 @@ export async function adminLogin(payload: AdminLoginPayload): Promise<AdminLogin
   return (await res.json()) as AdminLoginResponse;
 }
 
-export async function adminMe(): Promise<{ username: string; user_id: string }> {
+export async function adminMe(): Promise<{ email: string; user_id: string }> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/me`, {
     method: "GET",
     headers: authHeaders(),
@@ -180,7 +180,7 @@ export async function adminMe(): Promise<{ username: string; user_id: string }> 
     throw await parseError(res);
   }
 
-  return (await res.json()) as { username: string; user_id: string };
+  return (await res.json()) as { email: string; user_id: string };
 }
 
 export async function adminStatus(): Promise<AdminStatusResponse> {

@@ -14,10 +14,8 @@ ADMIN_INITIALIZED_KEY = "admin_initialized"
 
 
 def admin_email() -> str:
-    username = (settings.admin_username or "admin").strip().lower().replace(" ", "_")
-    if not username:
-        username = "admin"
-    return f"{username}@admin.local"
+    value = (settings.admin_email or "admin@urlshortener.local").strip().lower()
+    return value or "admin@urlshortener.local"
 
 
 def _resolved_admin_password_hash() -> str:
