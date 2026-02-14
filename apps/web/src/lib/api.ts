@@ -28,6 +28,18 @@ export type AdminLoginResponse = {
 
 export type AdminDeveloperTokenInfo = {
   masked_token: string;
+  masked_tokens: string[];
+};
+
+export type AdminDeveloperTokenRegenerateResponse = {
+  ok: boolean;
+  new_token: string;
+  masked_tokens: string[];
+};
+
+export type AdminDeveloperTokenFinalizeResponse = {
+  ok: boolean;
+  masked_tokens: string[];
 };
 
 export type AdminStatusResponse = {
@@ -233,6 +245,34 @@ export async function adminDeveloperTokenInfo(): Promise<AdminDeveloperTokenInfo
   }
 
   return (await res.json()) as AdminDeveloperTokenInfo;
+}
+
+export async function adminRegenerateDeveloperToken(): Promise<AdminDeveloperTokenRegenerateResponse> {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/developer-token/regenerate`, {
+    method: "POST",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminDeveloperTokenRegenerateResponse;
+}
+
+export async function adminFinalizeDeveloperTokenRotation(): Promise<AdminDeveloperTokenFinalizeResponse> {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/developer-token/finalize`, {
+    method: "POST",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminDeveloperTokenFinalizeResponse;
 }
 
 export async function adminCreateLink(payload: AdminLinkCreatePayload): Promise<AdminLinkResponse> {

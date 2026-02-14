@@ -20,7 +20,14 @@ from app.schemas.admin_auth import (
     AdminMeOut,
     AdminSetupIn,
     AdminSetupOut,
+    DeveloperTokenFinalizeOut,
     DeveloperTokenOut,
+    DeveloperTokenRegenerateOut,
+)
+from app.services.admin_api_token_service import (
+    finalize_admin_api_token_rotation,
+    get_admin_api_tokens,
+    regenerate_admin_api_token,
 )
 from app.services.admin_recovery_service import consume_recovery_code
 from app.services.admin_user_service import create_admin_user_once, get_primary_admin_user, is_admin_initialized
@@ -291,6 +298,53 @@ def admin_me(user: User = Depends(get_current_admin)):
 
 
 @router.get("/developer-token", response_model=DeveloperTokenOut)
-def developer_token_info(_: User = Depends(get_current_admin)):
-    current = settings.admin_api_tokens[0] if settings.admin_api_tokens else ""
-    return DeveloperTokenOut(masked_token=_mask_token(current))
+def developer_token_info(_: User = Depends(get_current_admin), db: Session = Depends(get_db)):
+    tokens = get_admin_api_tokens(db)
+    current = tokens[0] if tokens else ""
+    return DeveloperTokenOut(masked_token=_mask_token(current), masked_tokens=[_mask_token(t) for t in tokens])
+
+
+@router.post("/developer-token/regenerate", response_model=DeveloperTokenRegenerateOut)
+def developer_token_regenerate(
+    request: Request,
+    user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    new_token, tokens = regenerate_admin_api_token(db)
+
+    try:
+        log_security_event(
+            db,
+            event_type="settings_changed",
+            actor_user_id=user.id,
+            ip_address=client_ip(request),
+            details={"action": "developer_token_regenerate", "token_count": len(tokens)},
+            commit=True,
+        )
+    except Exception:
+        db.rollback()
+
+    return DeveloperTokenRegenerateOut(new_token=new_token, masked_tokens=[_mask_token(t) for t in tokens])
+
+
+@router.post("/developer-token/finalize", response_model=DeveloperTokenFinalizeOut)
+def developer_token_finalize(
+    request: Request,
+    user: User = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    tokens = finalize_admin_api_token_rotation(db)
+
+    try:
+        log_security_event(
+            db,
+            event_type="settings_changed",
+            actor_user_id=user.id,
+            ip_address=client_ip(request),
+            details={"action": "developer_token_finalize", "token_count": len(tokens)},
+            commit=True,
+        )
+    except Exception:
+        db.rollback()
+
+    return DeveloperTokenFinalizeOut(masked_tokens=[_mask_token(t) for t in tokens])

@@ -8,7 +8,9 @@ from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.rate_limit import allow_ip_action
 from app.db.session import get_db
+from app.services.admin_api_token_service import get_admin_api_tokens
 from app.services.admin_user_service import get_primary_admin_user, is_admin_initialized
 from app.services.link_service import create_link_record
 from app.services.security_event_service import log_security_event
@@ -64,10 +66,16 @@ def _create_short_link(
     db: Session,
     request: Request,
 ):
-    if not settings.admin_api_tokens:
+    if settings.dev_api_rate_limit_per_minute > 0:
+        ip = _client_ip(request)
+        if not allow_ip_action(ip, "developer-api", settings.dev_api_rate_limit_per_minute, window_seconds=60):
+            return _error("Too many API requests", status_code=status.HTTP_429_TOO_MANY_REQUESTS, output_format=output_format)
+
+    tokens = get_admin_api_tokens(db)
+    if not tokens:
         return _error("API is not configured", output_format=output_format)
 
-    if api_token not in settings.admin_api_tokens:
+    if api_token not in tokens:
         return _error("Invalid API token", status_code=status.HTTP_401_UNAUTHORIZED, output_format=output_format)
 
     try:

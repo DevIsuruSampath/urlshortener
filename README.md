@@ -59,6 +59,7 @@ SESSION_TOKEN_EXPIRE_MINUTES=15
 START_RATE_LIMIT_PER_MINUTE=120
 STEP_RATE_LIMIT_PER_MINUTE=60
 AUTH_RATE_LIMIT_PER_MINUTE=20
+DEV_API_RATE_LIMIT_PER_MINUTE=60
 ADMIN_SETUP_RATE_LIMIT_PER_MINUTE=5
 ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE=10
 ADMIN_LOGIN_LOCKOUT_THRESHOLD=10
@@ -98,6 +99,10 @@ API routing (clean split):
   - security events endpoint:
     - `GET /admin/security-events?limit=50` (admin auth required)
     - `POST /admin/security-events` for UI-originated events (`settings_changed`, `link_blocked`, `link_unblocked`)
+  - developer token management:
+    - `GET /admin/auth/developer-token` (masked only)
+    - `POST /admin/auth/developer-token/regenerate` (returns new token once + keeps old tokens for rotation window)
+    - `POST /admin/auth/developer-token/finalize` (removes old tokens, keeps newest)
 
 Admin auth security rules:
 - Setup endpoint is one-time (only when `initialized=false`)
@@ -142,7 +147,8 @@ Response formats:
   - Error: `400` with empty body (GPLinks-compatible)
 
 Validation rules:
-- `api` must match one value in `ADMIN_API_TOKENS`
+- `api` must match one active token (env `ADMIN_API_TOKENS` or rotated DB token set)
 - `url` must be `http://` or `https://` and pass public URL safety checks (no localhost/private/internal targets)
 - `alias` (optional) must be `4-20` chars (`A-Z`, `a-z`, `0-9`, `_`, `-`) and unique
 - `format` (optional) must be `json` or `text`
+- Developer API is rate-limited per IP (`DEV_API_RATE_LIMIT_PER_MINUTE`, default `60`)

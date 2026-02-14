@@ -29,6 +29,18 @@ class AdminMeOut(BaseModel):
 
 class DeveloperTokenOut(BaseModel):
     masked_token: str
+    masked_tokens: list[str] = []
+
+
+class DeveloperTokenRegenerateOut(BaseModel):
+    ok: bool = True
+    new_token: str
+    masked_tokens: list[str] = []
+
+
+class DeveloperTokenFinalizeOut(BaseModel):
+    ok: bool = True
+    masked_tokens: list[str] = []
 
 
 class AdminBootstrapStatusOut(BaseModel):

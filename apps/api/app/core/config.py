@@ -43,6 +43,7 @@ class Settings(BaseModel):
     auth_rate_limit_per_minute: int = int(os.getenv("AUTH_RATE_LIMIT_PER_MINUTE", "20"))
     admin_setup_rate_limit_per_minute: int = int(os.getenv("ADMIN_SETUP_RATE_LIMIT_PER_MINUTE", "5"))
     admin_login_rate_limit_per_minute: int = int(os.getenv("ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE", "10"))
+    dev_api_rate_limit_per_minute: int = int(os.getenv("DEV_API_RATE_LIMIT_PER_MINUTE", "60"))
     admin_login_lockout_threshold: int = int(os.getenv("ADMIN_LOGIN_LOCKOUT_THRESHOLD", "10"))
     admin_login_lockout_minutes: int = int(os.getenv("ADMIN_LOGIN_LOCKOUT_MINUTES", "15"))
     admin_login_progressive_delay_max_seconds: int = int(os.getenv("ADMIN_LOGIN_PROGRESSIVE_DELAY_MAX_SECONDS", "2"))

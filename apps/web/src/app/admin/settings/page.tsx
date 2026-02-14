@@ -7,7 +7,15 @@ import { CopyButton } from "@/components/ui/CopyButton";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
-import { adminDeveloperTokenInfo, adminListSecurityEvents, adminRecordSecurityEvent, ApiError, type AdminSecurityEvent } from "@/lib/api";
+import {
+  adminDeveloperTokenInfo,
+  adminFinalizeDeveloperTokenRotation,
+  adminListSecurityEvents,
+  adminRecordSecurityEvent,
+  adminRegenerateDeveloperToken,
+  ApiError,
+  type AdminSecurityEvent,
+} from "@/lib/api";
 import { env } from "@/lib/env";
 
 function toAbsoluteBaseUrl(base: string): string {
@@ -67,6 +75,10 @@ export default function SettingsPage() {
   const [inMobileRpm, setInMobileRpm] = useState("0.95");
 
   const [maskedDevelopersApiToken, setMaskedDevelopersApiToken] = useState("loading...");
+  const [maskedDevelopersApiTokens, setMaskedDevelopersApiTokens] = useState<string[]>([]);
+  const [latestGeneratedToken, setLatestGeneratedToken] = useState("");
+  const [rotatingToken, setRotatingToken] = useState(false);
+  const [finalizingToken, setFinalizingToken] = useState(false);
   const [securityEvents, setSecurityEvents] = useState<AdminSecurityEvent[]>([]);
   const [loadingSecurityEvents, setLoadingSecurityEvents] = useState(true);
 
@@ -83,14 +95,17 @@ export default function SettingsPage() {
       .then((res) => {
         if (!alive) return;
         setMaskedDevelopersApiToken(res.masked_token || "not-configured");
+        setMaskedDevelopersApiTokens(res.masked_tokens || []);
       })
       .catch((error) => {
         if (!alive) return;
         if (error instanceof ApiError && error.status === 401) {
           setMaskedDevelopersApiToken("session-required");
+          setMaskedDevelopersApiTokens([]);
           return;
         }
         setMaskedDevelopersApiToken("not-configured");
+        setMaskedDevelopersApiTokens([]);
       });
 
     adminListSecurityEvents(50)
@@ -117,6 +132,44 @@ export default function SettingsPage() {
       setSecurityEvents((prev) => [row, ...prev].slice(0, 50));
     } catch {
       // best-effort audit event logging
+    }
+  }
+
+  async function onRegenerateDeveloperToken() {
+    setRotatingToken(true);
+    try {
+      const res = await adminRegenerateDeveloperToken();
+      setLatestGeneratedToken(res.new_token || "");
+      setMaskedDevelopersApiTokens(res.masked_tokens || []);
+      setMaskedDevelopersApiToken((res.masked_tokens && res.masked_tokens[0]) || "not-configured");
+      push("Developer API token rotated. New token added alongside old token.", "success");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        push("Session expired. Please login again.", "error");
+      } else {
+        push("Failed to rotate developer API token.", "error");
+      }
+    } finally {
+      setRotatingToken(false);
+    }
+  }
+
+  async function onFinalizeDeveloperTokenRotation() {
+    setFinalizingToken(true);
+    try {
+      const res = await adminFinalizeDeveloperTokenRotation();
+      setMaskedDevelopersApiTokens(res.masked_tokens || []);
+      setMaskedDevelopersApiToken((res.masked_tokens && res.masked_tokens[0]) || "not-configured");
+      setLatestGeneratedToken("");
+      push("Developer API token rotation finalized (old tokens removed).", "success");
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        push("Session expired. Please login again.", "error");
+      } else {
+        push("Failed to finalize token rotation.", "error");
+      }
+    } finally {
+      setFinalizingToken(false);
     }
   }
 
@@ -406,11 +459,29 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <p className="muted">Admin API token (masked)</p>
-            <div className="settings-copy-row">
-              <code className="settings-code">{maskedDevelopersApiToken}</code>
+            <p className="muted">Admin API tokens (masked)</p>
+            <div className="settings-form">
+              {(maskedDevelopersApiTokens.length ? maskedDevelopersApiTokens : [maskedDevelopersApiToken]).map((token, idx) => (
+                <code key={`${token}-${idx}`} className="settings-code">{token}</code>
+              ))}
             </div>
-            <p className="muted">For security, full token is never exposed to browser UI.</p>
+            <p className="muted">Default view is masked only. New token is shown once immediately after rotation.</p>
+
+            <div className="settings-actions">
+              <Button type="button" onClick={onRegenerateDeveloperToken} disabled={rotatingToken}>
+                {rotatingToken ? "Regenerating..." : "Regenerate token"}
+              </Button>
+              <Button type="button" variant="secondary" onClick={onFinalizeDeveloperTokenRotation} disabled={finalizingToken}>
+                {finalizingToken ? "Finalizing..." : "Finalize rotation (remove old tokens)"}
+              </Button>
+            </div>
+
+            {latestGeneratedToken ? (
+              <div className="settings-copy-row">
+                <code className="settings-code">{latestGeneratedToken}</code>
+                <CopyButton value={latestGeneratedToken} label="Copy new token" />
+              </div>
+            ) : null}
           </div>
 
           <div>
