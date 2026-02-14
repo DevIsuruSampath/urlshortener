@@ -98,6 +98,8 @@ Admin auth security rules:
 - Login endpoint has per-IP rate limit (default `10/min`)
 - Optional login lockout can be enabled via `ADMIN_LOGIN_LOCKOUT_THRESHOLD`
 - `/admin/links/*` and `/admin/stats/*` always require admin auth
+- Admin account is stored with secure password hash only (no plain password in DB):
+  - `email`, `password_hash`, `created_at`, `updated_at`
 
 Admin password reset (Dokploy-style):
 - This is intentionally terminal-only (not exposed via web API).
