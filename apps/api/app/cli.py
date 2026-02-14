@@ -8,6 +8,7 @@ import sys
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.services.admin_user_service import get_primary_admin_user
+from app.services.security_event_service import log_security_event
 
 SYMBOLS = "!@#$%^&*-_=+"
 
@@ -35,6 +36,12 @@ def reset_admin_password() -> int:
 
         new_password = _generate_password()
         user.password_hash = hash_password(new_password)
+        log_security_event(
+            db,
+            event_type="admin_password_reset_cli",
+            actor_user_id=user.id,
+            details={"source": "cli"},
+        )
         db.commit()
 
     print(f"New admin password: {new_password} (copy this)")

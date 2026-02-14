@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { useToast } from "@/components/ui/Toast";
-import { adminCreateLink, adminListLinks, AdminLinkResponse, ApiError } from "@/lib/api";
+import { adminCreateLink, adminListLinks, adminRecordSecurityEvent, AdminLinkResponse, ApiError } from "@/lib/api";
 
 type BlockedReason = "url safety" | "manual" | "abuse report";
 
@@ -180,6 +180,19 @@ export default function LinksPage() {
     setRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
   }
 
+  function logLinkSecurityEvent(type: "link_blocked" | "link_unblocked", row: LinkRow, reason?: string) {
+    void adminRecordSecurityEvent({
+      event_type: type,
+      details: {
+        link_id: row.id,
+        code: row.code,
+        reason: reason || "",
+      },
+    }).catch(() => {
+      // best-effort logging only
+    });
+  }
+
   async function onCreateInline(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
@@ -289,6 +302,7 @@ export default function LinksPage() {
                   if (row.status === "blocked") {
                     updateRow(row.id, { status: "active", blockedReason: undefined });
                     push("Link unblocked", "success");
+                    logLinkSecurityEvent("link_unblocked", row);
                     return;
                   }
 
@@ -299,6 +313,7 @@ export default function LinksPage() {
                   const reason = normalizeBlockedReason(reasonInput);
                   updateRow(row.id, { status: "blocked", blockedReason: reason });
                   push(`Link blocked (${reason})`, "info");
+                  logLinkSecurityEvent("link_blocked", row, reason);
                 },
               },
               {

@@ -7,7 +7,7 @@ import { CopyButton } from "@/components/ui/CopyButton";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
-import { adminDeveloperTokenInfo, ApiError } from "@/lib/api";
+import { adminDeveloperTokenInfo, adminListSecurityEvents, adminRecordSecurityEvent, ApiError, type AdminSecurityEvent } from "@/lib/api";
 import { env } from "@/lib/env";
 
 function toAbsoluteBaseUrl(base: string): string {
@@ -20,6 +20,21 @@ function toAbsoluteBaseUrl(base: string): string {
   }
 
   return base.replace(/\/$/, "");
+}
+
+function formatEventTime(value: string): string {
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return value;
+  }
+}
+
+function eventDetailsText(details: Record<string, unknown> | undefined): string {
+  if (!details || Object.keys(details).length === 0) return "—";
+  return Object.entries(details)
+    .map(([k, v]) => `${k}=${String(v)}`)
+    .join(" | ");
 }
 
 export default function SettingsPage() {
@@ -52,6 +67,8 @@ export default function SettingsPage() {
   const [inMobileRpm, setInMobileRpm] = useState("0.95");
 
   const [maskedDevelopersApiToken, setMaskedDevelopersApiToken] = useState("loading...");
+  const [securityEvents, setSecurityEvents] = useState<AdminSecurityEvent[]>([]);
+  const [loadingSecurityEvents, setLoadingSecurityEvents] = useState(true);
 
   const developersApiBase = useMemo(() => `${toAbsoluteBaseUrl(env.apiBase)}/api`, []);
   const sampleDestination = "https://example.com/landing";
@@ -76,12 +93,34 @@ export default function SettingsPage() {
         setMaskedDevelopersApiToken("not-configured");
       });
 
+    adminListSecurityEvents(50)
+      .then((rows) => {
+        if (!alive) return;
+        setSecurityEvents(rows);
+      })
+      .catch(() => {
+        if (!alive) return;
+        setSecurityEvents([]);
+      })
+      .finally(() => {
+        if (alive) setLoadingSecurityEvents(false);
+      });
+
     return () => {
       alive = false;
     };
   }, []);
 
-  function onPasswordChange(e: FormEvent<HTMLFormElement>) {
+  async function trackSecurityEvent(event_type: "settings_changed" | "link_blocked" | "link_unblocked", details: Record<string, unknown>) {
+    try {
+      const row = await adminRecordSecurityEvent({ event_type, details });
+      setSecurityEvents((prev) => [row, ...prev].slice(0, 50));
+    } catch {
+      // best-effort audit event logging
+    }
+  }
+
+  async function onPasswordChange(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
@@ -98,21 +137,25 @@ export default function SettingsPage() {
     setNewPassword("");
     setConfirmPassword("");
     push("Password change saved (UI placeholder).", "success");
+    await trackSecurityEvent("settings_changed", { section: "admin_access", action: "change_password_placeholder" });
   }
 
-  function onFlowDefaultsSave(e: FormEvent<HTMLFormElement>) {
+  async function onFlowDefaultsSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     push("Flow defaults updated.", "success");
+    await trackSecurityEvent("settings_changed", { section: "flow_defaults" });
   }
 
-  function onAntiAbuseSave(e: FormEvent<HTMLFormElement>) {
+  async function onAntiAbuseSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     push("Anti-abuse rules updated.", "success");
+    await trackSecurityEvent("settings_changed", { section: "anti_abuse" });
   }
 
-  function onMonetizationSave(e: FormEvent<HTMLFormElement>) {
+  async function onMonetizationSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     push("Monetization settings updated.", "success");
+    await trackSecurityEvent("settings_changed", { section: "monetization" });
   }
 
   return (
@@ -386,6 +429,40 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="card section">
+        <h2>Security events (latest 50)</h2>
+        <p className="muted">Use this to investigate suspicious login/setup/API activity quickly.</p>
+
+        {loadingSecurityEvents ? (
+          <p className="muted">Loading security events…</p>
+        ) : securityEvents.length === 0 ? (
+          <p className="muted">No security events yet.</p>
+        ) : (
+          <div className="table-wrap">
+            <table className="tier-table dash-responsive-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Event</th>
+                  <th>IP</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                {securityEvents.map((event) => (
+                  <tr key={event.id}>
+                    <td>{formatEventTime(event.created_at)}</td>
+                    <td>{event.event_type}</td>
+                    <td>{event.ip_address || "—"}</td>
+                    <td>{eventDetailsText(event.details)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </main>
   );

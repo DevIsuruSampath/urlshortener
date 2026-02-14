@@ -24,6 +24,7 @@ from app.schemas.admin_auth import (
 )
 from app.services.admin_recovery_service import consume_recovery_code
 from app.services.admin_user_service import create_admin_user_once, get_primary_admin_user, is_admin_initialized
+from app.services.security_event_service import log_security_event
 
 router = APIRouter()
 
@@ -133,8 +134,28 @@ def _clear_login_failures(ip: str) -> None:
     redis_client.delete(_login_lock_key(ip))
 
 
-def _reject_invalid_credentials(ip: str) -> None:
+def _reject_invalid_credentials(
+    db: Session,
+    *,
+    ip: str,
+    email: str,
+    user_id: object | None = None,
+    reason: str = "invalid_credentials",
+) -> None:
     fail_count = _record_login_failure(ip)
+
+    try:
+        log_security_event(
+            db,
+            event_type="admin_login_failed",
+            actor_user_id=user_id,
+            ip_address=ip,
+            details={"email": email, "reason": reason, "fail_count": fail_count},
+            commit=True,
+        )
+    except Exception:
+        db.rollback()
+
     _apply_progressive_login_delay(fail_count)
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
 
@@ -169,9 +190,21 @@ def admin_setup(payload: AdminSetupIn, request: Request, db: Session = Depends(g
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters")
 
     try:
-        _, recovery_codes = create_admin_user_once(db, email=str(payload.email), password=payload.password)
+        user, recovery_codes = create_admin_user_once(db, email=str(payload.email), password=payload.password)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+    try:
+        log_security_event(
+            db,
+            event_type="admin_setup_completed",
+            actor_user_id=user.id,
+            ip_address=client_ip(request),
+            details={"email": user.email},
+            commit=True,
+        )
+    except Exception:
+        db.rollback()
 
     return AdminSetupOut(initialized=True, recovery_codes=recovery_codes)
 
@@ -197,7 +230,7 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide password or recovery code")
 
     if not email_ok:
-        _reject_invalid_credentials(ip)
+        _reject_invalid_credentials(db, ip=ip, email=str(payload.email), reason="email_mismatch")
 
     credential_ok = False
     if recovery_code:
@@ -208,7 +241,13 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
         credential_ok = verify_password(password, user.password_hash)
 
     if not credential_ok:
-        _reject_invalid_credentials(ip)
+        _reject_invalid_credentials(
+            db,
+            ip=ip,
+            email=user.email,
+            user_id=user.id,
+            reason="invalid_recovery_code" if recovery_code else "invalid_password",
+        )
 
     _clear_login_failures(ip)
 
@@ -224,6 +263,18 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
         max_age=settings.access_token_expire_minutes * 60,
         path="/",
     )
+
+    try:
+        log_security_event(
+            db,
+            event_type="admin_login_success",
+            actor_user_id=user.id,
+            ip_address=ip,
+            details={"method": "recovery_code" if recovery_code else "password"},
+            commit=True,
+        )
+    except Exception:
+        db.rollback()
 
     return AdminLoginOut(ok=True)
 

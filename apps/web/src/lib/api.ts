@@ -63,6 +63,30 @@ export type AdminLinkResponse = {
   created_at?: string;
 };
 
+export type SecurityEventType =
+  | "admin_setup_completed"
+  | "admin_login_success"
+  | "admin_login_failed"
+  | "admin_password_reset_cli"
+  | "developer_api_token_used"
+  | "link_blocked"
+  | "link_unblocked"
+  | "settings_changed";
+
+export type AdminSecurityEvent = {
+  id: string;
+  event_type: SecurityEventType | string;
+  actor_user_id?: string | null;
+  ip_address?: string | null;
+  details?: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AdminSecurityEventCreatePayload = {
+  event_type: "settings_changed" | "link_blocked" | "link_unblocked";
+  details?: Record<string, unknown>;
+};
+
 export class ApiError extends Error {
   status: number;
 
@@ -238,4 +262,33 @@ export async function adminListLinks(): Promise<AdminLinkResponse[]> {
   }
 
   return (await res.json()) as AdminLinkResponse[];
+}
+
+export async function adminListSecurityEvents(limit = 50): Promise<AdminSecurityEvent[]> {
+  const res = await fetch(`${env.apiBase}/admin/security-events?limit=${encodeURIComponent(String(limit))}`, {
+    method: "GET",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminSecurityEvent[];
+}
+
+export async function adminRecordSecurityEvent(payload: AdminSecurityEventCreatePayload): Promise<AdminSecurityEvent> {
+  const res = await fetch(`${env.apiBase}/admin/security-events`, {
+    method: "POST",
+    headers: authHeaders(true),
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminSecurityEvent;
 }

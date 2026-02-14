@@ -11,11 +11,19 @@ from app.core.config import settings
 from app.db.session import get_db
 from app.services.admin_user_service import get_primary_admin_user, is_admin_initialized
 from app.services.link_service import create_link_record
+from app.services.security_event_service import log_security_event
 from app.services.url_safety import validate_public_destination_url
 
 router = APIRouter()
 
 ALIAS_RE = re.compile(r"^[A-Za-z0-9_-]{4,20}$")
+
+
+def _client_ip(request: Request) -> str:
+    xfwd = request.headers.get("x-forwarded-for")
+    if xfwd:
+        return xfwd.split(",")[0].strip()
+    return request.client.host if request.client else "0.0.0.0"
 
 
 def _error(message: str, status_code: int = 400, output_format: str = "json") -> Response:
@@ -54,6 +62,7 @@ def _create_short_link(
     alias: str | None,
     output_format: str,
     db: Session,
+    request: Request,
 ):
     if not settings.admin_api_tokens:
         return _error("API is not configured", output_format=output_format)
@@ -93,6 +102,23 @@ def _create_short_link(
 
     short_url = f"{settings.public_web_base_url.rstrip('/')}/{link.code}"
 
+    try:
+        log_security_event(
+            db,
+            event_type="developer_api_token_used",
+            actor_user_id=admin_user.id,
+            ip_address=_client_ip(request),
+            details={
+                "format": output_format,
+                "alias": final_alias or "",
+                "code": link.code,
+                "token_suffix": api_token[-4:] if len(api_token) >= 4 else api_token,
+            },
+            commit=True,
+        )
+    except Exception:
+        db.rollback()
+
     if output_format == "text":
         return PlainTextResponse(content=short_url)
 
@@ -101,6 +127,7 @@ def _create_short_link(
 
 @router.get("/api")
 def public_api_get(
+    request: Request,
     api: str = Query(default=""),
     url: str = Query(default=""),
     alias: str | None = Query(default=None),
@@ -123,6 +150,7 @@ def public_api_get(
         alias=alias,
         output_format=output_format,
         db=db,
+        request=request,
     )
 
 
@@ -168,4 +196,5 @@ async def public_api_post(request: Request, db: Session = Depends(get_db)):
         alias=str(alias) if alias is not None else None,
         output_format=output_format,
         db=db,
+        request=request,
     )

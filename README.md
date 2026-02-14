@@ -83,7 +83,7 @@ App routes:
 
 API routing (clean split):
 - Public: `GET /api`, `POST /api`, `GET /{code}`, `POST /flow/step-complete`, `GET /flow/go`
-- Admin: `/admin/auth/*`, `/admin/links/*`, `/admin/stats/*`
+- Admin: `/admin/auth/*`, `/admin/links/*`, `/admin/stats/*`, `/admin/security-events/*`
   - bootstrap endpoints:
     - `GET /admin/auth/status` -> `{ "initialized": true|false }`
     - `POST /admin/auth/setup` (only when initialized=false)
@@ -95,6 +95,9 @@ API routing (clean split):
       - body: `{ "email": "...", "password": "..." }` or `{ "email": "...", "recovery_code": "ABCD-EFGH-IJKL" }`
   - logout endpoint:
     - `POST /admin/auth/logout`
+  - security events endpoint:
+    - `GET /admin/security-events?limit=50` (admin auth required)
+    - `POST /admin/security-events` for UI-originated events (`settings_changed`, `link_blocked`, `link_unblocked`)
 
 Admin auth security rules:
 - Setup endpoint is one-time (only when `initialized=false`)
@@ -112,6 +115,8 @@ Admin auth security rules:
 - Admin account is stored with secure password hash only (no plain password in DB):
   - `email`, `password_hash`, `created_at`, `updated_at`
 - Setup issues 10 one-time recovery codes (shown once, hashed in DB); login can use recovery code when password is unavailable.
+- Security audit events are persisted and visible on `/admin/settings` (latest 50):
+  - `admin_setup_completed`, `admin_login_success`, `admin_login_failed`, `admin_password_reset_cli`, `developer_api_token_used`, `link_blocked`, `link_unblocked`, `settings_changed`
 
 Admin password reset (Dokploy-style):
 - This is intentionally terminal-only (not exposed via web API).
