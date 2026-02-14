@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { DASHBOARD_NAV_ITEMS } from "./dashboard-nav-items";
 import { isActivePath } from "./nav-utils";
 
-const MOBILE_NAV_ITEMS = DASHBOARD_NAV_ITEMS.filter((item) => item.href !== "/admin/tools");
+const MOBILE_NAV_ITEMS = DASHBOARD_NAV_ITEMS;
 
 export function MobileNav() {
   const pathname = usePathname();

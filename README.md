@@ -58,6 +58,13 @@ RUN_MIGRATIONS=true
 A Next route handler (`apps/web/src/app/[code]/route.ts`) forwards short-code hits from `urlshortener.../{code}` to API, so short links work on main domain without nginx.
 It auto-handles local docker-compose (`localhost` -> internal `api` service) to keep env setup minimal.
 
-Admin auth + dashboard:
+App routes:
+- Public pages: `(public)/*`
 - `/login` (single admin login)
-- `/admin/*` (admin-only dashboard routes)
+- `/admin/*` (overview, links, stats, settings)
+- `/l` (interstitial)
+- `/{code}` (short-code forwarder)
+
+API routing (clean split):
+- Public: `GET /{code}`, `POST /flow/step-complete`, `GET /flow/go`
+- Admin: `/admin/auth/*`, `/admin/links/*`, `/admin/stats/*`
