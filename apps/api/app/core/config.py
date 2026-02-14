@@ -36,7 +36,7 @@ class Settings(BaseModel):
 
     public_web_base_url: str = os.getenv("PUBLIC_WEB_BASE_URL", "http://localhost")
     public_api_base_url: str = os.getenv("PUBLIC_API_BASE_URL", "http://localhost/api")
-    public_api_token: str = os.getenv("PUBLIC_API_TOKEN", "")
+    admin_api_token: str = os.getenv("ADMIN_API_TOKEN", os.getenv("PUBLIC_API_TOKEN", ""))
 
 
 settings = Settings()
