@@ -8,6 +8,12 @@ const overviewCards = [
   { label: "Balance", value: "$143.00" },
 ];
 
+const qualitySignals = [
+  { label: "Captcha required (today)", value: "38.4%", hint: "Higher can mean bot pressure" },
+  { label: "Duplicate blocked (today)", value: "187", hint: "24h dedupe hits" },
+  { label: "Median completion time", value: "46s", hint: "Flow start → success" },
+];
+
 const chartRows = [
   { day: "Sat", clicks: 55, completions: 39 },
   { day: "Sun", clicks: 40, completions: 28 },
@@ -54,6 +60,16 @@ export default function DashboardHome() {
             <span style={{ width: `${progress}%` }} />
           </div>
         </StatCard>
+      </section>
+
+      <section className="card section">
+        <h2>Quality signals</h2>
+        <p className="muted">Use these to quickly spot bot waves or flow UX regressions.</p>
+        <div className="dash-cards-grid">
+          {qualitySignals.map((card, index) => (
+            <StatCard key={card.label} label={card.label} value={card.value} hint={card.hint} index={index} />
+          ))}
+        </div>
       </section>
 
       <section className="card section">
