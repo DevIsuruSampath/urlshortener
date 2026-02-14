@@ -77,7 +77,10 @@ App routes:
 API routing (clean split):
 - Public: `GET /api`, `POST /api`, `GET /{code}`, `POST /flow/step-complete`, `GET /flow/go`
 - Admin: `/admin/auth/*`, `/admin/links/*`, `/admin/stats/*`
-  - bootstrap endpoints: `GET /admin/auth/status`, `POST /admin/auth/setup`
+  - bootstrap endpoints:
+    - `GET /admin/auth/status` -> `{ "initialized": true|false }`
+    - `POST /admin/auth/setup` (only when initialized=false)
+      - body: `{ "email": "...", "password": "...", "confirm_password": "..." }`
 
 GPLinks-style shortener API (`/api`):
 - JSON (default):

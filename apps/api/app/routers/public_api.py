@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.session import get_db
-from app.services.admin_user_service import ensure_admin_user
+from app.services.admin_user_service import get_primary_admin_user, is_admin_initialized
 from app.services.link_service import create_link_record
 from app.services.url_safety import validate_public_destination_url
 
@@ -71,7 +71,12 @@ def _create_short_link(
     except ValueError as exc:
         return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST, output_format=output_format)
 
-    admin_user = ensure_admin_user(db)
+    if not is_admin_initialized(db):
+        return _error("Admin setup is required", status_code=status.HTTP_403_FORBIDDEN, output_format=output_format)
+
+    admin_user = get_primary_admin_user(db)
+    if not admin_user:
+        return _error("Admin user not found", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, output_format=output_format)
 
     try:
         link = create_link_record(

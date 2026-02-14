@@ -35,10 +35,9 @@ def _set_admin_initialized(db: Session, initialized: bool = True) -> None:
     else:
         db.add(AppSetting(key=ADMIN_INITIALIZED_KEY, value=value))
 
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
+
+def get_primary_admin_user(db: Session) -> User | None:
+    return db.execute(select(User).order_by(User.created_at.asc())).scalars().first()
 
 
 def is_admin_initialized(db: Session) -> bool:
@@ -46,25 +45,51 @@ def is_admin_initialized(db: Session) -> bool:
         setting = db.get(AppSetting, ADMIN_INITIALIZED_KEY)
     except SQLAlchemyError:
         # Compatibility fallback for databases not yet migrated.
-        existing = db.execute(select(User).where(User.email == admin_email())).scalar_one_or_none()
-        return existing is not None
+        return get_primary_admin_user(db) is not None
 
     if setting:
         return setting.value.strip().lower() == "true"
 
-    existing = db.execute(select(User).where(User.email == admin_email())).scalar_one_or_none()
-    return existing is not None
+    return get_primary_admin_user(db) is not None
+
+
+def create_admin_user_once(db: Session, *, email: str, password: str) -> User:
+    if is_admin_initialized(db) or get_primary_admin_user(db):
+        raise ValueError("Admin already initialized")
+
+    normalized_email = email.strip().lower()
+    if not normalized_email:
+        raise ValueError("Email is required")
+
+    user = User(email=normalized_email, password_hash=hash_password(password))
+    db.add(user)
+    _set_admin_initialized(db, True)
+
+    try:
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise ValueError("Admin already initialized") from exc
+
+    db.refresh(user)
+    return user
 
 
 def ensure_admin_user(db: Session) -> User:
-    email = admin_email()
-    user = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+    user = get_primary_admin_user(db)
     if user:
         _set_admin_initialized(db, True)
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
         return user
 
-    user = User(email=email, password_hash=_resolved_admin_password_hash())
+    # Compatibility path for old env-only setups.
+    fallback_email = admin_email()
+    user = User(email=fallback_email, password_hash=_resolved_admin_password_hash())
     db.add(user)
+    _set_admin_initialized(db, True)
 
     try:
         db.commit()
@@ -72,12 +97,9 @@ def ensure_admin_user(db: Session) -> User:
         db.rollback()
     else:
         db.refresh(user)
-        _set_admin_initialized(db, True)
         return user
 
-    existing = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
+    existing = get_primary_admin_user(db)
     if not existing:
         raise RuntimeError("Failed to provision admin user")
-
-    _set_admin_initialized(db, True)
     return existing

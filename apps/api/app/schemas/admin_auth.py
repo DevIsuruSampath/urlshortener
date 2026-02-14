@@ -1,9 +1,15 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 
 class AdminLoginIn(BaseModel):
     username: str
     password: str
+
+
+class AdminSetupIn(BaseModel):
+    email: EmailStr
+    password: str
+    confirm_password: str
 
 
 class TokenOut(BaseModel):

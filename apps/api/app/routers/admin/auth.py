@@ -8,11 +8,18 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.deps import get_current_admin
 from app.core.rate_limit import allow_ip_action
-from app.core.security import create_access_token, hash_password, verify_password
+from app.core.security import create_access_token, verify_password
 from app.db.models.user import User
 from app.db.session import get_db
-from app.schemas.admin_auth import AdminBootstrapStatusOut, AdminLoginIn, AdminMeOut, DeveloperTokenOut, TokenOut
-from app.services.admin_user_service import ensure_admin_user, is_admin_initialized
+from app.schemas.admin_auth import (
+    AdminBootstrapStatusOut,
+    AdminLoginIn,
+    AdminMeOut,
+    AdminSetupIn,
+    DeveloperTokenOut,
+    TokenOut,
+)
+from app.services.admin_user_service import create_admin_user_once, get_primary_admin_user, is_admin_initialized
 
 router = APIRouter()
 
@@ -34,16 +41,6 @@ def _enforce_auth_rate_limit(request: Request, action: str) -> None:
         )
 
 
-def _resolved_admin_password_hash() -> str:
-    if settings.admin_password_hash:
-        return settings.admin_password_hash
-
-    if settings.admin_password:
-        return hash_password(settings.admin_password)
-
-    raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Admin password hash is not configured")
-
-
 def _mask_token(token: str) -> str:
     if not token:
         return "not-configured"
@@ -59,10 +56,23 @@ def admin_bootstrap_status(db: Session = Depends(get_db)):
 
 
 @router.post("/setup", response_model=AdminBootstrapStatusOut)
-def admin_setup(request: Request, db: Session = Depends(get_db)):
+def admin_setup(payload: AdminSetupIn, request: Request, db: Session = Depends(get_db)):
     _enforce_auth_rate_limit(request, "setup")
-    if not is_admin_initialized(db):
-        ensure_admin_user(db)
+
+    if is_admin_initialized(db):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Admin already initialized")
+
+    if payload.password != payload.confirm_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password confirmation does not match")
+
+    if len(payload.password) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters")
+
+    try:
+        create_admin_user_once(db, email=str(payload.email), password=payload.password)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
     return AdminBootstrapStatusOut(initialized=True)
 
 
@@ -73,13 +83,19 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
     if not is_admin_initialized(db):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin setup is required")
 
-    username_ok = secrets.compare_digest(payload.username.strip(), settings.admin_username)
-    password_ok = verify_password(payload.password, _resolved_admin_password_hash())
+    user = get_primary_admin_user(db)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Admin user not found")
+
+    identifier = payload.username.strip().lower()
+    allowed_identifiers = {user.email.strip().lower(), settings.admin_username.strip().lower()}
+
+    username_ok = identifier in allowed_identifiers
+    password_ok = verify_password(payload.password, user.password_hash)
 
     if not (username_ok and password_ok):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
 
-    user = ensure_admin_user(db)
     token = create_access_token(str(user.id))
 
     response.set_cookie(

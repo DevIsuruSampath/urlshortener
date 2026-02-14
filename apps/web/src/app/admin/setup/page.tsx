@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { adminSetup, adminStatus, ApiError } from "@/lib/api";
 
@@ -21,6 +21,10 @@ export default function AdminSetupPage() {
   const [loadingStatus, setLoadingStatus] = useState(true);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
+
+  const [email, setEmail] = useState("admin@urlshortener.local");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -44,11 +48,32 @@ export default function AdminSetupPage() {
     };
   }, []);
 
-  async function onInitialize() {
+  async function onInitialize(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+
+    if (!password.trim()) {
+      setError("Password is required.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Password confirmation does not match.");
+      return;
+    }
+
     setRunning(true);
     setError("");
     try {
-      const res = await adminSetup();
+      const res = await adminSetup({
+        email: email.trim(),
+        password,
+        confirm_password: confirmPassword,
+      });
       if (res.initialized) {
         window.location.href = "/admin/login";
         return;
@@ -76,15 +101,48 @@ export default function AdminSetupPage() {
     <main className="container auth-shell">
       <section className="card auth-card">
         <h1>Admin setup</h1>
-        <p className="muted">First run detected. Initialize admin using your configured environment credentials.</p>
+        <p className="muted">First run detected. Create the only admin account.</p>
 
-        {error ? <p className="auth-error">{error}</p> : null}
+        <form className="auth-form" onSubmit={onInitialize}>
+          <label>
+            <span>Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </label>
 
-        <div className="settings-actions" style={{ marginTop: 12 }}>
-          <button className="btn" disabled={running} onClick={onInitialize} type="button">
+          <label>
+            <span>Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </label>
+
+          <label>
+            <span>Confirm password</span>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+              required
+            />
+          </label>
+
+          {error ? <p className="auth-error">{error}</p> : null}
+
+          <button className="btn" disabled={running} type="submit">
             {running ? "Initializing..." : "Initialize admin"}
           </button>
-        </div>
+        </form>
       </section>
     </main>
   );

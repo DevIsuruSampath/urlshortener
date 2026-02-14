@@ -34,6 +34,12 @@ export type AdminStatusResponse = {
   initialized: boolean;
 };
 
+export type AdminSetupPayload = {
+  email: string;
+  password: string;
+  confirm_password: string;
+};
+
 export type AdminLinkCreatePayload = {
   destination_url: string;
   tier?: string;
@@ -155,10 +161,11 @@ export async function adminStatus(): Promise<AdminStatusResponse> {
   return (await res.json()) as AdminStatusResponse;
 }
 
-export async function adminSetup(): Promise<AdminStatusResponse> {
+export async function adminSetup(payload: AdminSetupPayload): Promise<AdminStatusResponse> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/setup`, {
     method: "POST",
-    headers: authHeaders(),
+    headers: authHeaders(true),
+    body: JSON.stringify(payload),
     credentials: "include",
   });
 
