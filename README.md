@@ -61,8 +61,9 @@ STEP_RATE_LIMIT_PER_MINUTE=60
 AUTH_RATE_LIMIT_PER_MINUTE=20
 ADMIN_SETUP_RATE_LIMIT_PER_MINUTE=5
 ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE=10
-ADMIN_LOGIN_LOCKOUT_THRESHOLD=0
+ADMIN_LOGIN_LOCKOUT_THRESHOLD=10
 ADMIN_LOGIN_LOCKOUT_MINUTES=15
+ADMIN_LOGIN_PROGRESSIVE_DELAY_MAX_SECONDS=2
 REQUIRE_HTTPS_FOR_ADMIN_SETUP=true
 DATABASE_AUTO_CREATE=false
 RUN_MIGRATIONS=false
@@ -100,7 +101,8 @@ Admin auth security rules:
 - Optional setup lock token (`ADMIN_SETUP_TOKEN`) prevents public admin-claim during first deploy
 - Setup endpoint has per-IP rate limit (default `5/min`) and can require HTTPS in production
 - Login endpoint has per-IP rate limit (default `10/min`)
-- Optional login lockout can be enabled via `ADMIN_LOGIN_LOCKOUT_THRESHOLD`
+- Login lockout defaults to `10` failed attempts for `15` minutes (`ADMIN_LOGIN_LOCKOUT_THRESHOLD`, `ADMIN_LOGIN_LOCKOUT_MINUTES`)
+- Progressive delay is applied after failed login attempts (up to `ADMIN_LOGIN_PROGRESSIVE_DELAY_MAX_SECONDS`, default `2s`)
 - `/admin/links/*` and `/admin/stats/*` always require admin auth
 - Admin auth uses HTTP-only session cookie for split deploy:
   - API sets cookie on `api.*` domain

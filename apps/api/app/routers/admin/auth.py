@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import secrets
+import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
@@ -104,24 +105,38 @@ def _check_login_lockout(ip: str) -> None:
     )
 
 
-def _record_login_failure(ip: str) -> None:
-    if settings.admin_login_lockout_threshold <= 0:
-        return
-
+def _record_login_failure(ip: str) -> int:
     fail_key = _login_fail_key(ip)
     fail_count = redis_client.incr(fail_key)
     if fail_count == 1:
         redis_client.expire(fail_key, 60)
 
-    if fail_count >= settings.admin_login_lockout_threshold:
+    if settings.admin_login_lockout_threshold > 0 and fail_count >= settings.admin_login_lockout_threshold:
         redis_client.setex(_login_lock_key(ip), settings.admin_login_lockout_minutes * 60, "1")
         redis_client.delete(fail_key)
 
+    return fail_count
+
+
+def _apply_progressive_login_delay(fail_count: int) -> None:
+    max_delay = settings.admin_login_progressive_delay_max_seconds
+    if max_delay <= 0:
+        return
+
+    delay_seconds = min(max_delay, max(0, fail_count - 1))
+    if delay_seconds > 0:
+        time.sleep(delay_seconds)
+
 
 def _clear_login_failures(ip: str) -> None:
-    if settings.admin_login_lockout_threshold <= 0:
-        return
     redis_client.delete(_login_fail_key(ip))
+    redis_client.delete(_login_lock_key(ip))
+
+
+def _reject_invalid_credentials(ip: str) -> None:
+    fail_count = _record_login_failure(ip)
+    _apply_progressive_login_delay(fail_count)
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
 
 
 def _mask_token(token: str) -> str:
@@ -182,8 +197,7 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Provide password or recovery code")
 
     if not email_ok:
-        _record_login_failure(ip)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
+        _reject_invalid_credentials(ip)
 
     credential_ok = False
     if recovery_code:
@@ -194,8 +208,7 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
         credential_ok = verify_password(password, user.password_hash)
 
     if not credential_ok:
-        _record_login_failure(ip)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
+        _reject_invalid_credentials(ip)
 
     _clear_login_failures(ip)
 
