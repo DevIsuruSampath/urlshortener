@@ -67,15 +67,17 @@ It auto-handles local docker-compose (`localhost` -> internal `api` service) to 
 
 App routes:
 - Public pages: `(public)/*`
-- `/login` (single admin login)
+- `/admin/setup` (first-run bootstrap)
+- `/admin/login` (single admin login)
 - `/admin/*` (overview, links, stats, settings)
+- `/login` (compat redirect -> `/admin/login`)
 - `/l` (interstitial)
 - `/{code}` (short-code forwarder)
 
 API routing (clean split):
 - Public: `GET /api`, `POST /api`, `GET /{code}`, `POST /flow/step-complete`, `GET /flow/go`
 - Admin: `/admin/auth/*`, `/admin/links/*`, `/admin/stats/*`
-  - includes bootstrap detection endpoint: `GET /admin/auth/bootstrap-status`
+  - bootstrap endpoints: `GET /admin/auth/status`, `POST /admin/auth/setup`
 
 GPLinks-style shortener API (`/api`):
 - JSON (default):

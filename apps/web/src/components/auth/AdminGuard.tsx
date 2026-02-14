@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { adminMe } from "@/lib/api";
+import { adminMe, adminStatus, ApiError } from "@/lib/api";
 
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -10,14 +10,31 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let alive = true;
 
-    adminMe()
-      .then(() => {
-        if (alive) setLoading(false);
-      })
-      .catch(() => {
+    async function run() {
+      try {
+        const status = await adminStatus();
         if (!alive) return;
-        window.location.href = "/login";
-      });
+
+        if (!status.initialized) {
+          window.location.href = "/admin/setup";
+          return;
+        }
+
+        await adminMe();
+        if (alive) setLoading(false);
+      } catch (error) {
+        if (!alive) return;
+
+        if (error instanceof ApiError && error.status === 403) {
+          window.location.href = "/admin/setup";
+          return;
+        }
+
+        window.location.href = "/admin/login";
+      }
+    }
+
+    run();
 
     return () => {
       alive = false;
@@ -28,7 +45,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
     return (
       <main className="dash-page">
         <section className="card">
-          <p className="muted">Checking admin session…</p>
+          <p className="muted">Checking admin setup and session…</p>
         </section>
       </main>
     );

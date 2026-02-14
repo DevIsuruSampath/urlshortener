@@ -14,7 +14,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="auth-actions">
-          <Link href="/login" className="btn">
+          <Link href="/admin/login" className="btn">
             Admin Login
           </Link>
         </div>

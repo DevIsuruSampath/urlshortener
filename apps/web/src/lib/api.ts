@@ -30,6 +30,10 @@ export type AdminDeveloperTokenInfo = {
   masked_token: string;
 };
 
+export type AdminStatusResponse = {
+  initialized: boolean;
+};
+
 export type AdminLinkCreatePayload = {
   destination_url: string;
   tier?: string;
@@ -135,6 +139,34 @@ export async function adminMe(): Promise<{ username: string; user_id: string }> 
   }
 
   return (await res.json()) as { username: string; user_id: string };
+}
+
+export async function adminStatus(): Promise<AdminStatusResponse> {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/status`, {
+    method: "GET",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminStatusResponse;
+}
+
+export async function adminSetup(): Promise<AdminStatusResponse> {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/setup`, {
+    method: "POST",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminStatusResponse;
 }
 
 export async function adminLogout(): Promise<void> {

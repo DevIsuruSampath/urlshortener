@@ -11,7 +11,7 @@ export default function LandingPage() {
           and transparent stats.
         </p>
         <div className="hero-actions">
-          <Link href="/login" className="btn">
+          <Link href="/admin/login" className="btn">
             Admin Login
           </Link>
           <Link href="/admin" className="btn btn-ghost">
@@ -51,7 +51,7 @@ export default function LandingPage() {
       <section className="section card cta-strip">
         <h2>Ready to manage links in admin mode?</h2>
         <p className="muted">Sign in and control links, flow rules, and analytics from one dashboard.</p>
-        <Link href="/login" className="btn">
+        <Link href="/admin/login" className="btn">
           Go to Admin Login
         </Link>
       </section>

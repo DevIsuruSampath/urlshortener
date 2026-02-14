@@ -1,9 +1,5 @@
-import { AuthForm } from "@/components/auth/AuthForm";
+import { redirect } from "next/navigation";
 
 export default function LoginPage() {
-  return (
-    <main className="container auth-shell">
-      <AuthForm />
-    </main>
-  );
+  redirect("/admin/login");
 }

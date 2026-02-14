@@ -53,13 +53,25 @@ def _mask_token(token: str) -> str:
 
 
 @router.get("/bootstrap-status", response_model=AdminBootstrapStatusOut)
+@router.get("/status", response_model=AdminBootstrapStatusOut)
 def admin_bootstrap_status(db: Session = Depends(get_db)):
     return AdminBootstrapStatusOut(initialized=is_admin_initialized(db))
+
+
+@router.post("/setup", response_model=AdminBootstrapStatusOut)
+def admin_setup(request: Request, db: Session = Depends(get_db)):
+    _enforce_auth_rate_limit(request, "setup")
+    if not is_admin_initialized(db):
+        ensure_admin_user(db)
+    return AdminBootstrapStatusOut(initialized=True)
 
 
 @router.post("/login", response_model=TokenOut)
 def admin_login(payload: AdminLoginIn, request: Request, response: Response, db: Session = Depends(get_db)):
     _enforce_auth_rate_limit(request, "login")
+
+    if not is_admin_initialized(db):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin setup is required")
 
     username_ok = secrets.compare_digest(payload.username.strip(), settings.admin_username)
     password_ok = verify_password(payload.password, _resolved_admin_password_hash())

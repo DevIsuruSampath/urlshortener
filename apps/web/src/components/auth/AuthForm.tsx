@@ -12,6 +12,7 @@ function friendlyAuthError(error: unknown): string {
   if (!(error instanceof ApiError)) return "Something went wrong. Please try again.";
 
   if (error.status === 401) return "Invalid admin username or password.";
+  if (error.status === 403) return "Admin setup is required before login.";
   if (error.status === 429) return "Too many attempts. Please wait one minute and try again.";
   if (error.status === 400) return error.message;
 
@@ -43,6 +44,10 @@ export function AuthForm() {
       localStorage.setItem("paidlink_access_token", res.access_token);
       window.location.href = "/admin";
     } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        window.location.href = "/admin/setup";
+        return;
+      }
       setError(friendlyAuthError(err));
     } finally {
       setLoading(false);
