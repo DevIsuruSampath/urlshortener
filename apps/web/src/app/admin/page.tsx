@@ -1,12 +1,20 @@
+import Link from "next/link";
+
 import { StatCard } from "@/components/ui/StatCard";
 
 const overviewCards = [
   { label: "Today clicks", value: "2,184" },
   { label: "Valid completions", value: "1,602" },
-  { label: "Invalid rate", value: "26.6%" },
   { label: "Earnings today", value: "$18.42" },
   { label: "Balance", value: "$143.00" },
 ];
+
+const invalidBreakdown = [
+  { key: "duplicate", label: "Duplicate", value: "12%" },
+  { key: "too_fast", label: "Too fast", value: "7%" },
+  { key: "rate_limited", label: "Rate limited", value: "4%" },
+  { key: "captcha_failed", label: "Captcha failed", value: "3%" },
+] as const;
 
 const qualitySignals = [
   { label: "Captcha required (today)", value: "38.4%", hint: "Higher can mean bot pressure" },
@@ -55,7 +63,22 @@ export default function DashboardHome() {
           <StatCard key={card.label} label={card.label} value={card.value} index={index} />
         ))}
 
-        <StatCard label="Next payout threshold" value={`$${threshold.toFixed(0)}`} hint={`$${balance.toFixed(2)} / $${threshold.toFixed(0)}`} index={overviewCards.length}>
+        <StatCard label="Invalid rate" value="26.6%" hint="Tap a reason to diagnose in Stats" index={overviewCards.length}>
+          <ul className="signal-breakdown">
+            {invalidBreakdown.map((item) => (
+              <li key={item.key}>
+                <Link href={`/admin/stats?reason=${item.key}`}>{item.label}: {item.value}</Link>
+              </li>
+            ))}
+          </ul>
+        </StatCard>
+
+        <StatCard
+          label="Next payout threshold"
+          value={`$${threshold.toFixed(0)}`}
+          hint={`$${balance.toFixed(2)} / $${threshold.toFixed(0)}`}
+          index={overviewCards.length + 1}
+        >
           <div className="progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
             <span style={{ width: `${progress}%` }} />
           </div>

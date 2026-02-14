@@ -1,4 +1,27 @@
+import Link from "next/link";
+
 import { StatCard } from "@/components/ui/StatCard";
+
+type StatsPageProps = {
+  searchParams?: {
+    reason?: string | string[];
+  };
+};
+
+const reasonMeta = {
+  duplicate: { label: "Duplicate", percent: "12%", count: 187, hint: "24h dedupe blocks" },
+  too_fast: { label: "Too fast", percent: "7%", count: 109, hint: "Step timing too short" },
+  rate_limited: { label: "Rate limited", percent: "4%", count: 62, hint: "Per-IP or per-session limits" },
+  captcha_failed: { label: "Captcha failed", percent: "3%", count: 47, hint: "Failed captcha verification" },
+} as const;
+
+type InvalidReason = keyof typeof reasonMeta;
+
+const allReasons = Object.keys(reasonMeta) as InvalidReason[];
+
+function isInvalidReason(value: string): value is InvalidReason {
+  return allReasons.includes(value as InvalidReason);
+}
 
 const rows = [
   { date: "2026-02-14", valid: 242, invalid: 69, earnings: "$18.42" },
@@ -8,7 +31,25 @@ const rows = [
   { date: "2026-02-10", valid: 226, invalid: 63, earnings: "$17.58" },
 ];
 
-export default function StatsPage() {
+const invalidEvents: Array<{ time: string; code: string; reason: InvalidReason; detail: string }> = [
+  { time: "16:11", code: "a9x3k", reason: "duplicate", detail: "same IP + UA hash within 24h" },
+  { time: "16:08", code: "pro77", reason: "captcha_failed", detail: "captcha score below threshold" },
+  { time: "16:04", code: "mobi2", reason: "too_fast", detail: "step-2 completed in 1.1s" },
+  { time: "16:03", code: "a9x3k", reason: "duplicate", detail: "repeat completion attempt" },
+  { time: "15:58", code: "dlp20", reason: "rate_limited", detail: "rate limit reached for source" },
+  { time: "15:54", code: "pro77", reason: "too_fast", detail: "flow completed below min threshold" },
+  { time: "15:50", code: "mobi2", reason: "duplicate", detail: "same fingerprint in dedupe window" },
+];
+
+export default function StatsPage({ searchParams }: StatsPageProps) {
+  const rawReason = Array.isArray(searchParams?.reason) ? searchParams?.reason[0] : searchParams?.reason;
+  const selectedReason = rawReason && isInvalidReason(rawReason) ? rawReason : null;
+  const selectedLabel = selectedReason ? reasonMeta[selectedReason].label : "All reasons";
+
+  const visibleEvents = selectedReason
+    ? invalidEvents.filter((event) => event.reason === selectedReason)
+    : invalidEvents;
+
   return (
     <main className="dash-page">
       <header className="dash-page-head">
@@ -20,6 +61,64 @@ export default function StatsPage() {
         <StatCard label="Today" value="$18.42" hint="Estimated" index={0} />
         <StatCard label="Last 7 days" value="$108.19" hint="Estimated" index={1} />
         <StatCard label="Last 30 days" value="$432.87" hint="Estimated" index={2} />
+      </section>
+
+      <section className="card section">
+        <h2>Invalid reasons (today)</h2>
+        <p className="muted">Click a reason to filter diagnosis events below.</p>
+        <div className="signal-filters" role="tablist" aria-label="Invalid reason filters">
+          <Link href="/admin/stats" className={`signal-filter ${selectedReason ? "" : "active"}`}>
+            All reasons
+          </Link>
+          {allReasons.map((reason) => (
+            <Link
+              key={reason}
+              href={`/admin/stats?reason=${reason}`}
+              className={`signal-filter ${selectedReason === reason ? "active" : ""}`}
+            >
+              {reasonMeta[reason].label}
+            </Link>
+          ))}
+        </div>
+
+        <div className="dash-cards-grid">
+          {allReasons.map((reason, index) => (
+            <StatCard
+              key={reason}
+              label={reasonMeta[reason].label}
+              value={reasonMeta[reason].percent}
+              hint={`${reasonMeta[reason].count} today · ${reasonMeta[reason].hint}`}
+              index={index}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section className="card section">
+        <h2>Diagnosis events</h2>
+        <p className="muted">Showing: {selectedLabel}</p>
+        <div className="table-wrap">
+          <table className="tier-table dash-responsive-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Code</th>
+                <th>Reason</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleEvents.map((event, index) => (
+                <tr key={`${event.time}-${event.code}-${index}`}>
+                  <td data-label="Time">{event.time}</td>
+                  <td data-label="Code">{event.code}</td>
+                  <td data-label="Reason">{reasonMeta[event.reason].label}</td>
+                  <td data-label="Detail">{event.detail}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <section className="card section">
