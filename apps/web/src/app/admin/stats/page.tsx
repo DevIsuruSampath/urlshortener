@@ -8,11 +8,19 @@ type StatsPageProps = {
   };
 };
 
+const funnelStages = [
+  { key: "started", label: "Started", count: 2608 },
+  { key: "step1", label: "Step 1", count: 2174 },
+  { key: "step2", label: "Step 2", count: 1896 },
+  { key: "step3", label: "Step 3", count: 1715 },
+  { key: "completed", label: "Completed", count: 1602 },
+] as const;
+
 const reasonMeta = {
-  duplicate: { label: "Duplicate", percent: "12%", count: 187, hint: "24h dedupe blocks" },
-  too_fast: { label: "Too fast", percent: "7%", count: 109, hint: "Step timing too short" },
-  rate_limited: { label: "Rate limited", percent: "4%", count: 62, hint: "Per-IP or per-session limits" },
-  captcha_failed: { label: "Captcha failed", percent: "3%", count: 47, hint: "Failed captcha verification" },
+  duplicate: { label: "Duplicate", percent: 12, count: 187, hint: "24h dedupe blocks" },
+  too_fast: { label: "Too fast", percent: 7, count: 109, hint: "Step timing too short" },
+  rate_limited: { label: "Rate limited", percent: 4, count: 62, hint: "Per-IP or per-session limits" },
+  captcha_failed: { label: "Captcha failed", percent: 3, count: 47, hint: "Failed captcha verification" },
 } as const;
 
 type InvalidReason = keyof typeof reasonMeta;
@@ -41,14 +49,20 @@ const invalidEvents: Array<{ time: string; code: string; reason: InvalidReason; 
   { time: "15:50", code: "mobi2", reason: "duplicate", detail: "same fingerprint in dedupe window" },
 ];
 
+function pct(part: number, total: number): string {
+  if (total <= 0) return "0.0%";
+  return `${((part / total) * 100).toFixed(1)}%`;
+}
+
 export default function StatsPage({ searchParams }: StatsPageProps) {
   const rawReason = Array.isArray(searchParams?.reason) ? searchParams?.reason[0] : searchParams?.reason;
   const selectedReason = rawReason && isInvalidReason(rawReason) ? rawReason : null;
   const selectedLabel = selectedReason ? reasonMeta[selectedReason].label : "All reasons";
 
-  const visibleEvents = selectedReason
-    ? invalidEvents.filter((event) => event.reason === selectedReason)
-    : invalidEvents;
+  const visibleEvents = selectedReason ? invalidEvents.filter((event) => event.reason === selectedReason) : invalidEvents;
+
+  const startedCount = funnelStages[0].count;
+  const maxReasonCount = Math.max(...allReasons.map((reason) => reasonMeta[reason].count), 1);
 
   return (
     <main className="dash-page">
@@ -64,34 +78,81 @@ export default function StatsPage({ searchParams }: StatsPageProps) {
       </section>
 
       <section className="card section">
+        <h2>Flow funnel (today)</h2>
+        <p className="muted">Started → Step1 → Step2 → Step3 → Completed, with drop-off by step.</p>
+
+        <ul className="funnel-list">
+          {funnelStages.map((stage, index) => {
+            const previousCount = index === 0 ? null : funnelStages[index - 1].count;
+            const dropCount = previousCount === null ? 0 : Math.max(previousCount - stage.count, 0);
+            const dropPercent = previousCount === null ? "—" : pct(dropCount, previousCount);
+            const shareWidth = Math.max((stage.count / startedCount) * 100, 4);
+
+            return (
+              <li key={stage.key} className="funnel-item">
+                <div className="funnel-head">
+                  <p>
+                    <strong>{stage.label}</strong>
+                  </p>
+                  <p>
+                    <strong>{stage.count.toLocaleString()}</strong>
+                    <span className="muted"> ({pct(stage.count, startedCount)} of started)</span>
+                  </p>
+                </div>
+
+                <div className="funnel-bar" role="img" aria-label={`${stage.label} share`}>
+                  <span style={{ width: `${shareWidth}%` }} />
+                </div>
+
+                <p className="muted funnel-drop">
+                  {previousCount === null
+                    ? "Entry stage"
+                    : `Drop-off from previous: ${dropCount.toLocaleString()} (${dropPercent})`}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      <section className="card section">
         <h2>Invalid reasons (today)</h2>
-        <p className="muted">Click a reason to filter diagnosis events below.</p>
+        <p className="muted">Bar list for fast anomaly detection. Click a reason to filter diagnosis events below.</p>
+
         <div className="signal-filters" role="tablist" aria-label="Invalid reason filters">
           <Link href="/admin/stats" className={`signal-filter ${selectedReason ? "" : "active"}`}>
             All reasons
           </Link>
           {allReasons.map((reason) => (
-            <Link
-              key={reason}
-              href={`/admin/stats?reason=${reason}`}
-              className={`signal-filter ${selectedReason === reason ? "active" : ""}`}
-            >
+            <Link key={reason} href={`/admin/stats?reason=${reason}`} className={`signal-filter ${selectedReason === reason ? "active" : ""}`}>
               {reasonMeta[reason].label}
             </Link>
           ))}
         </div>
 
-        <div className="dash-cards-grid">
-          {allReasons.map((reason, index) => (
-            <StatCard
-              key={reason}
-              label={reasonMeta[reason].label}
-              value={reasonMeta[reason].percent}
-              hint={`${reasonMeta[reason].count} today · ${reasonMeta[reason].hint}`}
-              index={index}
-            />
-          ))}
-        </div>
+        <ul className="reason-bars">
+          {allReasons.map((reason) => {
+            const meta = reasonMeta[reason];
+            const width = Math.max((meta.count / maxReasonCount) * 100, 6);
+            return (
+              <li key={reason}>
+                <div className="reason-bars-head">
+                  <p>
+                    <strong>{meta.label}</strong>
+                    <span className="muted"> · {meta.hint}</span>
+                  </p>
+                  <p>
+                    <strong>{meta.percent}%</strong>
+                    <span className="muted"> · {meta.count} events</span>
+                  </p>
+                </div>
+                <div className="reason-bar-track" role="img" aria-label={`${meta.label} count bar`}>
+                  <span style={{ width: `${width}%` }} />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       </section>
 
       <section className="card section">

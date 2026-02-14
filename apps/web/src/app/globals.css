@@ -857,6 +857,58 @@ a { color: inherit; text-decoration: none; }
   background: rgba(229, 9, 20, 0.14);
 }
 
+.funnel-list,
+.reason-bars {
+  list-style: none;
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.funnel-item,
+.reason-bars li {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+.funnel-head,
+.reason-bars-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.funnel-head p,
+.reason-bars-head p {
+  margin: 0;
+}
+
+.funnel-bar,
+.reason-bar-track {
+  margin-top: 8px;
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.funnel-bar span,
+.reason-bar-track span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), #ff555d);
+}
+
+.funnel-drop {
+  margin: 8px 0 0;
+}
+
 .progress-card,
 .payouts-grid .dash-stat-card {
   display: grid;
