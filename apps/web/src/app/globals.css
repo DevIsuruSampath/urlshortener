@@ -1082,6 +1082,10 @@ a { color: inherit; text-decoration: none; }
   font-size: var(--text-sm);
 }
 
+.revenue-note {
+  margin-top: calc(var(--space-3) * -0.5);
+}
+
 .settings-grid {
   align-items: stretch;
 }

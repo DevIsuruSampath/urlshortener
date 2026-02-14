@@ -32,11 +32,11 @@ function isInvalidReason(value: string): value is InvalidReason {
 }
 
 const rows = [
-  { date: "2026-02-14", valid: 242, invalid: 69, earnings: "$18.42" },
-  { date: "2026-02-13", valid: 236, invalid: 71, earnings: "$19.44" },
-  { date: "2026-02-12", valid: 220, invalid: 64, earnings: "$16.37" },
-  { date: "2026-02-11", valid: 213, invalid: 59, earnings: "$14.22" },
-  { date: "2026-02-10", valid: 226, invalid: 63, earnings: "$17.58" },
+  { date: "2026-02-14", valid: 242, invalid: 69, estimatedRevenue: "$18.42" },
+  { date: "2026-02-13", valid: 236, invalid: 71, estimatedRevenue: "$19.44" },
+  { date: "2026-02-12", valid: 220, invalid: 64, estimatedRevenue: "$16.37" },
+  { date: "2026-02-11", valid: 213, invalid: 59, estimatedRevenue: "$14.22" },
+  { date: "2026-02-10", valid: 226, invalid: 63, estimatedRevenue: "$17.58" },
 ];
 
 const invalidEvents: Array<{ time: string; code: string; reason: InvalidReason; detail: string }> = [
@@ -68,14 +68,17 @@ export default function StatsPage({ searchParams }: StatsPageProps) {
     <main className="dash-page">
       <header className="dash-page-head">
         <h1>Stats</h1>
-        <p className="muted">Admin-level traffic quality and earnings snapshot.</p>
+        <p className="muted">Admin-level traffic quality and estimated revenue snapshot.</p>
       </header>
 
       <section className="dash-cards-grid payouts-grid">
-        <StatCard label="Today" value="$18.42" hint="Estimated" index={0} />
-        <StatCard label="Last 7 days" value="$108.19" hint="Estimated" index={1} />
-        <StatCard label="Last 30 days" value="$432.87" hint="Estimated" index={2} />
+        <StatCard label="Estimated revenue (today)" value="$18.42" hint="RPM-based estimate" index={0} />
+        <StatCard label="Estimated revenue (7d)" value="$108.19" hint="RPM-based estimate" index={1} />
+        <StatCard label="Estimated revenue (30d)" value="$432.87" hint="RPM-based estimate" index={2} />
       </section>
+      <p className="muted revenue-note">
+        Based on configured RPM rates; actual ad network payout may differ.
+      </p>
 
       <section className="card section">
         <h2>Flow funnel (today)</h2>
@@ -191,7 +194,7 @@ export default function StatsPage({ searchParams }: StatsPageProps) {
                 <th>Date</th>
                 <th>Valid</th>
                 <th>Invalid</th>
-                <th>Earnings</th>
+                <th>Est. revenue</th>
               </tr>
             </thead>
             <tbody>
@@ -200,7 +203,7 @@ export default function StatsPage({ searchParams }: StatsPageProps) {
                   <td data-label="Date">{row.date}</td>
                   <td data-label="Valid">{row.valid}</td>
                   <td data-label="Invalid">{row.invalid}</td>
-                  <td data-label="Earnings">{row.earnings}</td>
+                  <td data-label="Est. revenue">{row.estimatedRevenue}</td>
                 </tr>
               ))}
             </tbody>

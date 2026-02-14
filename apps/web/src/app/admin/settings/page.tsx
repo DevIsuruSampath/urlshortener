@@ -31,6 +31,10 @@ export default function SettingsPage() {
   const [rotationEnabled, setRotationEnabled] = useState(true);
   const [primaryAdNetwork, setPrimaryAdNetwork] = useState("monetag");
   const [secondaryAdNetwork, setSecondaryAdNetwork] = useState("adsterra");
+  const [globalMobileRpm, setGlobalMobileRpm] = useState("1.20");
+  const [globalDesktopRpm, setGlobalDesktopRpm] = useState("1.80");
+  const [lkMobileRpm, setLkMobileRpm] = useState("1.55");
+  const [inMobileRpm, setInMobileRpm] = useState("0.95");
 
   function onPasswordChange(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -247,6 +251,51 @@ export default function SettingsPage() {
                 <option value="monetag">Monetag</option>
               </Select>
             </div>
+
+            <h3 className="section-subhead">RPM assumptions (estimated revenue)</h3>
+            <p className="muted">
+              Based on configured RPM rates; actual ad network payout may differ.
+            </p>
+
+            <div className="settings-inline-grid">
+              <Input
+                label="Global mobile RPM (USD)"
+                type="number"
+                min={0}
+                step="0.01"
+                value={globalMobileRpm}
+                onChange={(e) => setGlobalMobileRpm(e.target.value)}
+              />
+              <Input
+                label="Global desktop RPM (USD)"
+                type="number"
+                min={0}
+                step="0.01"
+                value={globalDesktopRpm}
+                onChange={(e) => setGlobalDesktopRpm(e.target.value)}
+              />
+            </div>
+
+            <div className="settings-inline-grid">
+              <Input
+                label="LK mobile RPM (USD)"
+                type="number"
+                min={0}
+                step="0.01"
+                value={lkMobileRpm}
+                onChange={(e) => setLkMobileRpm(e.target.value)}
+              />
+              <Input
+                label="IN mobile RPM (USD)"
+                type="number"
+                min={0}
+                step="0.01"
+                value={inMobileRpm}
+                onChange={(e) => setInMobileRpm(e.target.value)}
+              />
+            </div>
+
+            <p className="muted">Geo/device RPM matrix editor can be expanded later from these base assumptions.</p>
 
             <div className="settings-actions">
               <Button type="submit">Save monetization settings</Button>

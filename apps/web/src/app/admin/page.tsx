@@ -5,8 +5,8 @@ import { StatCard } from "@/components/ui/StatCard";
 const overviewCards = [
   { label: "Today clicks", value: "2,184" },
   { label: "Valid completions", value: "1,602" },
-  { label: "Earnings today", value: "$18.42" },
-  { label: "Balance", value: "$143.00" },
+  { label: "Estimated revenue (today)", value: "$18.42" },
+  { label: "Estimated balance", value: "$143.00" },
 ];
 
 const invalidBreakdown = [
@@ -33,10 +33,10 @@ const chartRows = [
 ];
 
 const topLinks = [
-  { code: "a9x3k", title: "Summer promo", clicks: 640, valid: 486, invalid: 96, earnings: "$5.21", status: "active" },
-  { code: "pro77", title: "Product launch", clicks: 401, valid: 289, invalid: 78, earnings: "$3.60", status: "active" },
-  { code: "mobi2", title: "Mobile burst", clicks: 311, valid: 245, invalid: 51, earnings: "$2.94", status: "paused" },
-  { code: "dlp20", title: "Download gate", clicks: 268, valid: 198, invalid: 49, earnings: "$2.41", status: "blocked" },
+  { code: "a9x3k", title: "Summer promo", clicks: 640, valid: 486, invalid: 96, estimatedRevenue: "$5.21", status: "active" },
+  { code: "pro77", title: "Product launch", clicks: 401, valid: 289, invalid: 78, estimatedRevenue: "$3.60", status: "active" },
+  { code: "mobi2", title: "Mobile burst", clicks: 311, valid: 245, invalid: 51, estimatedRevenue: "$2.94", status: "paused" },
+  { code: "dlp20", title: "Download gate", clicks: 268, valid: 198, invalid: 49, estimatedRevenue: "$2.41", status: "blocked" },
 ] as const;
 
 type LinkCode = (typeof topLinks)[number]["code"];
@@ -189,6 +189,9 @@ export default function DashboardHome({ searchParams }: DashboardHomeProps) {
           </div>
         </StatCard>
       </section>
+      <p className="muted revenue-note">
+        Estimated revenue is based on configured RPM rates; actual ad network payout may differ.
+      </p>
 
       <section className="card section">
         <h2>Quality signals</h2>
@@ -232,7 +235,7 @@ export default function DashboardHome({ searchParams }: DashboardHomeProps) {
                   <th>Valid</th>
                   <th>CVR</th>
                   <th>Invalid %</th>
-                  <th>Earnings</th>
+                  <th>Est. revenue</th>
                 </tr>
               </thead>
               <tbody>
@@ -246,7 +249,7 @@ export default function DashboardHome({ searchParams }: DashboardHomeProps) {
                     <td data-label="Valid">{row.valid}</td>
                     <td data-label="CVR">{percent(row.valid, row.clicks)}</td>
                     <td data-label="Invalid %">{percent(row.invalid, row.clicks)}</td>
-                    <td data-label="Earnings">{row.earnings}</td>
+                    <td data-label="Est. revenue">{row.estimatedRevenue}</td>
                   </tr>
                 ))}
               </tbody>
