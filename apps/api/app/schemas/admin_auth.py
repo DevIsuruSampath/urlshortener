@@ -14,3 +14,7 @@ class TokenOut(BaseModel):
 class AdminMeOut(BaseModel):
     username: str
     user_id: str
+
+
+class DeveloperTokenOut(BaseModel):
+    masked_token: str

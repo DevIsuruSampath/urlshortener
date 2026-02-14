@@ -38,23 +38,28 @@ You can use either:
 Set web env:
 ```env
 NEXT_PUBLIC_API_BASE=https://api.urlshortener.devisuru.ggff.net
-NEXT_PUBLIC_ADMIN_API_TOKEN=replace_with_long_api_token
 ```
 
 Set API env:
 ```env
 PUBLIC_WEB_BASE_URL=https://urlshortener.devisuru.ggff.net
 PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
-ADMIN_API_TOKEN=replace_with_long_api_token
+CORS_ORIGINS=https://urlshortener.devisuru.ggff.net
+ADMIN_API_TOKENS=replace_token_1,replace_token_2
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD_HASH=replace_with_bcrypt_or_argon2_hash
+ADMIN_SESSION_COOKIE_NAME=paidlink_admin_session
+COOKIE_SECURE=true
+COOKIE_SAMESITE=lax
+COOKIE_HTTPONLY=true
+FLOW_SIGNING_SECRET=replace_with_long_random_secret
+ADMIN_JWT_SECRET=replace_with_long_random_secret
 SESSION_TOKEN_EXPIRE_MINUTES=15
 START_RATE_LIMIT_PER_MINUTE=120
 STEP_RATE_LIMIT_PER_MINUTE=60
 AUTH_RATE_LIMIT_PER_MINUTE=20
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=replace_with_strong_admin_password
-ADMIN_SESSION_COOKIE_NAME=paidlink_admin_session
-DATABASE_AUTO_CREATE=true
-RUN_MIGRATIONS=true
+DATABASE_AUTO_CREATE=false
+RUN_MIGRATIONS=false
 ```
 
 A Next route handler (`apps/web/src/app/[code]/route.ts`) forwards short-code hits from `urlshortener.../{code}` to API, so short links work on main domain without nginx.
@@ -88,7 +93,7 @@ Response formats:
   - Error: `400` with empty body (GPLinks-compatible)
 
 Validation rules:
-- `api` must match `ADMIN_API_TOKEN`
+- `api` must match one value in `ADMIN_API_TOKENS`
 - `url` must be `http://` or `https://` and pass public URL safety checks (no localhost/private/internal targets)
 - `alias` (optional) must be `4-20` chars (`A-Z`, `a-z`, `0-9`, `_`, `-`) and unique
 - `format` (optional) must be `json` or `text`

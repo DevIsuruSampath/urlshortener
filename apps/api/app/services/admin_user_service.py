@@ -16,13 +16,21 @@ def admin_email() -> str:
     return f"{username}@admin.local"
 
 
+def _resolved_admin_password_hash() -> str:
+    if settings.admin_password_hash:
+        return settings.admin_password_hash
+    if settings.admin_password:
+        return hash_password(settings.admin_password)
+    return hash_password("change_this_admin_password")
+
+
 def ensure_admin_user(db: Session) -> User:
     email = admin_email()
     user = db.execute(select(User).where(User.email == email)).scalar_one_or_none()
     if user:
         return user
 
-    user = User(email=email, password_hash=hash_password(settings.admin_password))
+    user = User(email=email, password_hash=_resolved_admin_password_hash())
     db.add(user)
 
     try:

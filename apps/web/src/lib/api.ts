@@ -26,6 +26,10 @@ export type AuthResponse = {
   token_type: string;
 };
 
+export type AdminDeveloperTokenInfo = {
+  masked_token: string;
+};
+
 export type AdminLinkCreatePayload = {
   destination_url: string;
   tier?: string;
@@ -143,6 +147,20 @@ export async function adminLogout(): Promise<void> {
   if (!res.ok) {
     throw await parseError(res);
   }
+}
+
+export async function adminDeveloperTokenInfo(): Promise<AdminDeveloperTokenInfo> {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/developer-token`, {
+    method: "GET",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminDeveloperTokenInfo;
 }
 
 export async function adminCreateLink(payload: AdminLinkCreatePayload): Promise<AdminLinkResponse> {

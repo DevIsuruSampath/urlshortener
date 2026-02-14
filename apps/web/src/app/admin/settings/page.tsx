@@ -1,19 +1,14 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { CopyButton } from "@/components/ui/CopyButton";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
+import { adminDeveloperTokenInfo, ApiError } from "@/lib/api";
 import { env } from "@/lib/env";
-
-function maskToken(token: string): string {
-  if (!token) return "not-configured";
-  if (token.length <= 8) return token;
-  return `${token.slice(0, 4)}...${token.slice(-4)}`;
-}
 
 function toAbsoluteBaseUrl(base: string): string {
   if (base.startsWith("http://") || base.startsWith("https://")) {
@@ -56,13 +51,35 @@ export default function SettingsPage() {
   const [lkMobileRpm, setLkMobileRpm] = useState("1.55");
   const [inMobileRpm, setInMobileRpm] = useState("0.95");
 
+  const [maskedDevelopersApiToken, setMaskedDevelopersApiToken] = useState("loading...");
+
   const developersApiBase = useMemo(() => `${toAbsoluteBaseUrl(env.apiBase)}/api`, []);
-  const developersApiToken = env.adminApiToken;
-  const maskedDevelopersApiToken = maskToken(developersApiToken);
   const sampleDestination = "https://example.com/landing";
   const sampleAlias = "myalias";
-  const sampleJsonRequest = `${developersApiBase}?api=${encodeURIComponent(developersApiToken || "TOKEN")}&url=${encodeURIComponent(sampleDestination)}&alias=${encodeURIComponent(sampleAlias)}`;
+  const sampleJsonRequest = `${developersApiBase}?api=YOUR_TOKEN&url=${encodeURIComponent(sampleDestination)}&alias=${encodeURIComponent(sampleAlias)}`;
   const sampleTextRequest = `${sampleJsonRequest}&format=text`;
+
+  useEffect(() => {
+    let alive = true;
+
+    adminDeveloperTokenInfo()
+      .then((res) => {
+        if (!alive) return;
+        setMaskedDevelopersApiToken(res.masked_token || "not-configured");
+      })
+      .catch((error) => {
+        if (!alive) return;
+        if (error instanceof ApiError && error.status === 401) {
+          setMaskedDevelopersApiToken("session-required");
+          return;
+        }
+        setMaskedDevelopersApiToken("not-configured");
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   function onPasswordChange(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -349,11 +366,8 @@ export default function SettingsPage() {
             <p className="muted">Admin API token (masked)</p>
             <div className="settings-copy-row">
               <code className="settings-code">{maskedDevelopersApiToken}</code>
-              <CopyButton value={developersApiToken || ""} label="Copy token" />
             </div>
-            {!developersApiToken ? (
-              <p className="auth-error">Set NEXT_PUBLIC_ADMIN_API_TOKEN to enable token copy in this UI.</p>
-            ) : null}
+            <p className="muted">For security, full token is never exposed to browser UI.</p>
           </div>
 
           <div>

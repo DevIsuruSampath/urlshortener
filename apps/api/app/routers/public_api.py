@@ -55,10 +55,10 @@ def _create_short_link(
     output_format: str,
     db: Session,
 ):
-    if not settings.admin_api_token:
+    if not settings.admin_api_tokens:
         return _error("API is not configured", output_format=output_format)
 
-    if api_token != settings.admin_api_token:
+    if api_token not in settings.admin_api_tokens:
         return _error("Invalid API token", status_code=status.HTTP_401_UNAUTHORIZED, output_format=output_format)
 
     try:
