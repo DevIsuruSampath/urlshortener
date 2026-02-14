@@ -87,13 +87,10 @@ def admin_login(payload: AdminLoginIn, request: Request, response: Response, db:
     if not user:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Admin user not found")
 
-    identifier = payload.username.strip().lower()
-    allowed_identifiers = {user.email.strip().lower(), settings.admin_username.strip().lower()}
-
-    username_ok = identifier in allowed_identifiers
+    email_ok = payload.email.strip().lower() == user.email.strip().lower()
     password_ok = verify_password(payload.password, user.password_hash)
 
-    if not (username_ok and password_ok):
+    if not (email_ok and password_ok):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin credentials")
 
     token = create_access_token(str(user.id))

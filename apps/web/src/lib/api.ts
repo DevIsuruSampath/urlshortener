@@ -17,7 +17,7 @@ export type StepCompleteResponse = {
 };
 
 export type AdminLoginPayload = {
-  username: string;
+  email: string;
   password: string;
 };
 

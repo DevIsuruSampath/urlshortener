@@ -81,6 +81,9 @@ API routing (clean split):
     - `GET /admin/auth/status` -> `{ "initialized": true|false }`
     - `POST /admin/auth/setup` (only when initialized=false)
       - body: `{ "email": "...", "password": "...", "confirm_password": "..." }`
+  - login endpoint:
+    - `POST /admin/auth/login`
+      - body: `{ "email": "...", "password": "..." }`
 
 GPLinks-style shortener API (`/api`):
 - JSON (default):

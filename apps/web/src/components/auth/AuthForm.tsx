@@ -11,7 +11,7 @@ function friendlyAuthError(error: unknown): string {
 
   if (!(error instanceof ApiError)) return "Something went wrong. Please try again.";
 
-  if (error.status === 401) return "Invalid admin username or password.";
+  if (error.status === 401) return "Invalid admin email or password.";
   if (error.status === 403) return "Admin setup is required before login.";
   if (error.status === 429) return "Too many attempts. Please wait one minute and try again.";
   if (error.status === 400) return error.message;
@@ -20,7 +20,7 @@ function friendlyAuthError(error: unknown): string {
 }
 
 export function AuthForm() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -29,8 +29,8 @@ export function AuthForm() {
     e.preventDefault();
     setError("");
 
-    if (!username.trim()) {
-      setError("Username is required.");
+    if (!email.trim()) {
+      setError("Email is required.");
       return;
     }
     if (!password.trim()) {
@@ -40,7 +40,7 @@ export function AuthForm() {
 
     setLoading(true);
     try {
-      const res = await adminLogin({ username, password });
+      const res = await adminLogin({ email, password });
       localStorage.setItem("paidlink_access_token", res.access_token);
       window.location.href = "/admin";
     } catch (err) {
@@ -61,13 +61,13 @@ export function AuthForm() {
 
       <form className="auth-form" onSubmit={onSubmit}>
         <label>
-          <span>Username</span>
+          <span>Email</span>
           <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            placeholder="admin"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            placeholder="admin@example.com"
             required
           />
         </label>
