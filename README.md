@@ -38,6 +38,7 @@ You can use either:
 Set web env:
 ```env
 NEXT_PUBLIC_API_BASE=https://api.urlshortener.devisuru.ggff.net
+NEXT_PUBLIC_ADMIN_API_TOKEN=replace_with_long_api_token
 ```
 
 Set API env:

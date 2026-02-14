@@ -1,11 +1,31 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { CopyButton } from "@/components/ui/CopyButton";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
+import { env } from "@/lib/env";
+
+function maskToken(token: string): string {
+  if (!token) return "not-configured";
+  if (token.length <= 8) return token;
+  return `${token.slice(0, 4)}...${token.slice(-4)}`;
+}
+
+function toAbsoluteBaseUrl(base: string): string {
+  if (base.startsWith("http://") || base.startsWith("https://")) {
+    return base.replace(/\/$/, "");
+  }
+
+  if (typeof window !== "undefined") {
+    return new URL(base, window.location.origin).toString().replace(/\/$/, "");
+  }
+
+  return base.replace(/\/$/, "");
+}
 
 export default function SettingsPage() {
   const { push } = useToast();
@@ -35,6 +55,14 @@ export default function SettingsPage() {
   const [globalDesktopRpm, setGlobalDesktopRpm] = useState("1.80");
   const [lkMobileRpm, setLkMobileRpm] = useState("1.55");
   const [inMobileRpm, setInMobileRpm] = useState("0.95");
+
+  const developersApiBase = useMemo(() => `${toAbsoluteBaseUrl(env.apiBase)}/api`, []);
+  const developersApiToken = env.adminApiToken;
+  const maskedDevelopersApiToken = maskToken(developersApiToken);
+  const sampleDestination = "https://example.com/landing";
+  const sampleAlias = "myalias";
+  const sampleJsonRequest = `${developersApiBase}?api=${encodeURIComponent(developersApiToken || "TOKEN")}&url=${encodeURIComponent(sampleDestination)}&alias=${encodeURIComponent(sampleAlias)}`;
+  const sampleTextRequest = `${sampleJsonRequest}&format=text`;
 
   function onPasswordChange(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -302,6 +330,48 @@ export default function SettingsPage() {
             </div>
           </form>
         </article>
+      </section>
+
+      <section className="card section">
+        <h2>Developers API</h2>
+        <p className="muted">Use this endpoint for GPLinks-style programmatic short-link creation.</p>
+
+        <div className="settings-form">
+          <div>
+            <p className="muted">Base endpoint</p>
+            <div className="settings-copy-row">
+              <code className="settings-code">{developersApiBase}</code>
+              <CopyButton value={developersApiBase} label="Copy endpoint" />
+            </div>
+          </div>
+
+          <div>
+            <p className="muted">Admin API token (masked)</p>
+            <div className="settings-copy-row">
+              <code className="settings-code">{maskedDevelopersApiToken}</code>
+              <CopyButton value={developersApiToken || ""} label="Copy token" />
+            </div>
+            {!developersApiToken ? (
+              <p className="auth-error">Set NEXT_PUBLIC_ADMIN_API_TOKEN to enable token copy in this UI.</p>
+            ) : null}
+          </div>
+
+          <div>
+            <p className="muted">JSON example</p>
+            <div className="settings-copy-row">
+              <code className="settings-code">{sampleJsonRequest}</code>
+              <CopyButton value={sampleJsonRequest} label="Copy JSON request" />
+            </div>
+          </div>
+
+          <div>
+            <p className="muted">TEXT example</p>
+            <div className="settings-copy-row">
+              <code className="settings-code">{sampleTextRequest}</code>
+              <CopyButton value={sampleTextRequest} label="Copy TEXT request" />
+            </div>
+          </div>
+        </div>
       </section>
     </main>
   );
