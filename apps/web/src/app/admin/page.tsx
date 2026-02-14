@@ -166,7 +166,7 @@ export default function DashboardHome({ searchParams }: DashboardHomeProps) {
           <StatCard key={card.label} label={card.label} value={card.value} index={index} />
         ))}
 
-        <StatCard label="Invalid rate" value="26.6%" hint="Tap a reason to diagnose in Stats" index={overviewCards.length}>
+        <StatCard label="Invalid rate" value="26.6%" hint="Tap a reason to diagnose in Quality" index={overviewCards.length}>
           <ul className="signal-breakdown">
             {invalidBreakdown.map((item) => (
               <li key={item.key}>

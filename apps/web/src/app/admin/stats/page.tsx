@@ -67,7 +67,7 @@ export default function StatsPage({ searchParams }: StatsPageProps) {
   return (
     <main className="dash-page">
       <header className="dash-page-head">
-        <h1>Stats</h1>
+        <h1>Quality</h1>
         <p className="muted">Admin-level traffic quality and estimated revenue snapshot.</p>
       </header>
 

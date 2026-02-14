@@ -15,7 +15,7 @@ function getBarMeta(pathname: string): BarMeta {
   if (pathname.startsWith("/admin/links")) {
     return { title: "Links", action: { href: "/admin/links/new", label: "Create Link" } };
   }
-  if (pathname.startsWith("/admin/stats")) return { title: "Stats" };
+  if (pathname.startsWith("/admin/stats")) return { title: "Quality" };
   if (pathname.startsWith("/admin/settings")) return { title: "Settings" };
   return { title: "Overview" };
 }

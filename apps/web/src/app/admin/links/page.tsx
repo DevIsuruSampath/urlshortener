@@ -313,7 +313,7 @@ export default function LinksPage() {
                 },
               },
               {
-                label: "View stats",
+                label: "View quality",
                 onSelect: () => {
                   window.location.href = `/admin/stats?code=${encodeURIComponent(row.code)}`;
                 },
