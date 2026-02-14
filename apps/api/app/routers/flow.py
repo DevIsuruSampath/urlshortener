@@ -34,7 +34,7 @@ def step_complete(payload: StepCompleteIn, request: Request, db: Session = Depen
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
 
     try:
-        verify_session_token(payload.token, payload.session_id)
+        token_payload = verify_session_token(payload.token, payload.session_id)
     except JWTError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session token") from exc
 
@@ -42,7 +42,22 @@ def step_complete(payload: StepCompleteIn, request: Request, db: Session = Depen
     if not session:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
-    if session.status not in {"pending", "ready"}:
+    if payload.step < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Step must be >= 1")
+
+    try:
+        token_steps = int(token_payload.get("steps") or 0)
+    except (TypeError, ValueError):
+        token_steps = 0
+
+    if (
+        token_payload.get("code") != session.code
+        or str(token_payload.get("pid")) != str(session.publisher_id)
+        or token_steps != int(session.total_steps)
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session token")
+
+    if session.status != "pending":
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Session already completed")
 
     expected_step = session.current_step + 1
@@ -105,8 +120,11 @@ def go(rt: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
     link = db.get(Link, session.link_id)
-    if not link:
+    if not link or not link.is_active:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Link not found")
+
+    if session.status not in {"ready", "completed"}:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Session is not ready for redirect")
 
     if session.status != "completed":
         if session.payable:

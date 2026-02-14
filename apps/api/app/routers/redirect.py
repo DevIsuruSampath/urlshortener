@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from redis.exceptions import RedisError
 from fastapi.responses import RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -20,7 +21,28 @@ from app.services.session_service import build_interstitial_url
 
 router = APIRouter()
 
-RESERVED_CODES = {"api", "docs", "redoc", "openapi.json", "health", "l", "pricing", "terms", "privacy", "login", "register"}
+RESERVED_CODES = {
+    "api",
+    "docs",
+    "redoc",
+    "openapi.json",
+    "health",
+    "l",
+    "pricing",
+    "terms",
+    "privacy",
+    "login",
+    "register",
+    "admin",
+    "faq",
+    "support",
+    "contact",
+    "cookie",
+    "robots.txt",
+    "sitemap.xml",
+    "favicon.ico",
+    "_next",
+}
 
 
 def client_ip(request: Request) -> str:
@@ -40,7 +62,10 @@ def hit_short_code(code: str, request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
 
     cache_key = f"link:{code}"
-    cached = redis_client.get(cache_key)
+    try:
+        cached = redis_client.get(cache_key)
+    except RedisError:
+        cached = None
 
     publisher_id = None
     web_steps = None
@@ -51,13 +76,21 @@ def hit_short_code(code: str, request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid short code")
 
     if cached:
-        data = json.loads(cached)
-        publisher_id = data["publisher_id"]
-        web_steps = int(data["web_steps"])
+        try:
+            data = json.loads(cached)
+            publisher_id = str(data.get("publisher_id") or link.user_id)
+            web_steps = max(1, int(data.get("web_steps") or link.web_steps))
+        except (TypeError, ValueError, json.JSONDecodeError):
+            publisher_id = str(link.user_id)
+            web_steps = max(1, int(link.web_steps))
     else:
         publisher_id = str(link.user_id)
-        web_steps = int(link.web_steps)
+        web_steps = max(1, int(link.web_steps))
+
+    try:
         redis_client.setex(cache_key, settings.cache_ttl_seconds, cache_payload(link.destination_url, publisher_id, web_steps))
+    except RedisError:
+        pass
 
     ua = request.headers.get("user-agent", "")
 

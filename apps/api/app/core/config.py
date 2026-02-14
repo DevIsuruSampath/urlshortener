@@ -19,6 +19,11 @@ def _parse_csv(value: str | None) -> list[str]:
     return [v.strip() for v in value.split(",") if v.strip()]
 
 
+def _parse_samesite(value: str | None) -> str:
+    normalized = (value or "lax").strip().lower()
+    return normalized if normalized in {"lax", "strict", "none"} else "lax"
+
+
 class Settings(BaseModel):
     app_env: str = os.getenv("APP_ENV", "development")
 
@@ -56,7 +61,7 @@ class Settings(BaseModel):
     admin_session_cookie_name: str = os.getenv("ADMIN_SESSION_COOKIE_NAME", "paidlink_admin_session")
 
     cookie_secure: bool = _parse_bool(os.getenv("COOKIE_SECURE"), os.getenv("APP_ENV", "development").lower() == "production")
-    cookie_samesite: str = os.getenv("COOKIE_SAMESITE", "lax").strip().lower() or "lax"
+    cookie_samesite: str = _parse_samesite(os.getenv("COOKIE_SAMESITE"))
     cookie_domain: str | None = os.getenv("COOKIE_DOMAIN") or None
     cookie_httponly: bool = _parse_bool(os.getenv("COOKIE_HTTPONLY"), True)
 

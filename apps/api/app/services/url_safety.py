@@ -17,7 +17,8 @@ def _is_forbidden_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
 
 
 def validate_public_destination_url(raw_url: str) -> str:
-    parsed = urlparse(raw_url)
+    cleaned_url = raw_url.strip()
+    parsed = urlparse(cleaned_url)
 
     if parsed.scheme not in {"http", "https"}:
         raise ValueError("Only http/https destination URLs are allowed")
@@ -35,12 +36,13 @@ def validate_public_destination_url(raw_url: str) -> str:
     # Literal IP address check
     try:
         ip = ipaddress.ip_address(host)
+    except ValueError:
+        ip = None
+
+    if ip is not None:
         if _is_forbidden_ip(ip):
             raise ValueError("Private/internal destination IPs are blocked")
-        return raw_url
-    except ValueError:
-        # Not an IP literal; continue with DNS resolution checks.
-        pass
+        return cleaned_url
 
     # Hostname DNS resolution check
     try:
@@ -61,4 +63,4 @@ def validate_public_destination_url(raw_url: str) -> str:
         if _is_forbidden_ip(ip):
             raise ValueError("Destination host resolves to private/internal IP")
 
-    return raw_url
+    return cleaned_url

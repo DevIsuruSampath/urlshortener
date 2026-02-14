@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import secrets
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, status
@@ -31,7 +32,7 @@ def _client_ip(request: Request) -> str:
 def _error(message: str, status_code: int = 400, output_format: str = "json") -> Response:
     if output_format == "text":
         # GPLinks-compatible behavior for text clients: empty body on error.
-        return Response(status_code=status.HTTP_400_BAD_REQUEST, content="")
+        return Response(status_code=status_code, content="")
 
     return JSONResponse(status_code=status_code, content={"status": "error", "message": message})
 
@@ -75,7 +76,7 @@ def _create_short_link(
     if not tokens:
         return _error("API is not configured", output_format=output_format)
 
-    if api_token not in tokens:
+    if not any(secrets.compare_digest(api_token, token) for token in tokens):
         return _error("Invalid API token", status_code=status.HTTP_401_UNAUTHORIZED, output_format=output_format)
 
     try:

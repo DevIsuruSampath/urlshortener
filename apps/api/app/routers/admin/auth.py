@@ -4,6 +4,7 @@ import secrets
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from redis.exceptions import RedisError
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -100,10 +101,13 @@ def _check_login_lockout(ip: str) -> None:
         return
 
     key = _login_lock_key(ip)
-    if not redis_client.exists(key):
-        return
+    try:
+        if not redis_client.exists(key):
+            return
 
-    ttl = redis_client.ttl(key)
+        ttl = redis_client.ttl(key)
+    except RedisError:
+        return
     if ttl is None or ttl < 0:
         ttl = settings.admin_login_lockout_minutes * 60
 
@@ -115,15 +119,18 @@ def _check_login_lockout(ip: str) -> None:
 
 def _record_login_failure(ip: str) -> int:
     fail_key = _login_fail_key(ip)
-    fail_count = redis_client.incr(fail_key)
-    if fail_count == 1:
-        redis_client.expire(fail_key, 60)
+    try:
+        fail_count = redis_client.incr(fail_key)
+        if fail_count == 1:
+            redis_client.expire(fail_key, 60)
 
-    if settings.admin_login_lockout_threshold > 0 and fail_count >= settings.admin_login_lockout_threshold:
-        redis_client.setex(_login_lock_key(ip), settings.admin_login_lockout_minutes * 60, "1")
-        redis_client.delete(fail_key)
+        if settings.admin_login_lockout_threshold > 0 and fail_count >= settings.admin_login_lockout_threshold:
+            redis_client.setex(_login_lock_key(ip), settings.admin_login_lockout_minutes * 60, "1")
+            redis_client.delete(fail_key)
 
-    return fail_count
+        return fail_count
+    except RedisError:
+        return 1
 
 
 def _apply_progressive_login_delay(fail_count: int) -> None:
@@ -137,8 +144,11 @@ def _apply_progressive_login_delay(fail_count: int) -> None:
 
 
 def _clear_login_failures(ip: str) -> None:
-    redis_client.delete(_login_fail_key(ip))
-    redis_client.delete(_login_lock_key(ip))
+    try:
+        redis_client.delete(_login_fail_key(ip))
+        redis_client.delete(_login_lock_key(ip))
+    except RedisError:
+        pass
 
 
 def _reject_invalid_credentials(
