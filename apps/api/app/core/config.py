@@ -41,6 +41,14 @@ class Settings(BaseModel):
     start_rate_limit_per_minute: int = int(os.getenv("START_RATE_LIMIT_PER_MINUTE", "120"))
     step_rate_limit_per_minute: int = int(os.getenv("STEP_RATE_LIMIT_PER_MINUTE", "60"))
     auth_rate_limit_per_minute: int = int(os.getenv("AUTH_RATE_LIMIT_PER_MINUTE", "20"))
+    admin_setup_rate_limit_per_minute: int = int(os.getenv("ADMIN_SETUP_RATE_LIMIT_PER_MINUTE", "5"))
+    admin_login_rate_limit_per_minute: int = int(os.getenv("ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE", "10"))
+    admin_login_lockout_threshold: int = int(os.getenv("ADMIN_LOGIN_LOCKOUT_THRESHOLD", "0"))
+    admin_login_lockout_minutes: int = int(os.getenv("ADMIN_LOGIN_LOCKOUT_MINUTES", "15"))
+    require_https_for_admin_setup: bool = _parse_bool(
+        os.getenv("REQUIRE_HTTPS_FOR_ADMIN_SETUP"),
+        os.getenv("APP_ENV", "development").lower() == "production",
+    )
 
     admin_username: str = os.getenv("ADMIN_USERNAME", "admin")
     admin_password_hash: str = os.getenv("ADMIN_PASSWORD_HASH", "")
