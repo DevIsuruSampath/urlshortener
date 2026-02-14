@@ -3,17 +3,14 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request, status
 from fastapi.responses import JSONResponse, PlainTextResponse
-from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.core.redis_client import redis_client
-from app.db.models.link import Link
 from app.db.session import get_db
 from app.services.admin_user_service import ensure_admin_user
-from app.services.link_service import cache_payload, generate_code, resolve_tier
+from app.services.link_service import create_link_record
 from app.services.url_safety import validate_public_destination_url
 
 router = APIRouter()
@@ -23,15 +20,6 @@ ALIAS_RE = re.compile(r"^[A-Za-z0-9_-]{4,20}$")
 
 def _error(message: str, status_code: int = 400) -> JSONResponse:
     return JSONResponse(status_code=status_code, content={"status": "error", "message": message})
-
-
-def _unique_code(db: Session) -> str:
-    for _ in range(20):
-        code = generate_code(7)
-        exists = db.execute(select(Link).where(Link.code == code)).scalar_one_or_none()
-        if not exists:
-            return code
-    raise HTTPException(status_code=500, detail="failed to generate unique code")
 
 
 def _normalized_format(value: str | None) -> str:
@@ -79,38 +67,22 @@ def _create_short_link(
     except ValueError as exc:
         return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
 
-    if final_alias:
-        exists = db.execute(select(Link).where(Link.code == final_alias)).scalar_one_or_none()
-        if exists:
-            return _error("Alias already exists", status_code=status.HTTP_409_CONFLICT)
-        code = final_alias
-    else:
-        code = _unique_code(db)
-
-    tier_data = resolve_tier("standard")
     admin_user = ensure_admin_user(db)
 
-    link = Link(
-        user_id=admin_user.id,
-        code=code,
-        destination_url=safe_url,
-        tier="standard",
-        web_steps=int(tier_data.get("web_steps", 3)),
-        app_steps=int(tier_data.get("app_steps", 5)),
-        game_enabled=bool(tier_data.get("game_enabled", False)),
-    )
+    try:
+        link = create_link_record(
+            db,
+            user_id=admin_user.id,
+            destination_url=safe_url,
+            tier="standard",
+            alias=final_alias,
+        )
+    except ValueError as exc:
+        return _error(str(exc), status_code=status.HTTP_409_CONFLICT)
+    except RuntimeError as exc:
+        return _error(str(exc), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    db.add(link)
-    db.commit()
-    db.refresh(link)
-
-    redis_client.setex(
-        f"link:{code}",
-        settings.cache_ttl_seconds,
-        cache_payload(link.destination_url, str(link.user_id), link.web_steps),
-    )
-
-    short_url = f"{settings.public_web_base_url.rstrip('/')}/{code}"
+    short_url = f"{settings.public_web_base_url.rstrip('/')}/{link.code}"
 
     if output_format == "text":
         return PlainTextResponse(content=short_url)
@@ -120,7 +92,7 @@ def _create_short_link(
         "message": "Short link created successfully",
         "shortenedUrl": short_url,
         "url": link.destination_url,
-        "alias": code,
+        "alias": link.code,
     }
 
 
