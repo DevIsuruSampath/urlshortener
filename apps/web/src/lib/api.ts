@@ -59,8 +59,10 @@ export async function postStepComplete(payload: StepCompleteRequest): Promise<St
   return (await res.json()) as StepCompleteResponse;
 }
 
+const ADMIN_AUTH_BASE = "/api/admin/auth";
+
 export async function adminLogin(payload: AdminLoginPayload): Promise<AuthResponse> {
-  const res = await fetch(`${env.apiBase}/admin/auth/login`, {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -75,7 +77,7 @@ export async function adminLogin(payload: AdminLoginPayload): Promise<AuthRespon
 }
 
 export async function adminMe(): Promise<{ username: string; user_id: string }> {
-  const res = await fetch(`${env.apiBase}/admin/auth/me`, {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/me`, {
     method: "GET",
     credentials: "include",
   });
@@ -88,7 +90,7 @@ export async function adminMe(): Promise<{ username: string; user_id: string }> 
 }
 
 export async function adminLogout(): Promise<void> {
-  const res = await fetch(`${env.apiBase}/admin/auth/logout`, {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/logout`, {
     method: "POST",
     credentials: "include",
   });
