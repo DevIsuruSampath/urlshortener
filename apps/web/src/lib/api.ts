@@ -26,6 +26,23 @@ export type AuthResponse = {
   token_type: string;
 };
 
+export type AdminLinkCreatePayload = {
+  destination_url: string;
+  tier?: string;
+};
+
+export type AdminLinkResponse = {
+  id: string;
+  code: string;
+  short_url: string;
+  destination_url: string;
+  tier: string;
+  web_steps: number;
+  app_steps: number;
+  is_active: boolean;
+  created_at?: string;
+};
+
 export class ApiError extends Error {
   status: number;
 
@@ -33,6 +50,18 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+function authHeaders(contentType = false): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (contentType) headers["Content-Type"] = "application/json";
+
+  if (typeof window !== "undefined") {
+    const token = window.localStorage.getItem("paidlink_access_token");
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+
+  return headers;
 }
 
 async function parseError(res: Response): Promise<ApiError> {
@@ -47,7 +76,7 @@ async function parseError(res: Response): Promise<ApiError> {
 export async function postStepComplete(payload: StepCompleteRequest): Promise<StepCompleteResponse> {
   const res = await fetch(`${env.apiBase}/flow/step-complete`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(true),
     body: JSON.stringify(payload),
     credentials: "include",
   });
@@ -60,11 +89,12 @@ export async function postStepComplete(payload: StepCompleteRequest): Promise<St
 }
 
 const ADMIN_AUTH_BASE = `${env.apiBase}/admin/auth`;
+const ADMIN_LINKS_BASE = `${env.apiBase}/admin/links`;
 
 export async function adminLogin(payload: AdminLoginPayload): Promise<AuthResponse> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(true),
     body: JSON.stringify(payload),
     credentials: "include",
   });
@@ -79,6 +109,7 @@ export async function adminLogin(payload: AdminLoginPayload): Promise<AuthRespon
 export async function adminMe(): Promise<{ username: string; user_id: string }> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/me`, {
     method: "GET",
+    headers: authHeaders(),
     credentials: "include",
   });
 
@@ -92,10 +123,40 @@ export async function adminMe(): Promise<{ username: string; user_id: string }> 
 export async function adminLogout(): Promise<void> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/logout`, {
     method: "POST",
+    headers: authHeaders(),
     credentials: "include",
   });
 
   if (!res.ok) {
     throw await parseError(res);
   }
+}
+
+export async function adminCreateLink(payload: AdminLinkCreatePayload): Promise<AdminLinkResponse> {
+  const res = await fetch(ADMIN_LINKS_BASE, {
+    method: "POST",
+    headers: authHeaders(true),
+    body: JSON.stringify({ destination_url: payload.destination_url, tier: payload.tier || "standard" }),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminLinkResponse;
+}
+
+export async function adminListLinks(): Promise<AdminLinkResponse[]> {
+  const res = await fetch(ADMIN_LINKS_BASE, {
+    method: "GET",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminLinkResponse[];
 }

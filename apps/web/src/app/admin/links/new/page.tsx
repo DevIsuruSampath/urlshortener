@@ -4,47 +4,59 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 
 import { CopyButton } from "@/components/ui/CopyButton";
-import { DashboardLink, appendStoredLink, makeCode } from "@/lib/links-store";
+import { adminCreateLink, AdminLinkResponse, ApiError } from "@/lib/api";
 
-const WEB_BASE = "https://urlshortener.devisuru.ggff.net";
+type CreatedLinkView = {
+  title: string;
+  campaignTag?: string;
+  row: AdminLinkResponse;
+};
+
+function friendlyLinkError(error: unknown): string {
+  if (!(error instanceof ApiError)) return "Request failed. Please try again.";
+
+  if (error.status === 401) return "Admin session expired. Please login again.";
+  if (error.status === 400) return error.message;
+  if (error.status === 429) return "Too many requests. Please wait and retry.";
+
+  return error.message || "Request failed. Please try again.";
+}
 
 export default function NewLinkPage() {
   const [destinationUrl, setDestinationUrl] = useState("");
   const [title, setTitle] = useState("");
   const [campaignTag, setCampaignTag] = useState("");
-  const [created, setCreated] = useState<DashboardLink | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
+  const [created, setCreated] = useState<CreatedLinkView | null>(null);
 
   const qrUrl = useMemo(
     () =>
-      created?.shortUrl
-        ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(created.shortUrl)}`
+      created?.row.short_url
+        ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(created.row.short_url)}`
         : "",
     [created]
   );
 
-  function onCreate(e: FormEvent<HTMLFormElement>) {
+  async function onCreate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!destinationUrl.trim()) return;
 
-    const code = makeCode();
-    const link: DashboardLink = {
-      id: `local-${Date.now()}`,
-      title: title.trim() || "Untitled link",
-      code,
-      shortUrl: `${WEB_BASE}/${code}`,
-      destination: destinationUrl.trim(),
-      status: "active",
-      webSteps: 3,
-      appSteps: 5,
-      clicks: null,
-      valid: null,
-      invalid: null,
-      campaignTag: campaignTag.trim() || undefined,
-      createdAt: new Date().toISOString(),
-    };
+    setCreating(true);
+    setError("");
 
-    appendStoredLink(link);
-    setCreated(link);
+    try {
+      const row = await adminCreateLink({ destination_url: destinationUrl.trim(), tier: "standard" });
+      setCreated({
+        title: title.trim() || `Link ${row.code}`,
+        campaignTag: campaignTag.trim() || undefined,
+        row,
+      });
+    } catch (err) {
+      setError(friendlyLinkError(err));
+    } finally {
+      setCreating(false);
+    }
   }
 
   if (created) {
@@ -58,17 +70,17 @@ export default function NewLinkPage() {
         <section className="card section generated-result">
           <h2>{created.title}</h2>
           <div className="inline-actions">
-            <a href={created.shortUrl} target="_blank" rel="noreferrer" className="mono-link">
-              {created.shortUrl}
+            <a href={created.row.short_url} target="_blank" rel="noreferrer" className="mono-link">
+              {created.row.short_url}
             </a>
           </div>
 
-          <CopyButton value={created.shortUrl} label="Copy short link" className="btn btn-big" />
+          <CopyButton value={created.row.short_url} label="Copy short link" className="btn btn-big" />
 
           <div className="result-meta muted">
-            <p>Destination: {created.destination}</p>
+            <p>Destination: {created.row.destination_url}</p>
             {created.campaignTag ? <p>Campaign: {created.campaignTag}</p> : null}
-            <p>Steps: Web {created.webSteps} / App {created.appSteps}</p>
+            <p>Steps: Web {created.row.web_steps} / App {created.row.app_steps}</p>
           </div>
 
           <div className="qr-box">
@@ -128,8 +140,10 @@ export default function NewLinkPage() {
             <input value={campaignTag} onChange={(e) => setCampaignTag(e.target.value)} placeholder="fb-cpc" />
           </label>
 
-          <button className="btn" type="submit">
-            Create link
+          {error ? <p className="auth-error">{error}</p> : null}
+
+          <button className="btn" type="submit" disabled={creating}>
+            {creating ? "Please wait..." : "Create link"}
           </button>
         </form>
       </section>

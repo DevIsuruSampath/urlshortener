@@ -2,68 +2,54 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
+import { DataTable, type DataTableColumn } from "@/components/data/DataTable";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CopyButton } from "@/components/ui/CopyButton";
-import { DataTable, type DataTableColumn } from "@/components/data/DataTable";
 import { Drawer } from "@/components/ui/Drawer";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { useToast } from "@/components/ui/Toast";
-import { DashboardLink, appendStoredLink, getStoredLinks, makeCode } from "@/lib/links-store";
+import { adminCreateLink, adminListLinks, AdminLinkResponse, ApiError } from "@/lib/api";
 
-const WEB_BASE = "https://urlshortener.devisuru.ggff.net";
+type LinkRow = {
+  id: string;
+  title: string;
+  code: string;
+  shortUrl: string;
+  destination: string;
+  status: "active" | "paused" | "blocked";
+  webSteps: number;
+  appSteps: number;
+  clicks: number | null;
+  valid: number | null;
+  invalid: number | null;
+  campaignTag?: string;
+  createdAt: string;
+};
 
-const defaultRows: DashboardLink[] = [
-  {
-    id: "seed-a9x3k",
-    title: "Main Offer - Global",
-    code: "a9x3k",
-    shortUrl: "https://urlshortener.devisuru.ggff.net/a9x3k",
-    destination: "https://partner.example.com/offer/main",
-    status: "active",
-    webSteps: 3,
-    appSteps: 5,
+function mapApiRow(row: AdminLinkResponse): LinkRow {
+  return {
+    id: row.id,
+    title: `Link ${row.code}`,
+    code: row.code,
+    shortUrl: row.short_url,
+    destination: row.destination_url,
+    status: row.is_active ? "active" : "paused",
+    webSteps: row.web_steps,
+    appSteps: row.app_steps,
     clicks: null,
     valid: null,
     invalid: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "seed-pro77",
-    title: "App Install Campaign",
-    code: "pro77",
-    shortUrl: "https://urlshortener.devisuru.ggff.net/pro77",
-    destination: "https://m.example.com/install",
-    status: "paused",
-    webSteps: 2,
-    appSteps: 3,
-    clicks: null,
-    valid: null,
-    invalid: null,
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "seed-mobi2",
-    title: "Utility Download",
-    code: "mobi2",
-    shortUrl: "https://urlshortener.devisuru.ggff.net/mobi2",
-    destination: "https://downloads.example.com/tool",
-    status: "blocked",
-    webSteps: 1,
-    appSteps: 2,
-    clicks: null,
-    valid: null,
-    invalid: null,
-    createdAt: new Date().toISOString(),
-  },
-];
+    createdAt: row.created_at || new Date().toISOString(),
+  };
+}
 
-function statusBadge(status: DashboardLink["status"]) {
+function statusBadge(status: LinkRow["status"]) {
   const tone = status === "active" ? "success" : status === "paused" ? "warning" : "danger";
   return <Badge tone={tone}>{status}</Badge>;
 }
@@ -82,66 +68,87 @@ function destinationPreview(url: string) {
   }
 }
 
+function friendlyLinkError(error: unknown): string {
+  if (!(error instanceof ApiError)) return "Request failed. Please try again.";
+
+  if (error.status === 401) return "Admin session expired. Please login again.";
+  if (error.status === 400) return error.message;
+  if (error.status === 429) return "Too many requests. Please wait and retry.";
+
+  return error.message || "Request failed. Please try again.";
+}
+
 export default function LinksPage() {
   const { push } = useToast();
 
   const [query, setQuery] = useState("");
-  const [storedRows, setStoredRows] = useState<DashboardLink[]>([]);
+  const [rows, setRows] = useState<LinkRow[]>([]);
   const [loadingRows, setLoadingRows] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [selected, setSelected] = useState<DashboardLink | null>(null);
+  const [selected, setSelected] = useState<LinkRow | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const [destinationUrl, setDestinationUrl] = useState("");
   const [title, setTitle] = useState("");
   const [campaignTag, setCampaignTag] = useState("");
 
   useEffect(() => {
-    setStoredRows(getStoredLinks());
-    setLoadingRows(false);
-  }, []);
+    let alive = true;
 
-  const allRows = useMemo(() => [...storedRows, ...defaultRows], [storedRows]);
+    async function load() {
+      setLoadingRows(true);
+      try {
+        const data = await adminListLinks();
+        if (!alive) return;
+        setRows(data.map(mapApiRow));
+      } catch (error) {
+        if (!alive) return;
+        push(friendlyLinkError(error), "error");
+      } finally {
+        if (alive) setLoadingRows(false);
+      }
+    }
+
+    load();
+    return () => {
+      alive = false;
+    };
+  }, [push]);
 
   const filteredRows = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return allRows;
-    return allRows.filter((row) => row.title.toLowerCase().includes(q) || row.code.toLowerCase().includes(q));
-  }, [allRows, query]);
+    if (!q) return rows;
+    return rows.filter((row) => row.title.toLowerCase().includes(q) || row.code.toLowerCase().includes(q));
+  }, [rows, query]);
 
-  function onCreateFromDrawer(e: FormEvent<HTMLFormElement>) {
+  async function onCreateFromDrawer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!destinationUrl.trim()) return;
 
-    const code = makeCode();
-    const link: DashboardLink = {
-      id: `local-${Date.now()}`,
-      title: title.trim() || "Untitled link",
-      code,
-      shortUrl: `${WEB_BASE}/${code}`,
-      destination: destinationUrl.trim(),
-      status: "active",
-      webSteps: 3,
-      appSteps: 5,
-      clicks: null,
-      valid: null,
-      invalid: null,
-      campaignTag: campaignTag.trim() || undefined,
-      createdAt: new Date().toISOString(),
-    };
+    setCreating(true);
+    try {
+      const created = await adminCreateLink({ destination_url: destinationUrl.trim(), tier: "standard" });
+      const mapped = mapApiRow(created);
+      mapped.title = title.trim() || mapped.title;
+      mapped.campaignTag = campaignTag.trim() || undefined;
 
-    appendStoredLink(link);
-    setStoredRows((prev) => [link, ...prev]);
+      setRows((prev) => [mapped, ...prev]);
 
-    setDrawerOpen(false);
-    setDestinationUrl("");
-    setTitle("");
-    setCampaignTag("");
+      setDrawerOpen(false);
+      setDestinationUrl("");
+      setTitle("");
+      setCampaignTag("");
 
-    push("Link created", "success");
+      push("Link created", "success");
+    } catch (error) {
+      push(friendlyLinkError(error), "error");
+    } finally {
+      setCreating(false);
+    }
   }
 
-  const columns = useMemo<DataTableColumn<DashboardLink>[]>(
+  const columns = useMemo<DataTableColumn<LinkRow>[]>(
     () => [
       { key: "title", header: "Name", render: (row) => row.title || "Untitled" },
       {
@@ -264,7 +271,9 @@ export default function LinksPage() {
               placeholder="fb-cpc"
             />
 
-            <Button type="submit">Create link</Button>
+            <Button type="submit" loading={creating}>
+              Create link
+            </Button>
           </Stack>
         </form>
       </Drawer>

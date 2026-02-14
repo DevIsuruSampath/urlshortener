@@ -68,6 +68,8 @@ def create_link(
         "destination_url": link.destination_url,
         "tier": link.tier,
         "web_steps": link.web_steps,
+        "app_steps": link.app_steps,
+        "is_active": link.is_active,
     }
 
 
@@ -78,9 +80,12 @@ def list_links(db: Session = Depends(get_db), user: User = Depends(get_current_u
         {
             "id": str(r.id),
             "code": r.code,
+            "short_url": f"{settings.public_web_base_url.rstrip('/')}/{r.code}",
             "destination_url": r.destination_url,
             "tier": r.tier,
             "web_steps": r.web_steps,
+            "app_steps": r.app_steps,
+            "is_active": r.is_active,
             "created_at": r.created_at,
         }
         for r in rows
