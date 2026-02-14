@@ -78,6 +78,14 @@ GPLinks-style shortener API (`/api`):
 - POST support (json or form):
   - `POST /api` with `api`, `url`, optional `alias`, optional `format=text|json`
 
+Response formats:
+- JSON (default)
+  - Success: `{ "status": "success", "shortenedUrl": "..." }`
+  - Error: `{ "status": "error", "message": "..." }`
+- TEXT (`format=text`)
+  - Success: short URL only (plain text)
+  - Error: `400` with empty body (GPLinks-compatible)
+
 Validation rules:
 - `api` must match `ADMIN_API_TOKEN`
 - `url` must be `http://` or `https://` and pass public URL safety checks (no localhost/private/internal targets)

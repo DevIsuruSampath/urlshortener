@@ -4,7 +4,7 @@ import re
 from typing import Any
 
 from fastapi import APIRouter, Depends, Query, Request, status
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -18,7 +18,11 @@ router = APIRouter()
 ALIAS_RE = re.compile(r"^[A-Za-z0-9_-]{4,20}$")
 
 
-def _error(message: str, status_code: int = 400) -> JSONResponse:
+def _error(message: str, status_code: int = 400, output_format: str = "json") -> Response:
+    if output_format == "text":
+        # GPLinks-compatible behavior for text clients: empty body on error.
+        return Response(status_code=status.HTTP_400_BAD_REQUEST, content="")
+
     return JSONResponse(status_code=status_code, content={"status": "error", "message": message})
 
 
@@ -52,20 +56,20 @@ def _create_short_link(
     db: Session,
 ):
     if not settings.admin_api_token:
-        return _error("API is not configured")
+        return _error("API is not configured", output_format=output_format)
 
     if api_token != settings.admin_api_token:
-        return _error("Invalid API token", status_code=status.HTTP_401_UNAUTHORIZED)
+        return _error("Invalid API token", status_code=status.HTTP_401_UNAUTHORIZED, output_format=output_format)
 
     try:
         safe_url = validate_public_destination_url(destination_url)
     except ValueError as exc:
-        return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
+        return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST, output_format=output_format)
 
     try:
         final_alias = _validate_alias(alias)
     except ValueError as exc:
-        return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
+        return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST, output_format=output_format)
 
     admin_user = ensure_admin_user(db)
 
@@ -78,22 +82,16 @@ def _create_short_link(
             alias=final_alias,
         )
     except ValueError as exc:
-        return _error(str(exc), status_code=status.HTTP_409_CONFLICT)
+        return _error(str(exc), status_code=status.HTTP_409_CONFLICT, output_format=output_format)
     except RuntimeError as exc:
-        return _error(str(exc), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return _error(str(exc), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, output_format=output_format)
 
     short_url = f"{settings.public_web_base_url.rstrip('/')}/{link.code}"
 
     if output_format == "text":
         return PlainTextResponse(content=short_url)
 
-    return {
-        "status": "success",
-        "message": "Short link created successfully",
-        "shortenedUrl": short_url,
-        "url": link.destination_url,
-        "alias": link.code,
-    }
+    return {"status": "success", "shortenedUrl": short_url}
 
 
 @router.get("/api")
@@ -110,9 +108,9 @@ def public_api_get(
         return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
 
     if not api:
-        return _error("Missing required query param: api")
+        return _error("Missing required query param: api", output_format=output_format)
     if not url:
-        return _error("Missing required query param: url")
+        return _error("Missing required query param: url", output_format=output_format)
 
     return _create_short_link(
         api_token=api,
@@ -148,15 +146,16 @@ async def public_api_post(request: Request, db: Session = Depends(get_db)):
     api_token = str(query.get("api") or body.get("api") or "").strip()
     destination_url = str(query.get("url") or body.get("url") or "").strip()
     alias = query.get("alias") or body.get("alias")
+
     try:
         output_format = _normalized_format((query.get("format") or body.get("format") or "json"))
     except ValueError as exc:
         return _error(str(exc), status_code=status.HTTP_400_BAD_REQUEST)
 
     if not api_token:
-        return _error("Missing required param: api")
+        return _error("Missing required param: api", output_format=output_format)
     if not destination_url:
-        return _error("Missing required param: url")
+        return _error("Missing required param: url", output_format=output_format)
 
     return _create_short_link(
         api_token=api_token,
