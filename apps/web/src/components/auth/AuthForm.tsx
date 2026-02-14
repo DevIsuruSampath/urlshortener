@@ -92,9 +92,12 @@ export function AuthForm() {
       </form>
 
       <div className="auth-help muted">
-        <p>Lost password? Reset requires server terminal access.</p>
-        <code>python -m app.cli reset-admin-password</code>
-        <code>./start.sh reset-admin-password</code>
+        <p><strong>Lost your password?</strong></p>
+        <p>Log in to your VPS.</p>
+        <p>Find container id:</p>
+        <code>docker ps</code>
+        <p>Run reset command:</p>
+        <code>docker exec -it &lt;container-id&gt; bash -c "./start.sh reset-admin-password"</code>
       </div>
     </section>
   );
