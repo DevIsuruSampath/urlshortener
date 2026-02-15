@@ -27,6 +27,7 @@ type LinkRow = {
   blockedReason?: BlockedReason;
   webSteps: number;
   appSteps: number;
+  createdVia: string;
   clicks: number | null;
   valid: number | null;
   invalid: number | null;
@@ -43,6 +44,7 @@ function mapApiRow(row: AdminLinkResponse): LinkRow {
     status: row.is_active ? "active" : "paused",
     webSteps: row.web_steps,
     appSteps: row.app_steps,
+    createdVia: row.created_via || "dashboard",
     clicks: null,
     valid: null,
     invalid: null,
@@ -229,6 +231,19 @@ export default function LinksPage() {
         key: "stats",
         header: "Clicks / Valid / Invalid",
         render: (row) => `${statValue(row.clicks)} / ${statValue(row.valid)} / ${statValue(row.invalid)}`,
+      },
+      {
+        key: "createdVia",
+        header: "Created Via",
+        render: (row) => {
+          const labels: Record<string, { text: string; emoji: string }> = {
+            dashboard: { text: "Dashboard", emoji: "🖥️" },
+            api_get: { text: "API (GET)", emoji: "🔗" },
+            api_post: { text: "API (POST)", emoji: "📡" },
+          };
+          const label = labels[row.createdVia] || { text: row.createdVia, emoji: "❓" };
+          return <Badge tone="neutral">{label.emoji} {label.text}</Badge>;
+        },
       },
       {
         key: "actions",

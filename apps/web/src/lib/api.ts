@@ -72,6 +72,7 @@ export type AdminLinkResponse = {
   web_steps: number;
   app_steps: number;
   is_active: boolean;
+  created_via?: string;
   created_at?: string;
 };
 

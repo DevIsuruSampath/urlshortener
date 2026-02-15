@@ -66,6 +66,7 @@ def _create_short_link(
     output_format: str,
     db: Session,
     request: Request,
+    created_via: str = "api",
 ):
     if settings.dev_api_rate_limit_per_minute > 0:
         ip = _client_ip(request)
@@ -103,6 +104,7 @@ def _create_short_link(
             destination_url=safe_url,
             tier="standard",
             alias=final_alias,
+            created_via=created_via,
         )
     except ValueError as exc:
         return _error(str(exc), status_code=status.HTTP_409_CONFLICT, output_format=output_format)
@@ -165,10 +167,8 @@ def public_api_get(
         output_format=output_format,
         db=db,
         request=request,
-    )
-
-
-async def _parse_post_payload(request: Request) -> dict[str, Any]:
+        created_via="api_get",
+    )(request: Request) -> dict[str, Any]:
     ctype = (request.headers.get("content-type") or "").lower()
 
     if "application/json" in ctype:
@@ -211,4 +211,5 @@ async def public_api_post(request: Request, db: Session = Depends(get_db)):
         output_format=output_format,
         db=db,
         request=request,
+        created_via="api_post",
     )

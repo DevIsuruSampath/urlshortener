@@ -63,6 +63,7 @@ def create_link(
             user_id=user.id,
             destination_url=destination_url,
             tier=payload.tier,
+            created_via="dashboard",
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -83,6 +84,7 @@ def create_link(
         "web_steps": link.web_steps,
         "app_steps": link.app_steps,
         "is_active": link.is_active,
+        "created_via": link.created_via,
     }
 
 
@@ -107,6 +109,7 @@ def list_links(db: Session = Depends(get_db), user: User = Depends(get_current_u
             "web_steps": r.web_steps,
             "app_steps": r.app_steps,
             "is_active": r.is_active,
+            "created_via": r.created_via,
             "created_at": r.created_at,
         }
         for r in rows
@@ -138,6 +141,7 @@ def _link_response(link: Link) -> dict:
         "web_steps": link.web_steps,
         "app_steps": link.app_steps,
         "is_active": link.is_active,
+        "created_via": link.created_via,
         "created_at": link.created_at,
     }
 

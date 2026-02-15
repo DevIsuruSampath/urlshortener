@@ -62,6 +62,7 @@ def create_link_record(
     destination_url: str,
     tier: str = "standard",
     alias: str | None = None,
+    created_via: str = "dashboard",
 ) -> Link:
     code = ensure_unique_code(db, alias)
     tier_data = resolve_tier(tier)
@@ -74,6 +75,7 @@ def create_link_record(
         web_steps=int(tier_data.get("web_steps", 3)),
         app_steps=int(tier_data.get("app_steps", 5)),
         game_enabled=bool(tier_data.get("game_enabled", False)),
+        created_via=created_via,
     )
 
     db.add(link)
