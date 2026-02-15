@@ -109,7 +109,12 @@ def _create_short_link(
     except RuntimeError as exc:
         return _error(str(exc), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, output_format=output_format)
 
-    short_url = f"{settings.public_web_base_url.rstrip('/')}/{link.code}"
+    # Use dedicated short link domain
+    base_domain = settings.short_link_domain or settings.public_web_base_url.rstrip('/').replace("https://", "").replace("http://", "")
+    if "localhost" in base_domain:
+        short_url = f"http://{base_domain}/{link.code}"
+    else:
+        short_url = f"https://{base_domain}/{link.code}"
 
     try:
         log_security_event(

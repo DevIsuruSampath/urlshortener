@@ -19,6 +19,8 @@ if raw_cors.strip():
 else:
     cors_origins = [
         settings.public_web_base_url.rstrip("/"),
+        f"https://{settings.short_link_domain}",
+        f"https://{settings.interstitial_domain}",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]

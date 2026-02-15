@@ -3,8 +3,11 @@ services:
     build: ../apps/web
     container_name: paidlink-web
     environment:
-      # Browser-side calls (from localhost:3000) -> host API port
       - NEXT_PUBLIC_API_BASE=http://localhost:8000
+      - NEXT_PUBLIC_APP_DOMAIN=example.com
+      - NEXT_PUBLIC_ADMIN_DOMAIN=admin.example.com
+      - NEXT_PUBLIC_ADS_DOMAIN=adsexample.com
+      - NEXT_PUBLIC_SHORT_DOMAIN=exa.com
     volumes:
       - ../apps/web:/app
       - /app/node_modules
