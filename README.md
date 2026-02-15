@@ -1,6 +1,6 @@
 # Paid Link Shortener (GPLinks-style)
 
-Monorepo for a paid-link URL shortener with step-based interstitial flow.
+Monetized URL shortener with step-based interstitial ad flow.
 
 Current mode: **single-user admin** (no public user registration flow).
 
@@ -9,6 +9,89 @@ Current mode: **single-user admin** (no public user registration flow).
 - Backend: FastAPI + SQLAlchemy + Alembic
 - Cache/Rate Limit: Redis
 - DB: PostgreSQL
+
+## Multi-Domain Architecture
+
+| Domain | Service | Purpose |
+|--------|---------|---------|
+| `example.com` | Frontend (3000) | Landing Page, Login |
+| `admin.example.com` | Frontend (3000) | Admin Dashboard |
+| `adsexample.com` | Frontend (3000) | Ad/Interstitial Pages |
+| `api.example.com` | Backend (8000) | API Endpoints |
+| `exa.com` | Backend (8000) | Short Link Redirects |
+
+## How It Works
+
+```
+Admin creates link → https://exa.com/AbCd123
+User clicks link   → exa.com/AbCd123
+                   → Redirects to adsexample.com/l?... (ads + timer)
+                   → User waits → Captcha → Continue
+                   → Redirects to original URL (google.com)
+```
+
+## Creating Links (3 Methods)
+
+### 1. Admin Dashboard
+Create links from the UI at `admin.example.com/admin/links`:
+- Enter destination URL → Click "Quick Create"
+- Returns: `https://exa.com/AbCd123`
+- Manage: Edit, Delete, Pause, Block from the Actions menu
+
+### 2. Public API (GET)
+```
+GET https://api.example.com/api?api=YOUR_TOKEN&url=https://google.com&alias=mylink
+```
+Response (JSON):
+```json
+{ "status": "success", "shortenedUrl": "https://exa.com/mylink" }
+```
+Response (Text):
+```
+GET https://api.example.com/api?api=YOUR_TOKEN&url=https://google.com&format=text
+→ https://exa.com/AbCd123
+```
+
+### 3. Public API (POST)
+```bash
+curl -X POST https://api.example.com/api \
+  -H "Content-Type: application/json" \
+  -d '{"api": "YOUR_TOKEN", "url": "https://google.com", "alias": "mylink"}'
+```
+Response:
+```json
+{ "status": "success", "shortenedUrl": "https://exa.com/mylink" }
+```
+
+**Parameters:**
+| Param | Required | Description |
+|-------|----------|-------------|
+| `api` | ✅ | Your API token |
+| `url` | ✅ | Destination URL (http/https only) |
+| `alias` | ❌ | Custom alias (4-20 chars: `A-Z`, `a-z`, `0-9`, `_`, `-`) |
+| `format` | ❌ | `json` (default) or `text` |
+
+## Link Management (Admin)
+
+All endpoints require admin session cookie.
+
+| Action | Method | Endpoint |
+|--------|--------|----------|
+| Create | `POST` | `/admin/links` |
+| List | `GET` | `/admin/links` |
+| Edit | `PATCH` | `/admin/links/{id}` |
+| Delete | `DELETE` | `/admin/links/{id}` |
+| Pause/Resume | `PATCH` | `/admin/links/{id}/toggle` |
+| Block/Unblock | `PATCH` | `/admin/links/{id}/block` |
+
+## Settings (Admin)
+
+| Setting | Method | Endpoint |
+|---------|--------|----------|
+| Change Password | `POST` | `/admin/auth/change-password` |
+| Flow Defaults | `GET/PUT` | `/admin/settings/flow` |
+| Anti-Abuse | `GET/PUT` | `/admin/settings/anti-abuse` |
+| Monetization | `GET/PUT` | `/admin/settings/monetization` |
 
 ## Run locally (no nginx)
 ```bash
