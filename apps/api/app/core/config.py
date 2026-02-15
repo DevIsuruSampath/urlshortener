@@ -69,6 +69,8 @@ class Settings(BaseModel):
 
     public_web_base_url: str = os.getenv("PUBLIC_WEB_BASE_URL", "http://localhost")
     public_api_base_url: str = os.getenv("PUBLIC_API_BASE_URL", "http://localhost/api")
+    short_link_domain: str = os.getenv("SHORT_LINK_DOMAIN", "exa.com")
+    interstitial_domain: str = os.getenv("INTERSTITIAL_DOMAIN", "adsexample.com")
 
     admin_api_tokens: list[str] = (
         _parse_csv(os.getenv("ADMIN_API_TOKENS"))
