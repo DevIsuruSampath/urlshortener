@@ -37,10 +37,17 @@ def create_link(
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
+    # Determine protocol
+    base_domain = settings.short_link_domain or settings.public_web_base_url.rstrip('/').replace("https://", "").replace("http://", "")
+    if "localhost" in base_domain:
+        base_url = f"http://{base_domain}"
+    else:
+        base_url = f"https://{base_domain}"
+
     return {
         "id": str(link.id),
         "code": link.code,
-        "short_url": f"{settings.public_web_base_url.rstrip('/')}/{link.code}",
+        "short_url": f"{base_url}/{link.code}",
         "destination_url": link.destination_url,
         "tier": link.tier,
         "web_steps": link.web_steps,
@@ -52,11 +59,19 @@ def create_link(
 @router.get("")
 def list_links(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     rows = db.execute(select(Link).where(Link.user_id == user.id).order_by(Link.created_at.desc())).scalars().all()
+    
+    # Determine protocol
+    base_domain = settings.short_link_domain or settings.public_web_base_url.rstrip('/').replace("https://", "").replace("http://", "")
+    if "localhost" in base_domain:
+        base_url = f"http://{base_domain}"
+    else:
+        base_url = f"https://{base_domain}"
+
     return [
         {
             "id": str(r.id),
             "code": r.code,
-            "short_url": f"{settings.public_web_base_url.rstrip('/')}/{r.code}",
+            "short_url": f"{base_url}/{r.code}",
             "destination_url": r.destination_url,
             "tier": r.tier,
             "web_steps": r.web_steps,
