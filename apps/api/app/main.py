@@ -9,6 +9,7 @@ from app.routers import flow, public_api, redirect
 from app.routers.admin import auth as admin_auth
 from app.routers.admin import links as admin_links
 from app.routers.admin import security_events as admin_security_events
+from app.routers.admin import settings as admin_settings
 from app.routers.admin import stats as admin_stats
 
 app = FastAPI(title="PaidLink API", version="0.1.0")
@@ -62,6 +63,12 @@ app.include_router(
     admin_security_events.router,
     prefix="/admin/security-events",
     tags=["admin-security-events"],
+    dependencies=[Depends(get_current_admin)],
+)
+app.include_router(
+    admin_settings.router,
+    prefix="/admin/settings",
+    tags=["admin-settings"],
     dependencies=[Depends(get_current_admin)],
 )
 

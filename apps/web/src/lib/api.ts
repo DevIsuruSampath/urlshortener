@@ -149,6 +149,7 @@ export async function postStepComplete(payload: StepCompleteRequest): Promise<St
 
 const ADMIN_AUTH_BASE = `${env.apiBase}/admin/auth`;
 const ADMIN_LINKS_BASE = `${env.apiBase}/admin/links`;
+const ADMIN_SETTINGS_BASE = `${env.apiBase}/admin/settings`;
 
 export async function adminLogin(payload: AdminLoginPayload): Promise<AdminLoginResponse> {
   const res = await fetch(`${ADMIN_AUTH_BASE}/login`, {
@@ -327,4 +328,209 @@ export async function adminRecordSecurityEvent(payload: AdminSecurityEventCreate
   }
 
   return (await res.json()) as AdminSecurityEvent;
+}
+
+// ── Link CRUD ────────────────────────────────────────────────────────────
+
+export type AdminLinkEditPayload = {
+  destination_url?: string;
+  tier?: string;
+  web_steps?: number;
+  app_steps?: number;
+};
+
+export async function adminEditLink(linkId: string, payload: AdminLinkEditPayload): Promise<AdminLinkResponse> {
+  const res = await fetch(`${ADMIN_LINKS_BASE}/${linkId}`, {
+    method: "PATCH",
+    headers: authHeaders(true),
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminLinkResponse;
+}
+
+export async function adminDeleteLink(linkId: string): Promise<{ ok: boolean }> {
+  const res = await fetch(`${ADMIN_LINKS_BASE}/${linkId}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as { ok: boolean };
+}
+
+export async function adminToggleLink(linkId: string): Promise<AdminLinkResponse> {
+  const res = await fetch(`${ADMIN_LINKS_BASE}/${linkId}/toggle`, {
+    method: "PATCH",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminLinkResponse;
+}
+
+export async function adminBlockLink(linkId: string, block: boolean): Promise<AdminLinkResponse> {
+  const res = await fetch(`${ADMIN_LINKS_BASE}/${linkId}/block`, {
+    method: "PATCH",
+    headers: authHeaders(true),
+    body: JSON.stringify({ block }),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AdminLinkResponse;
+}
+
+// ── Change Password ──────────────────────────────────────────────────────
+
+export type AdminChangePasswordPayload = {
+  current_password: string;
+  new_password: string;
+  confirm_password: string;
+};
+
+export async function adminChangePassword(payload: AdminChangePasswordPayload): Promise<{ ok: boolean }> {
+  const res = await fetch(`${ADMIN_AUTH_BASE}/change-password`, {
+    method: "POST",
+    headers: authHeaders(true),
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as { ok: boolean };
+}
+
+// ── Settings ─────────────────────────────────────────────────────────────
+
+export type FlowSettings = {
+  default_web_steps: string;
+  default_app_steps: string;
+  first_step_min_seconds: string;
+  next_step_min_seconds: string;
+  captcha_mode: string;
+};
+
+export async function adminGetFlowSettings(): Promise<FlowSettings> {
+  const res = await fetch(`${ADMIN_SETTINGS_BASE}/flow`, {
+    method: "GET",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as FlowSettings;
+}
+
+export async function adminPutFlowSettings(payload: FlowSettings): Promise<{ ok: boolean }> {
+  const res = await fetch(`${ADMIN_SETTINGS_BASE}/flow`, {
+    method: "PUT",
+    headers: authHeaders(true),
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as { ok: boolean };
+}
+
+export type AntiAbuseSettings = {
+  dedupe_hours: string;
+  start_rate_limit_per_minute: string;
+  step_rate_limit_per_minute: string;
+  auth_rate_limit_per_minute: string;
+};
+
+export async function adminGetAntiAbuseSettings(): Promise<AntiAbuseSettings> {
+  const res = await fetch(`${ADMIN_SETTINGS_BASE}/anti-abuse`, {
+    method: "GET",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as AntiAbuseSettings;
+}
+
+export async function adminPutAntiAbuseSettings(payload: AntiAbuseSettings): Promise<{ ok: boolean }> {
+  const res = await fetch(`${ADMIN_SETTINGS_BASE}/anti-abuse`, {
+    method: "PUT",
+    headers: authHeaders(true),
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as { ok: boolean };
+}
+
+export type MonetizationSettings = {
+  payout_threshold_usd: string;
+  rotation_enabled: string;
+  primary_ad_network: string;
+  secondary_ad_network: string;
+  global_mobile_rpm: string;
+  global_desktop_rpm: string;
+  lk_mobile_rpm: string;
+  in_mobile_rpm: string;
+};
+
+export async function adminGetMonetizationSettings(): Promise<MonetizationSettings> {
+  const res = await fetch(`${ADMIN_SETTINGS_BASE}/monetization`, {
+    method: "GET",
+    headers: authHeaders(),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as MonetizationSettings;
+}
+
+export async function adminPutMonetizationSettings(payload: MonetizationSettings): Promise<{ ok: boolean }> {
+  const res = await fetch(`${ADMIN_SETTINGS_BASE}/monetization`, {
+    method: "PUT",
+    headers: authHeaders(true),
+    body: JSON.stringify(payload),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    throw await parseError(res);
+  }
+
+  return (await res.json()) as { ok: boolean };
 }

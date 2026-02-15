@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/Input";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Stack } from "@/components/ui/Stack";
 import { useToast } from "@/components/ui/Toast";
-import { adminCreateLink, adminListLinks, AdminLinkResponse, ApiError } from "@/lib/api";
+import { adminCreateLink, adminListLinks, adminEditLink, adminDeleteLink, adminToggleLink, adminBlockLink, AdminLinkResponse, ApiError } from "@/lib/api";
 
 type BlockedReason = "url safety" | "manual" | "abuse report";
 
@@ -237,27 +237,46 @@ export default function LinksPage() {
           <DropdownMenu
             items={[
               {
-                label: "Edit title",
-                onSelect: () => {
-                  push("Edit title API is not implemented yet.", "info");
-                },
-              },
-              {
                 label: "Edit destination",
                 onSelect: () => {
-                  push("Edit destination API is not implemented yet.", "info");
+                  const newUrl = prompt("Enter new destination URL:", row.destination);
+                  if (newUrl === null || newUrl.trim() === "") return;
+                  adminEditLink(row.id, { destination_url: newUrl.trim() })
+                    .then((updated) => {
+                      const mapped = mapApiRow(updated);
+                      setRows((prev) => prev.map((r) => (r.id === row.id ? mapped : r)));
+                      push("Destination updated", "success");
+                    })
+                    .catch((error) => push(friendlyLinkError(error), "error"));
                 },
               },
               {
-                label: "Pause / Resume",
+                label: row.status === "active" ? "Pause" : "Resume",
                 onSelect: () => {
-                  push("Pause/resume API is not implemented yet.", "info");
+                  adminToggleLink(row.id)
+                    .then((updated) => {
+                      const mapped = mapApiRow(updated);
+                      setRows((prev) => prev.map((r) => (r.id === row.id ? mapped : r)));
+                      push(updated.is_active ? "Link resumed" : "Link paused", "success");
+                    })
+                    .catch((error) => push(friendlyLinkError(error), "error"));
                 },
               },
               {
-                label: "Block / Unblock",
+                label: row.status === "blocked" ? "Unblock" : "Block",
                 onSelect: () => {
-                  push("Block/unblock API is not implemented yet.", "info");
+                  const shouldBlock = row.status !== "blocked";
+                  adminBlockLink(row.id, shouldBlock)
+                    .then((updated) => {
+                      const mapped = mapApiRow(updated);
+                      if (shouldBlock) {
+                        mapped.status = "blocked";
+                        mapped.blockedReason = "manual";
+                      }
+                      setRows((prev) => prev.map((r) => (r.id === row.id ? mapped : r)));
+                      push(shouldBlock ? "Link blocked" : "Link unblocked", "success");
+                    })
+                    .catch((error) => push(friendlyLinkError(error), "error"));
                 },
               },
               {
@@ -365,8 +384,15 @@ export default function LinksPage() {
         confirmLabel="OK"
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
+          if (!selected) return;
+          const linkId = selected.id;
           setConfirmOpen(false);
-          push("Delete API is not implemented yet.", "info");
+          adminDeleteLink(linkId)
+            .then(() => {
+              setRows((prev) => prev.filter((r) => r.id !== linkId));
+              push("Link deleted", "success");
+            })
+            .catch((error) => push(friendlyLinkError(error), "error"));
         }}
       />
     </main>

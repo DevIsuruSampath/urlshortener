@@ -8,10 +8,17 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useToast } from "@/components/ui/Toast";
 import {
+  adminChangePassword,
   adminDeveloperTokenInfo,
   adminFinalizeDeveloperTokenRotation,
+  adminGetFlowSettings,
+  adminGetAntiAbuseSettings,
+  adminGetMonetizationSettings,
   adminListSecurityEvents,
   adminMe,
+  adminPutFlowSettings,
+  adminPutAntiAbuseSettings,
+  adminPutMonetizationSettings,
   adminRegenerateDeveloperToken,
   ApiError,
   type AdminSecurityEvent,
@@ -131,6 +138,41 @@ export default function SettingsPage() {
         if (alive) setLoadingSecurityEvents(false);
       });
 
+    adminGetFlowSettings()
+      .then((data) => {
+        if (!alive) return;
+        setWebSteps(data.default_web_steps);
+        setAppSteps(data.default_app_steps);
+        setStep1Seconds(data.first_step_min_seconds);
+        setStepNSeconds(data.next_step_min_seconds);
+        setCaptchaMode(data.captcha_mode);
+      })
+      .catch(() => {});
+
+    adminGetAntiAbuseSettings()
+      .then((data) => {
+        if (!alive) return;
+        setDedupeHours(data.dedupe_hours);
+        setStartRatePerMinute(data.start_rate_limit_per_minute);
+        setStepRatePerMinute(data.step_rate_limit_per_minute);
+        setAuthRatePerMinute(data.auth_rate_limit_per_minute);
+      })
+      .catch(() => {});
+
+    adminGetMonetizationSettings()
+      .then((data) => {
+        if (!alive) return;
+        setPayoutThresholdUsd(data.payout_threshold_usd);
+        setRotationEnabled(data.rotation_enabled === "true");
+        setPrimaryAdNetwork(data.primary_ad_network);
+        setSecondaryAdNetwork(data.secondary_ad_network);
+        setGlobalMobileRpm(data.global_mobile_rpm);
+        setGlobalDesktopRpm(data.global_desktop_rpm);
+        setLkMobileRpm(data.lk_mobile_rpm);
+        setInMobileRpm(data.in_mobile_rpm);
+      })
+      .catch(() => {});
+
     return () => {
       alive = false;
     };
@@ -174,7 +216,7 @@ export default function SettingsPage() {
     }
   }
 
-  function onPasswordChange(e: FormEvent<HTMLFormElement>) {
+  async function onPasswordChange(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     if (!currentPassword.trim() || !newPassword.trim() || !confirmPassword.trim()) {
@@ -187,22 +229,85 @@ export default function SettingsPage() {
       return;
     }
 
-    push("Password change API is not implemented yet.", "info");
+    try {
+      await adminChangePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      push("Password changed successfully.", "success");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        push(error.message, "error");
+      } else {
+        push("Failed to change password.", "error");
+      }
+    }
   }
 
-  function onFlowDefaultsSave(e: FormEvent<HTMLFormElement>) {
+  async function onFlowDefaultsSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    push("Flow defaults API is not implemented yet.", "info");
+    try {
+      await adminPutFlowSettings({
+        default_web_steps: webSteps,
+        default_app_steps: appSteps,
+        first_step_min_seconds: step1Seconds,
+        next_step_min_seconds: stepNSeconds,
+        captcha_mode: captchaMode,
+      });
+      push("Flow defaults saved.", "success");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        push(error.message, "error");
+      } else {
+        push("Failed to save flow defaults.", "error");
+      }
+    }
   }
 
-  function onAntiAbuseSave(e: FormEvent<HTMLFormElement>) {
+  async function onAntiAbuseSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    push("Anti-abuse settings API is not implemented yet.", "info");
+    try {
+      await adminPutAntiAbuseSettings({
+        dedupe_hours: dedupeHours,
+        start_rate_limit_per_minute: startRatePerMinute,
+        step_rate_limit_per_minute: stepRatePerMinute,
+        auth_rate_limit_per_minute: authRatePerMinute,
+      });
+      push("Anti-abuse settings saved.", "success");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        push(error.message, "error");
+      } else {
+        push("Failed to save anti-abuse settings.", "error");
+      }
+    }
   }
 
-  function onMonetizationSave(e: FormEvent<HTMLFormElement>) {
+  async function onMonetizationSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    push("Monetization settings API is not implemented yet.", "info");
+    try {
+      await adminPutMonetizationSettings({
+        payout_threshold_usd: payoutThresholdUsd,
+        rotation_enabled: String(rotationEnabled),
+        primary_ad_network: primaryAdNetwork,
+        secondary_ad_network: secondaryAdNetwork,
+        global_mobile_rpm: globalMobileRpm,
+        global_desktop_rpm: globalDesktopRpm,
+        lk_mobile_rpm: lkMobileRpm,
+        in_mobile_rpm: inMobileRpm,
+      });
+      push("Monetization settings saved.", "success");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        push(error.message, "error");
+      } else {
+        push("Failed to save monetization settings.", "error");
+      }
+    }
   }
 
   return (

@@ -4,6 +4,7 @@ import secrets
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from pydantic import BaseModel
 from redis.exceptions import RedisError
 from sqlalchemy.orm import Session
 
@@ -11,7 +12,7 @@ from app.core.config import settings
 from app.core.deps import get_current_admin
 from app.core.rate_limit import allow_ip_action
 from app.core.redis_client import redis_client
-from app.core.security import create_access_token, verify_password
+from app.core.security import create_access_token, hash_password, verify_password
 from app.db.models.user import User
 from app.db.session import get_db
 from app.schemas.admin_auth import (
@@ -358,3 +359,46 @@ def developer_token_finalize(
         db.rollback()
 
     return DeveloperTokenFinalizeOut(masked_tokens=[_mask_token(t) for t in tokens])
+
+
+class ChangePasswordIn(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_password: str
+
+
+@router.post("/change-password")
+def change_password(
+    payload: ChangePasswordIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_admin),
+):
+    if not payload.current_password.strip() or not payload.new_password.strip():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="All password fields are required")
+
+    if payload.new_password != payload.confirm_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="New password and confirmation do not match")
+
+    if len(payload.new_password) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password must be at least 8 characters")
+
+    if not verify_password(payload.current_password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Current password is incorrect")
+
+    user.password_hash = hash_password(payload.new_password)
+    db.commit()
+
+    try:
+        log_security_event(
+            db,
+            event_type="settings_changed",
+            actor_user_id=user.id,
+            ip_address=client_ip(request),
+            details={"action": "password_changed"},
+            commit=True,
+        )
+    except Exception:
+        db.rollback()
+
+    return {"ok": True}
