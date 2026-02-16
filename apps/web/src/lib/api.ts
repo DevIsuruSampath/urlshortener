@@ -1,21 +1,5 @@
 import { env } from "./env";
 
-export type StepCompleteRequest = {
-  session_id: string;
-  step: number;
-  token: string;
-  captcha_token?: string;
-};
-
-export type StepCompleteResponse = {
-  done: boolean;
-  next_step?: number;
-  next_step_url?: string;
-  redirect_url?: string;
-  requires_captcha?: boolean;
-  message?: string;
-};
-
 export type AdminLoginPayload = {
   email: string;
   password?: string;
@@ -131,21 +115,6 @@ async function parseError(res: Response): Promise<ApiError> {
 
 async function fetchAdminLinks(init: RequestInit): Promise<Response> {
   return await fetch(ADMIN_LINKS_BASE, init);
-}
-
-export async function postStepComplete(payload: StepCompleteRequest): Promise<StepCompleteResponse> {
-  const res = await fetch(`${env.apiBase}/flow/step-complete`, {
-    method: "POST",
-    headers: authHeaders(true),
-    body: JSON.stringify(payload),
-    credentials: "include",
-  });
-
-  if (!res.ok) {
-    throw await parseError(res);
-  }
-
-  return (await res.json()) as StepCompleteResponse;
 }
 
 const ADMIN_AUTH_BASE = `${env.apiBase}/admin/auth`;

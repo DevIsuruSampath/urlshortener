@@ -329,7 +329,8 @@
   </div>
 
   <script>
-    const API_BASE = "http://localhost:8000";
+    // Configure: set to your API domain
+    const API_BASE = "https://api.example.com";
 
     // Get session_id from URL
     const params = new URLSearchParams(window.location.search);
@@ -405,7 +406,7 @@
 
       // Step 4: Call the backend API
       try {
-        const res = await fetch(`${API_BASE}/verify/${sessionId}`);
+        const res = await fetch(`${API_BASE}/visitor/verify/${sessionId}`);
         const data = await res.json();
 
         if (res.ok && data.original_url) {

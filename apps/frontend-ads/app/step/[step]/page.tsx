@@ -43,7 +43,7 @@ export default function StepPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE}/step-complete`, {
+      const res = await fetch(`${API_BASE}/visitor/step-complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -64,7 +64,7 @@ export default function StepPage() {
         router.push(`/step/${step + 1}?session_id=${sessionId}`);
       } else {
         // All steps done — redirect to verification page
-        window.location.href = `${process.env.NEXT_PUBLIC_REDIRECT_BASE || "http://localhost:3001"}/verify?session_id=${sessionId}`;
+        window.location.href = `${process.env.NEXT_PUBLIC_REDIRECT_BASE || "https://exa.com"}/verify?session_id=${sessionId}`;
       }
     } catch {
       setError("Network error. Please try again.");

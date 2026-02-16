@@ -11,13 +11,11 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.core.rate_limit import allow_ip_action
 from app.core.redis_client import redis_client
-from app.core.security import sign_session_token
 from app.db.models.click_session import ClickSession
 from app.db.models.link import Link
 from app.db.session import get_db
 from app.services.fraud_service import hash_value, suspicious_request
 from app.services.link_service import cache_payload
-from app.services.session_service import build_interstitial_url
 
 router = APIRouter()
 
@@ -42,6 +40,11 @@ RESERVED_CODES = {
     "sitemap.xml",
     "favicon.ico",
     "_next",
+    "flow",
+    "visitor",
+    "start",
+    "verify",
+    "step-complete",
 }
 
 
@@ -70,7 +73,6 @@ def hit_short_code(code: str, request: Request, db: Session = Depends(get_db)):
     publisher_id = None
     web_steps = None
 
-    # Always load canonical link row (active + ownership), cache only avoids extra destination/tier payload fetches.
     link = db.execute(select(Link).where(Link.code == code).where(Link.is_active.is_(True))).scalar_one_or_none()
     if not link:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invalid short code")
@@ -113,20 +115,13 @@ def hit_short_code(code: str, request: Request, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(click_session)
 
-    st = sign_session_token(
-        session_id=str(click_session.id),
-        code=code,
-        publisher_id=publisher_id,
-        total_steps=web_steps,
-    )
+    # Redirect to new frontend-ads (ScrollWall pages)
+    ads_domain = settings.interstitial_domain
+    if "localhost" in ads_domain:
+        ads_base = f"http://{ads_domain}"
+    else:
+        ads_base = f"https://{ads_domain}"
 
-    interstitial_url = build_interstitial_url(
-        code=code,
-        publisher_id=publisher_id,
-        session_id=str(click_session.id),
-        total_steps=web_steps,
-        st=st,
-        step=1,
-    )
+    interstitial_url = f"{ads_base}/step/1?session_id={click_session.id}"
 
     return RedirectResponse(url=interstitial_url, status_code=302)
