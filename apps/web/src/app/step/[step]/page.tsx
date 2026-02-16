@@ -61,8 +61,10 @@ export default function StepPage() {
       if (step < TOTAL_STEPS) {
         router.push(`/step/${step + 1}?session_id=${sessionId}`);
       } else {
-        // All steps done — redirect to verification page
-        window.location.href = `/verify?session_id=${sessionId}`;
+        // All steps done — redirect to verification page (on short domain)
+        const shortDomain = process.env.NEXT_PUBLIC_SHORT_DOMAIN || "exa.com";
+        const verifyBase = `https://${shortDomain}`;
+        window.location.href = `${verifyBase}/verify?session_id=${sessionId}`;
       }
     } catch {
       setError("Network error. Please try again.");

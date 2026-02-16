@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server'
 // Define your domains here (or load from env)
 const ADMIN_DOMAIN = process.env.NEXT_PUBLIC_ADMIN_DOMAIN || 'admin.example.com';
 const ADS_DOMAIN = process.env.NEXT_PUBLIC_ADS_DOMAIN || 'adsexample.com';
+const SHORT_DOMAIN = process.env.NEXT_PUBLIC_SHORT_DOMAIN || 'exa.com';
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
@@ -19,14 +20,17 @@ export function middleware(request: NextRequest) {
 
   // 2. Handle Ads/Interstitial Domain
   if (hostname === ADS_DOMAIN) {
-    // Allow /step/* (ScrollWall pages), /verify (verification), and assets
+    // Allow /step/* (ScrollWall pages) and assets
     if (
       pathname.startsWith('/step') ||
-      pathname.startsWith('/verify') ||
       pathname.startsWith('/_next') ||
       pathname.startsWith('/api')
     ) {
       return NextResponse.next();
+    }
+    // Block /verify on ads domain (moved to short domain)
+    if (pathname.startsWith('/verify')) {
+       return NextResponse.redirect(new URL('/verify', `https://${SHORT_DOMAIN}`));
     }
     // Root → redirect to main site
     if (pathname === '/') {
@@ -36,8 +40,18 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}`));
   }
 
-  // 3. Main domain — block /step and /verify (only accessible via ads domain)
-  if (hostname !== ADMIN_DOMAIN && hostname !== ADS_DOMAIN) {
+  // 3. Handle Short Domain (exa.com)
+  if (hostname === SHORT_DOMAIN) {
+    // Allow /verify and short codes (handled by [code]/route.ts)
+    if (pathname.startsWith('/verify') || pathname.length > 1) {
+      return NextResponse.next();
+    }
+    // Root of short domain -> redirect to main site
+    return NextResponse.redirect(new URL('/', `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}`));
+  }
+
+  // 4. Main domain — block /step and /verify
+  if (hostname !== ADMIN_DOMAIN && hostname !== ADS_DOMAIN && hostname !== SHORT_DOMAIN) {
     if (pathname.startsWith('/step') || pathname.startsWith('/verify')) {
       return NextResponse.redirect(new URL('/', request.url));
     }
