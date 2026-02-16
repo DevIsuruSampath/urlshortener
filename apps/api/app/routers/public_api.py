@@ -168,7 +168,10 @@ def public_api_get(
         db=db,
         request=request,
         created_via="api_get",
-    )(request: Request) -> dict[str, Any]:
+    )
+
+
+async def _parse_post_payload(request: Request) -> dict[str, Any]:
     ctype = (request.headers.get("content-type") or "").lower()
 
     if "application/json" in ctype:
