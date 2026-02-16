@@ -145,7 +145,6 @@ urlshortener/
 │   │   │   │   ├── redirect.py     # GET /{code} → adsexample.com
 │   │   │   │   ├── visitor.py      # step-complete + verify
 │   │   │   │   ├── public_api.py   # GET/POST /api
-│   │   │   │   ├── flow.py         # Legacy flow (backwards compat)
 │   │   │   │   └── admin/          # auth, links, stats, settings
 │   │   │   ├── services/       # Business logic
 │   │   │   ├── schemas/        # Pydantic models

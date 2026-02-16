@@ -29,7 +29,7 @@ export default function LandingPage() {
           </article>
           <article>
             <h3>2) User completes flow</h3>
-            <p className="muted">Timer + scroll + captcha are verified server-side to prevent bypass.</p>
+            <p className="muted">Timer + scroll + validation are verified server-side to prevent bypass.</p>
           </article>
           <article>
             <h3>3) Redirect and earn</h3>
@@ -44,7 +44,7 @@ export default function LandingPage() {
           <li>24h duplicate protection by code + IP hash + UA hash</li>
           <li>Redis abuse protection for flow start and step-complete endpoints</li>
           <li>Configurable steps by tier for web and app traffic</li>
-          <li>Server-signed session/redirect tokens for flow integrity</li>
+          <li>Server-verified visitor sessions for flow integrity</li>
         </ul>
       </section>
 
