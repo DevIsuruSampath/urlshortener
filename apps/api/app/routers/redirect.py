@@ -115,7 +115,7 @@ def hit_short_code(code: str, request: Request, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(click_session)
 
-    # Redirect to new frontend-ads (ScrollWall pages)
+    # Redirect to ScrollWall ad pages
     ads_domain = settings.interstitial_domain
     if "localhost" in ads_domain:
         ads_base = f"http://{ads_domain}"

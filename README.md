@@ -1,55 +1,72 @@
-# Paid Link Shortener (GPLinks-style)
+# PaidLink — Monetized URL Shortener
 
-Monetized URL shortener with step-based interstitial ad flow.
+Single-admin URL shortener with scroll-based ad interstitials.
 
-Current mode: **single-user admin** (no public user registration flow).
+## Tech Stack
 
-## Tech
-- Frontend: Next.js App Router + TypeScript
-- Backend: FastAPI + SQLAlchemy + Alembic
-- Cache/Rate Limit: Redis
-- DB: PostgreSQL
+- **Frontend:** Next.js 15 (App Router) + TypeScript
+- **Backend:** FastAPI + SQLAlchemy + Alembic
+- **Database:** PostgreSQL
+- **Cache:** Redis
 
-## Multi-Domain Architecture
+## Architecture
 
-| Domain | Service | Purpose |
-|--------|---------|---------|
-| `example.com` | Frontend (3000) | Landing Page, Login |
-| `admin.example.com` | Frontend (3000) | Admin Dashboard |
-| `adsexample.com` | Frontend (3000) | Ad/Interstitial Pages |
-| `api.example.com` | Backend (8000) | API Endpoints |
-| `exa.com` | Backend (8000) | Short Link Redirects |
+| Domain | App | Port | Purpose |
+|--------|-----|------|---------|
+| `example.com` | `apps/web` | 3000 | Landing Page |
+| `admin.example.com` | `apps/web` | 3000 | Admin Dashboard |
+| `adsexample.com` | `apps/web` | 3000 | ScrollWall Ad Pages + Verify |
+| `api.example.com` | `apps/api` | 8000 | API Endpoints |
+| `exa.com` | `apps/api` | 8000 | Short Link Redirects |
+
+**2 apps, 2 ports, 5 domains.**
 
 ## How It Works
 
 ```
 Admin creates link → https://exa.com/AbCd123
-User clicks link   → exa.com/AbCd123
-                   → Redirects to adsexample.com/l?... (ads + timer)
-                   → User waits → Captcha → Continue
-                   → Redirects to original URL (google.com)
+
+User clicks link:
+  exa.com/AbCd123
+    → adsexample.com/step/1?session_id=UUID  (scroll + ads)
+    → adsexample.com/step/2?session_id=UUID  (scroll + ads)
+    → adsexample.com/step/3?session_id=UUID  (scroll + ads)
+    → adsexample.com/verify?session_id=UUID  (cyber animation)
+    → google.com ✅
 ```
+
+### User Flow Detail
+
+1. **Click** → `exa.com/AbCd123` hits `apps/api` `GET /{code}`
+2. **Session** → API creates `ClickSession`, redirects to `adsexample.com/step/1`
+3. **ScrollWall** → User must scroll 90% to unlock "Continue" button
+4. **Step Complete** → Frontend calls `POST /visitor/step-complete` (anti-skip validation)
+5. **Repeat** → Steps 2 and 3 with more ads
+6. **Verify** → Cyber terminal animation, calls `GET /visitor/verify/{session_id}`
+7. **Redirect** → 3-second countdown → original URL
+
+### Anti-Fraud
+
+- Sequential step validation (no skipping)
+- Minimum wait time per step (8s first, 3s subsequent)
+- IP + User-Agent deduplication (24h window)
+- Bot/suspicious UA detection
+- Rate limiting on all endpoints
 
 ## Creating Links (3 Methods)
 
 ### 1. Admin Dashboard
-Create links from the UI at `admin.example.com/admin/links`:
+Create from UI at `admin.example.com/admin/links`:
 - Enter destination URL → Click "Quick Create"
 - Returns: `https://exa.com/AbCd123`
-- Manage: Edit, Delete, Pause, Block from the Actions menu
+- Manage: Edit, Delete, Pause, Block from Actions menu
 
 ### 2. Public API (GET)
 ```
 GET https://api.example.com/api?api=YOUR_TOKEN&url=https://google.com&alias=mylink
 ```
-Response (JSON):
 ```json
 { "status": "success", "shortenedUrl": "https://exa.com/mylink" }
-```
-Response (Text):
-```
-GET https://api.example.com/api?api=YOUR_TOKEN&url=https://google.com&format=text
-→ https://exa.com/AbCd123
 ```
 
 ### 3. Public API (POST)
@@ -58,22 +75,26 @@ curl -X POST https://api.example.com/api \
   -H "Content-Type: application/json" \
   -d '{"api": "YOUR_TOKEN", "url": "https://google.com", "alias": "mylink"}'
 ```
-Response:
-```json
-{ "status": "success", "shortenedUrl": "https://exa.com/mylink" }
-```
 
 **Parameters:**
 | Param | Required | Description |
 |-------|----------|-------------|
-| `api` | ✅ | Your API token |
-| `url` | ✅ | Destination URL (http/https only) |
-| `alias` | ❌ | Custom alias (4-20 chars: `A-Z`, `a-z`, `0-9`, `_`, `-`) |
+| `api` | ✅ | API token |
+| `url` | ✅ | Destination URL (http/https) |
+| `alias` | ❌ | Custom alias (4-20 chars: `A-Za-z0-9_-`) |
 | `format` | ❌ | `json` (default) or `text` |
 
-## Link Management (Admin)
+## API Endpoints
 
-All endpoints require admin session cookie.
+### Visitor Flow (Public — no auth)
+
+| Action | Method | Endpoint |
+|--------|--------|----------|
+| Start session | `GET` | `/{code}` |
+| Complete step | `POST` | `/visitor/step-complete` |
+| Verify & get URL | `GET` | `/visitor/verify/{session_id}` |
+
+### Link Management (Admin auth required)
 
 | Action | Method | Endpoint |
 |--------|--------|----------|
@@ -84,7 +105,7 @@ All endpoints require admin session cookie.
 | Pause/Resume | `PATCH` | `/admin/links/{id}/toggle` |
 | Block/Unblock | `PATCH` | `/admin/links/{id}/block` |
 
-## Settings (Admin)
+### Settings (Admin auth required)
 
 | Setting | Method | Endpoint |
 |---------|--------|----------|
@@ -93,144 +114,121 @@ All endpoints require admin session cookie.
 | Anti-Abuse | `GET/PUT` | `/admin/settings/anti-abuse` |
 | Monetization | `GET/PUT` | `/admin/settings/monetization` |
 
-## Run locally (no nginx)
+### Developer API Token
+
+| Action | Method | Endpoint |
+|--------|--------|----------|
+| View (masked) | `GET` | `/admin/auth/developer-token` |
+| Regenerate | `POST` | `/admin/auth/developer-token/regenerate` |
+| Finalize rotation | `POST` | `/admin/auth/developer-token/finalize` |
+
+### Admin Auth
+
+| Action | Method | Endpoint |
+|--------|--------|----------|
+| Status | `GET` | `/admin/auth/status` |
+| Setup (first run) | `POST` | `/admin/auth/setup` |
+| Login | `POST` | `/admin/auth/login` |
+| Logout | `POST` | `/admin/auth/logout` |
+| Security Events | `GET` | `/admin/security-events` |
+
+## Project Structure
+
+```
+urlshortener/
+├── apps/
+│   ├── api/                    ⚙️ Backend (FastAPI :8000)
+│   │   ├── app/
+│   │   │   ├── core/           # Config, auth, rate limiting, Redis
+│   │   │   ├── db/             # Models, migrations (6 total)
+│   │   │   ├── routers/
+│   │   │   │   ├── redirect.py     # GET /{code} → adsexample.com
+│   │   │   │   ├── visitor.py      # step-complete + verify
+│   │   │   │   ├── public_api.py   # GET/POST /api
+│   │   │   │   ├── flow.py         # Legacy flow (backwards compat)
+│   │   │   │   └── admin/          # auth, links, stats, settings
+│   │   │   ├── services/       # Business logic
+│   │   │   ├── schemas/        # Pydantic models
+│   │   │   └── main.py
+│   │   ├── Dockerfile
+│   │   └── .env.example
+│   │
+│   └── web/                    🎨 Frontend (Next.js :3000)
+│       └── src/
+│           ├── app/
+│           │   ├── (public)/       # Landing pages
+│           │   ├── admin/          # Dashboard, links, settings
+│           │   ├── step/[step]/    # ScrollWall ad pages
+│           │   ├── verify/         # Verification animation
+│           │   └── [code]/         # Short code forwarder
+│           ├── components/
+│           │   ├── ads/            # ScrollWall
+│           │   ├── ui/             # Design system
+│           │   ├── layout/         # Sidebar, TopBar
+│           │   └── auth/           # Guards, forms
+│           ├── lib/                # API client, env config
+│           └── middleware.ts       # Domain routing
+│
+├── packages/shared/            📦 Shared config
+│   └── tiers.json
+├── infra/
+│   └── docker-compose.yml      🐳 Local dev (Postgres + Redis)
+├── Dockerfile                  🐳 Production (unified)
+└── example.env
+```
+
+## Run Locally
+
 ```bash
 cp example.env .env
 docker compose -f infra/docker-compose.yml up --build
 ```
 
-Open:
-- Web: <http://localhost:3000>
-- API: <http://localhost:8000>
+- Web: http://localhost:3000
+- API: http://localhost:8000
 
-## Monorepo
-- `apps/web` – frontend
-- `apps/api` – backend
-- `packages/shared/tiers.json` – tier/step rules
-- `infra` – docker-compose + helper scripts
+## Deploy (Dokploy)
 
-## Split deployment (recommended)
-Deploy two services:
-1. `apps/web` (port `3000`) -> `urlshortener.devisuru.ggff.net`
-2. `apps/api` (port `8000`) -> `api.urlshortener.devisuru.ggff.net`
+Deploy 2 services:
 
-You can use either:
-- service-specific Dockerfiles (`apps/web/Dockerfile`, `apps/api/Dockerfile`), or
-- root `Dockerfile` with `RUN_SERVICE` env (`web` or `api`).
-
-Set web env:
+**Service 1 — Web (Next.js)**
 ```env
-NEXT_PUBLIC_API_BASE=https://api.urlshortener.devisuru.ggff.net
+NEXT_PUBLIC_API_BASE=https://api.example.com
+NEXT_PUBLIC_APP_DOMAIN=example.com
+NEXT_PUBLIC_ADMIN_DOMAIN=admin.example.com
+NEXT_PUBLIC_ADS_DOMAIN=adsexample.com
 ```
+→ Domains: `example.com`, `admin.example.com`, `adsexample.com`
 
-Set API env:
+**Service 2 — API (FastAPI)**
+→ See `apps/api/.env.example` for full config
+→ Domains: `api.example.com`, `exa.com`
+
+## Middleware (Domain Routing)
+
+`apps/web/src/middleware.ts` handles routing by hostname:
+
+| Domain | Behavior |
+|--------|----------|
+| `admin.example.com` | `/` → redirect to `/admin/stats` |
+| `adsexample.com` | Allow `/step/*`, `/verify`; block everything else |
+| `example.com` | Block `/step/*`, `/verify`; allow everything else |
+
+## Admin Auth
+
+- Setup is one-time only (`POST /admin/auth/setup`)
+- Optional bootstrap token (`ADMIN_SETUP_TOKEN`)
+- HTTP-only session cookie (`COOKIE_DOMAIN=.example.com`)
+- Recovery codes issued at setup (10 codes, shown once)
+- Password reset via CLI only: `python -m app.cli reset-admin-password`
+- Security events logged: login, setup, blocks, settings changes
+
+## Cookie Security
+
+For cross-subdomain auth (`example.com` ↔ `api.example.com`):
 ```env
-PUBLIC_WEB_BASE_URL=https://urlshortener.devisuru.ggff.net
-PUBLIC_API_BASE_URL=https://api.urlshortener.devisuru.ggff.net
-CORS_ORIGINS=https://urlshortener.devisuru.ggff.net
-ADMIN_API_TOKENS=replace_token_1,replace_token_2
-ADMIN_SETUP_TOKEN=replace_with_long_random_bootstrap_token
-ADMIN_SESSION_COOKIE_NAME=paidlink_admin_session
+COOKIE_DOMAIN=.example.com
+COOKIE_SAMESITE=lax
 COOKIE_SECURE=true
-COOKIE_SAMESITE=none
 COOKIE_HTTPONLY=true
-FLOW_SIGNING_SECRET=replace_with_long_random_secret
-ADMIN_JWT_SECRET=replace_with_long_random_secret
-SESSION_TOKEN_EXPIRE_MINUTES=15
-START_RATE_LIMIT_PER_MINUTE=120
-STEP_RATE_LIMIT_PER_MINUTE=60
-AUTH_RATE_LIMIT_PER_MINUTE=20
-DEV_API_RATE_LIMIT_PER_MINUTE=60
-ADMIN_SETUP_RATE_LIMIT_PER_MINUTE=5
-ADMIN_LOGIN_RATE_LIMIT_PER_MINUTE=10
-ADMIN_LOGIN_LOCKOUT_THRESHOLD=10
-ADMIN_LOGIN_LOCKOUT_MINUTES=15
-ADMIN_LOGIN_PROGRESSIVE_DELAY_MAX_SECONDS=2
-REQUIRE_HTTPS_FOR_ADMIN_SETUP=true
-DATABASE_AUTO_CREATE=false
-RUN_MIGRATIONS=false
 ```
-
-A Next route handler (`apps/web/src/app/[code]/route.ts`) forwards short-code hits from `urlshortener.../{code}` to API, so short links work on main domain without nginx.
-It auto-handles local docker-compose (`localhost` -> internal `api` service) to keep env setup minimal.
-
-App routes:
-- Public pages: `(public)/*`
-- `/admin/setup` (first-run bootstrap)
-- `/admin/login` (single admin login)
-- `/admin/*` (overview, links, stats, settings)
-- `/login` (compat redirect -> `/admin/login`)
-- `/l` (interstitial)
-- `/{code}` (short-code forwarder)
-
-API routing (clean split):
-- Public: `GET /api`, `POST /api`, `GET /{code}`, `POST /flow/step-complete`, `GET /flow/go`
-- Admin: `/admin/auth/*`, `/admin/links/*`, `/admin/stats/*`, `/admin/security-events/*`
-  - bootstrap endpoints:
-    - `GET /admin/auth/status` -> `{ "initialized": true|false }`
-    - `POST /admin/auth/setup` (only when initialized=false)
-      - requires setup token when `ADMIN_SETUP_TOKEN` is set (`?token=...` or `x-admin-setup-token` header)
-      - body: `{ "email": "...", "password": "...", "confirm_password": "..." }`
-      - response includes one-time recovery codes
-  - login endpoint:
-    - `POST /admin/auth/login`
-      - body: `{ "email": "...", "password": "..." }` or `{ "email": "...", "recovery_code": "ABCD-EFGH-IJKL" }`
-  - logout endpoint:
-    - `POST /admin/auth/logout`
-  - security events endpoint:
-    - `GET /admin/security-events?limit=50` (admin auth required)
-    - `POST /admin/security-events` for UI-originated events (`settings_changed`, `link_blocked`, `link_unblocked`)
-  - developer token management:
-    - `GET /admin/auth/developer-token` (masked only)
-    - `POST /admin/auth/developer-token/regenerate` (returns new token once + keeps old tokens for rotation window)
-    - `POST /admin/auth/developer-token/finalize` (removes old tokens, keeps newest)
-
-Admin auth security rules:
-- Setup endpoint is one-time (only when `initialized=false`)
-- Optional setup lock token (`ADMIN_SETUP_TOKEN`) prevents public admin-claim during first deploy
-- Setup endpoint has per-IP rate limit (default `5/min`) and can require HTTPS in production
-- Login endpoint has per-IP rate limit (default `10/min`)
-- Login lockout defaults to `10` failed attempts for `15` minutes (`ADMIN_LOGIN_LOCKOUT_THRESHOLD`, `ADMIN_LOGIN_LOCKOUT_MINUTES`)
-- Progressive delay is applied after failed login attempts (up to `ADMIN_LOGIN_PROGRESSIVE_DELAY_MAX_SECONDS`, default `2s`)
-- `/admin/links/*` and `/admin/stats/*` always require admin auth
-- Admin auth uses HTTP-only session cookie for split deploy:
-  - API sets cookie on `api.*` domain
-  - Web sends requests with `credentials: include`
-  - `CORS_ORIGINS` must include web origin and `allow_credentials=true` is enabled in API middleware
-  - Recommended for cross-subdomain reliability: `COOKIE_SAMESITE=none` + `COOKIE_SECURE=true`
-- Admin account is stored with secure password hash only (no plain password in DB):
-  - `email`, `password_hash`, `created_at`, `updated_at`
-- Admin credentials are not read from env; bootstrap + reset operate through DB (`/admin/setup` or CLI reset).
-- Setup issues 10 one-time recovery codes (shown once, hashed in DB); login can use recovery code when password is unavailable.
-- Security audit events are persisted and visible on `/admin/settings` (latest 50):
-  - `admin_setup_completed`, `admin_login_success`, `admin_login_failed`, `admin_password_reset_cli`, `developer_api_token_used`, `link_blocked`, `link_unblocked`, `settings_changed`
-
-Admin password reset (Dokploy-style):
-- This is intentionally terminal-only (not exposed via web API).
-- Run inside API container:
-  - `python -m app.cli reset-admin-password`
-  - or `./start.sh reset-admin-password`
-- Output prints the new password to terminal.
-
-GPLinks-style shortener API (`/api`):
-- JSON (default):
-  - `GET /api?api=TOKEN&url=https://example.com&alias=myalias`
-- Text response:
-  - `GET /api?api=TOKEN&url=https://example.com&alias=myalias&format=text`
-- POST support (json or form):
-  - `POST /api` with `api`, `url`, optional `alias`, optional `format=text|json`
-
-Response formats:
-- JSON (default)
-  - Success: `{ "status": "success", "shortenedUrl": "..." }`
-  - Error: `{ "status": "error", "message": "..." }`
-- TEXT (`format=text`)
-  - Success: short URL only (plain text)
-  - Error: `400` with empty body (GPLinks-compatible)
-
-Validation rules:
-- `api` must match one active token (env `ADMIN_API_TOKENS` or rotated DB token set)
-- `url` must be `http://` or `https://` and pass public URL safety checks (no localhost/private/internal targets)
-- `alias` (optional) must be `4-20` chars (`A-Z`, `a-z`, `0-9`, `_`, `-`) and unique
-- `format` (optional) must be `json` or `text`
-- Developer API is rate-limited per IP (`DEV_API_RATE_LIMIT_PER_MINUTE`, default `60`)

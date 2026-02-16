@@ -4,10 +4,9 @@ services:
     container_name: paidlink-web
     environment:
       - NEXT_PUBLIC_API_BASE=http://localhost:8000
-      - NEXT_PUBLIC_APP_DOMAIN=example.com
-      - NEXT_PUBLIC_ADMIN_DOMAIN=admin.example.com
-      - NEXT_PUBLIC_ADS_DOMAIN=adsexample.com
-      - NEXT_PUBLIC_SHORT_DOMAIN=exa.com
+      - NEXT_PUBLIC_APP_DOMAIN=localhost:3000
+      - NEXT_PUBLIC_ADMIN_DOMAIN=localhost:3000
+      - NEXT_PUBLIC_ADS_DOMAIN=localhost:3000
     volumes:
       - ../apps/web:/app
       - /app/node_modules
