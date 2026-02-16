@@ -2,9 +2,8 @@
 
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useState, useCallback } from "react";
-import ScrollWall from "@/components/ScrollWall";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+import ScrollWall from "@/components/ads/ScrollWall";
+import { env } from "@/lib/env";
 
 const LOREM = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
@@ -43,7 +42,7 @@ export default function StepPage() {
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE}/visitor/step-complete`, {
+      const res = await fetch(`${env.apiBase}/visitor/step-complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -60,11 +59,10 @@ export default function StepPage() {
       }
 
       if (step < TOTAL_STEPS) {
-        // Go to next step
         router.push(`/step/${step + 1}?session_id=${sessionId}`);
       } else {
         // All steps done — redirect to verification page
-        window.location.href = `${process.env.NEXT_PUBLIC_REDIRECT_BASE || "https://exa.com"}/verify?session_id=${sessionId}`;
+        window.location.href = `/verify?session_id=${sessionId}`;
       }
     } catch {
       setError("Network error. Please try again.");
@@ -116,14 +114,12 @@ export default function StepPage() {
               {step < TOTAL_STEPS ? `step ${step + 1}` : "your destination"}.
             </p>
 
-            {/* Long content to force scrolling */}
             {LOREM.split("\n\n").map((paragraph, i) => (
               <p key={i} style={styles.paragraph}>
                 {paragraph}
               </p>
             ))}
 
-            {/* Repeat for more scroll depth */}
             <div style={styles.divider} />
             <h2 style={styles.sectionTitle}>Additional Information</h2>
             {LOREM.split("\n\n")
