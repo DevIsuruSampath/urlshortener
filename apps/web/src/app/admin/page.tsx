@@ -106,10 +106,10 @@ const activityEvents: Array<{
 ];
 
 type DashboardHomeProps = {
-  searchParams?: {
+  searchParams: Promise<{
     filter?: string | string[];
     code?: string | string[];
-  };
+  }>;
 };
 
 function percent(part: number, total: number): string {
@@ -138,13 +138,14 @@ function buildActivityHref(filter: ActivityFilter, code: "all" | LinkCode): stri
   return query ? `/admin?${query}` : "/admin";
 }
 
-export default function DashboardHome({ searchParams }: DashboardHomeProps) {
+export default async function DashboardHome({ searchParams }: DashboardHomeProps) {
   const threshold = 250;
   const balance = 143;
   const progress = Math.min(100, Math.round((balance / threshold) * 100));
 
-  const selectedFilter = normalizeFilter(getSingleParam(searchParams?.filter));
-  const rawCode = getSingleParam(searchParams?.code);
+  const params = await searchParams;
+  const selectedFilter = normalizeFilter(getSingleParam(params?.filter));
+  const rawCode = getSingleParam(params?.code);
   const selectedCode: "all" | LinkCode = rawCode && isLinkCode(rawCode) ? rawCode : "all";
 
   const visibleEvents = activityEvents.filter((event) => {
