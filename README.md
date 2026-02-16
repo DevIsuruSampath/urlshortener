@@ -31,7 +31,7 @@ User clicks link:
     → adsexample.com/step/1?session_id=UUID  (scroll + ads)
     → adsexample.com/step/2?session_id=UUID  (scroll + ads)
     → adsexample.com/step/3?session_id=UUID  (scroll + ads)
-    → adsexample.com/verify?session_id=UUID  (cyber animation)
+    → exa.com/verify?session_id=UUID         (cyber animation)
     → google.com ✅
 ```
 
