@@ -55,8 +55,13 @@ def _client_ip(request: Request) -> str:
     return (request.client.host if request.client else "0.0.0.0")
 
 
-def _get_session_or_404(db: Session, session_id: str) -> ClickSession:
-    session = db.get(ClickSession, session_id)
+def _get_session_or_404(db: Session, session_id: str, for_update: bool = False) -> ClickSession:
+    if for_update:
+        # Lock the row to prevent race conditions during step completion
+        session = db.query(ClickSession).with_for_update().filter(ClickSession.id == session_id).scalar()
+    else:
+        session = db.get(ClickSession, session_id)
+        
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -81,7 +86,7 @@ def step_complete(payload: StepCompleteIn, request: Request, db: Session = Depen
     if not allow_ip_action(ip, "step-complete", settings.step_rate_limit_per_minute, window_seconds=60):
         raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded")
 
-    session = _get_session_or_404(db, payload.session_id)
+    session = _get_session_or_404(db, payload.session_id, for_update=True)
 
     # Already completed
     if session.status == "completed":

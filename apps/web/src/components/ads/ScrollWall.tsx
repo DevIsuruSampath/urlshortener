@@ -45,6 +45,7 @@ export default function ScrollWall({
             : "⬇️ Scroll down to continue..."}
         </p>
         <button
+          aria-label={canContinue ? "Continue to next step" : "Scroll to continue"}
           onClick={onComplete}
           disabled={!canContinue || loading}
           style={{

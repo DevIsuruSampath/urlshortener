@@ -2,6 +2,8 @@ import os
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.core.config import settings
 from app.core.deps import get_current_admin
@@ -33,6 +35,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=["*"])  # Behind proxy, so allow * or configure specific
 
 
 @app.get("/health")
