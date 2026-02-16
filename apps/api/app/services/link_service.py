@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 import json
 import random
 import string
@@ -29,10 +28,6 @@ def resolve_tier(tier_key: str) -> dict:
 
 def generate_code(length: int = 7) -> str:
     return "".join(random.choice(ALPHABET) for _ in range(length))
-
-
-def b64u_encode(value: str) -> str:
-    return base64.urlsafe_b64encode(value.encode()).decode().rstrip("=")
 
 
 def cache_payload(destination_url: str, publisher_id: str, web_steps: int) -> str:

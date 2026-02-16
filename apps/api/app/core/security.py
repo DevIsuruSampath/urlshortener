@@ -40,35 +40,3 @@ def decode_access_token(token: str) -> dict[str, Any]:
     if payload.get("typ") != "access":
         raise JWTError("invalid token type")
     return payload
-
-
-def sign_session_token(session_id: str, code: str, publisher_id: str, total_steps: int) -> str:
-    return _encode(
-        {
-            "typ": "session",
-            "sid": session_id,
-            "code": code,
-            "pid": publisher_id,
-            "steps": total_steps,
-        },
-        settings.session_token_expire_minutes,
-        settings.flow_signing_secret,
-    )
-
-
-def verify_session_token(token: str, session_id: str) -> dict[str, Any]:
-    payload = _decode(token, settings.flow_signing_secret)
-    if payload.get("typ") != "session" or payload.get("sid") != session_id:
-        raise JWTError("invalid session token")
-    return payload
-
-
-def sign_redirect_token(session_id: str) -> str:
-    return _encode({"typ": "redirect", "sid": session_id}, settings.redirect_token_expire_minutes, settings.flow_signing_secret)
-
-
-def verify_redirect_token(token: str) -> dict[str, Any]:
-    payload = _decode(token, settings.flow_signing_secret)
-    if payload.get("typ") != "redirect":
-        raise JWTError("invalid redirect token")
-    return payload

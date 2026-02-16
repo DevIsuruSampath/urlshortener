@@ -32,14 +32,11 @@ class Settings(BaseModel):
     )
     redis_url: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
-    # Secret separation: admin JWT vs flow/session signing.
+    # Secrets
     admin_jwt_secret: str = os.getenv("ADMIN_JWT_SECRET", os.getenv("JWT_SECRET", "change_me"))
-    flow_signing_secret: str = os.getenv("FLOW_SIGNING_SECRET", os.getenv("JWT_SECRET", "change_me"))
     jwt_alg: str = os.getenv("JWT_ALG", "HS256")
 
     access_token_expire_minutes: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
-    session_token_expire_minutes: int = int(os.getenv("SESSION_TOKEN_EXPIRE_MINUTES", "15"))
-    redirect_token_expire_minutes: int = int(os.getenv("REDIRECT_TOKEN_EXPIRE_MINUTES", "10"))
 
     first_step_min_seconds: int = int(os.getenv("FIRST_STEP_MIN_SECONDS", "8"))
     next_step_min_seconds: int = int(os.getenv("NEXT_STEP_MIN_SECONDS", "3"))
