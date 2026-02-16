@@ -64,6 +64,9 @@ class Settings(BaseModel):
 
     cache_ttl_seconds: int = int(os.getenv("CACHE_TTL_SECONDS", "300"))
 
+    database_auto_create: bool = _parse_bool(os.getenv("DATABASE_AUTO_CREATE"), True)
+    run_migrations: bool = _parse_bool(os.getenv("RUN_MIGRATIONS"), True)
+
     public_web_base_url: str = os.getenv("PUBLIC_WEB_BASE_URL", "http://localhost")
     public_api_base_url: str = os.getenv("PUBLIC_API_BASE_URL", "http://localhost/api")
     short_link_domain: str = os.getenv("SHORT_LINK_DOMAIN", "exa.com")
