@@ -17,7 +17,7 @@ Single-admin URL shortener with scroll-based ad interstitials.
 | `admin.example.com` | `apps/web` | 3000 | Admin Dashboard |
 | `adsexample.com` | `apps/web` | 3000 | ScrollWall Ad Pages + Verify |
 | `api.example.com` | `apps/api` | 8000 | API Endpoints |
-| `exa.com` | `apps/api` | 8000 | Short Link Redirects |
+| `exa.com` | `apps/web` | 3000 | Short Link Redirects + Verify |
 
 **2 apps, 2 ports, 5 domains.**
 
@@ -196,22 +196,32 @@ NEXT_PUBLIC_API_BASE=https://api.example.com
 NEXT_PUBLIC_APP_DOMAIN=example.com
 NEXT_PUBLIC_ADMIN_DOMAIN=admin.example.com
 NEXT_PUBLIC_ADS_DOMAIN=adsexample.com
+NEXT_PUBLIC_SHORT_DOMAIN=exa.com
 ```
-→ Domains: `example.com`, `admin.example.com`, `adsexample.com`
+→ Domains: `example.com`, `admin.example.com`, `adsexample.com`, **`exa.com`**
 
 **Service 2 — API (FastAPI)**
 → See `apps/api/.env.example` for full config
-→ Domains: `api.example.com`, `exa.com`
+→ Domains: `api.example.com`
 
-## Middleware (Domain Routing)
+## Short Link Flow
+
+Since `exa.com` points to the Web app (Next.js), short links work by proxy:
+1. User visits `exa.com/AbCd`
+2. `apps/web` (middleware) detects short domain
+3. Next.js Route Handler (`[code]/route.ts`) proxies request to `apps/api`
+4. API returns redirect to `adsexample.com`
+5. User completes flow on `adsexample.com`
+6. Verification happens on `exa.com/verify` (handled by Next.js)
 
 `apps/web/src/middleware.ts` handles routing by hostname:
 
 | Domain | Behavior |
 |--------|----------|
 | `admin.example.com` | `/` → redirect to `/admin/stats` |
-| `adsexample.com` | Allow `/step/*`, `/verify`; block everything else |
+| `adsexample.com` | Allow `/step/*`, block everything else |
 | `example.com` | Block `/step/*`, `/verify`; allow everything else |
+| `exa.com` | Allow `/verify` and short codes; redirect root to `example.com` |
 
 ## Admin Auth
 
