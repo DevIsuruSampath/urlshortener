@@ -697,18 +697,7 @@ a { color: inherit; text-decoration: none; }
   letter-spacing: 0.06em;
 }
 
-.captcha-gate {
-  margin-top: var(--space-3);
-}
-
-.captcha-gate p {
-  margin: 0 0 6px;
-}
-
-.captcha-gate .btn {
-  width: 100%;
-  min-height: 48px;
-}
+/* captcha removed */
 
 .scroll-spacer {
   height: 34vh;
