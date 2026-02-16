@@ -56,7 +56,7 @@ export function AuthForm() {
       window.location.href = "/admin";
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
-        window.location.href = "/admin/setup";
+        window.location.href = "/register";
         return;
       }
       setError(friendlyAuthError(err));

@@ -41,7 +41,7 @@ export default function AdminSetupPage() {
       .then((res) => {
         if (!alive) return;
         if (res.initialized) {
-          window.location.href = "/admin/login";
+          window.location.href = "/login";
           return;
         }
         setLoadingStatus(false);
@@ -159,7 +159,7 @@ export default function AdminSetupPage() {
             <button className="btn btn-ghost" type="button" onClick={downloadCodes}>
               Download .txt
             </button>
-            <button className="btn" type="button" onClick={() => (window.location.href = "/admin/login")}>
+            <button className="btn" type="button" onClick={() => (window.location.href = "/login")}>
               I saved them, continue
             </button>
           </div>

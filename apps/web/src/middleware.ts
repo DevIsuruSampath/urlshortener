@@ -50,10 +50,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', `https://${process.env.NEXT_PUBLIC_APP_DOMAIN}`));
   }
 
-  // 4. Main domain — block /step and /verify, redirect /admin to admin domain
+  // 4. Main domain — block /step and /verify, redirect admin/auth to admin domain
   if (hostname !== ADMIN_DOMAIN && hostname !== ADS_DOMAIN && hostname !== SHORT_DOMAIN) {
-    // Redirect /admin/* to admin.example.com/admin/*
-    if (pathname.startsWith('/admin')) {
+    // Redirect /admin, /login, /register to admin domain
+    if (pathname.startsWith('/admin') || pathname.startsWith('/login') || pathname.startsWith('/register')) {
       return NextResponse.redirect(new URL(pathname, `https://${ADMIN_DOMAIN}`));
     }
     // Block ads/verify pages on main domain

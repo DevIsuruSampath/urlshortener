@@ -16,7 +16,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         if (!alive) return;
 
         if (!status.initialized) {
-          window.location.href = "/admin/setup";
+          window.location.href = "/register";
           return;
         }
 
@@ -26,11 +26,11 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         if (!alive) return;
 
         if (error instanceof ApiError && error.status === 403) {
-          window.location.href = "/admin/setup";
+          window.location.href = "/register";
           return;
         }
 
-        window.location.href = "/admin/login";
+        window.location.href = "/login";
       }
     }
 

@@ -157,6 +157,8 @@ urlshortener/
 │           ├── app/
 │           │   ├── (public)/       # Landing pages
 │           │   ├── admin/          # Dashboard, links, settings
+│           │   ├── login/          # Admin login
+│           │   ├── register/       # Admin setup
 │           │   ├── step/[step]/    # ScrollWall ad pages
 │           │   ├── verify/         # Verification animation
 │           │   └── [code]/         # Short code forwarder
