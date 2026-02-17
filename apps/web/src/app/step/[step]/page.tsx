@@ -75,6 +75,9 @@ export default function StepPage() {
 
   return (
     <div style={styles.page}>
+      {/* --- PASTE GLOBAL AD SCRIPTS (POPUNDER/SOCIAL BAR) HERE --- */}
+      {/* <script type="text/javascript" src="//pl123456.example.com/pop.js"></script> */}
+      
       {/* Header */}
       <header style={styles.header}>
         <p style={styles.brand}>PaidLink</p>
@@ -95,17 +98,19 @@ export default function StepPage() {
 
       {/* Main Content */}
       <div style={styles.content}>
-        {/* Header Ad Placeholder */}
-        <div style={styles.adHeader}>
-          <p style={styles.adLabel}>Advertisement</p>
-          <div style={styles.adHeaderSlot}>
-            <span style={styles.adPlaceholder}>Ad Slot — 728×90</span>
+          {/* Header Ad Placeholder */}
+          <div style={styles.adHeader}>
+            <p style={styles.adLabel}>Advertisement</p>
+            <div style={styles.adHeaderSlot}>
+              {/* --- PASTE ADSTERRA / MONETAG HEADER SCRIPT HERE --- */}
+              {/* <script src="//example.com/ad-script.js"></script> */}
+              <span style={styles.adPlaceholder}>Ad Slot — 728×90</span>
+            </div>
           </div>
-        </div>
 
-        <div style={styles.mainGrid}>
-          {/* Article Content */}
-          <article style={styles.article}>
+          <div style={styles.mainGrid}>
+            {/* Article Content */}
+            <article style={styles.article}>
             <h1 style={styles.title}>
               {step === 1 && "🔒 Secure Link Verification — Step 1"}
               {step === 2 && "🛡️ Identity Confirmation — Step 2"}
@@ -138,6 +143,8 @@ export default function StepPage() {
             <div style={styles.adSidebar}>
               <p style={styles.adLabel}>Advertisement</p>
               <div style={styles.adSidebarSlot}>
+                {/* --- PASTE ADSTERRA / MONETAG SIDEBAR SCRIPT HERE --- */}
+                {/* <script src="//example.com/sidebar-script.js"></script> */}
                 <span style={styles.adPlaceholder}>Ad Slot — 160×600</span>
               </div>
             </div>

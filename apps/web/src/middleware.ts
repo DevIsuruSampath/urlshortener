@@ -18,8 +18,6 @@ export function middleware(request: NextRequest) {
   // 1. Example Domain (example.com) - MAIN SITE
   if (hostname === APP_DOMAIN || hostname === `www.${APP_DOMAIN}`) {
     if (pathname.startsWith('/admin')) {
-      // Redirect /admin/* to admin.example.com/* (stripping /admin prefix)
-      // e.g. /admin/links -> admin.example.com/links
       const newPath = pathname.replace(/^\/admin/, '') || '/';
       return NextResponse.redirect(new URL(newPath, `http://${ADMIN_DOMAIN}`));
     }
@@ -31,29 +29,18 @@ export function middleware(request: NextRequest) {
 
   // 2. Admin Domain (admin.example.com) - DASHBOARD
   if (hostname === ADMIN_DOMAIN) {
-    // Allow Next.js internals
     if (pathname.startsWith('/_next') || pathname.startsWith('/static') || pathname === '/favicon.ico') {
       return NextResponse.next();
     }
 
-    // Handle legacy /admin paths -> Redirect to clean paths
-    // e.g. /admin/links -> /links
     if (pathname.startsWith('/admin')) {
        const cleanPath = pathname.replace(/^\/admin/, '') || '/';
        return NextResponse.redirect(new URL(cleanPath, request.url));
     }
 
-    // Rewrite clean paths to internal file structure (/admin/*)
-    // / -> /admin/page.tsx (Overview)
-    // /links -> /admin/links/page.tsx
-    // /settings -> /admin/settings/page.tsx
-    
-    // Check if path is root
     if (pathname === '/') {
         return NextResponse.rewrite(new URL('/admin', request.url));
     }
-    
-    // Otherwise rewrite to /admin + pathname
     return NextResponse.rewrite(new URL(`/admin${pathname}`, request.url));
   }
 
@@ -81,7 +68,18 @@ export function middleware(request: NextRequest) {
     
     // Proxy short codes to API container
     const apiUrl = new URL(`${pathname}${search}`, INTERNAL_API_HOST);
-    return NextResponse.rewrite(apiUrl);
+
+    // Forward IP headers for accurate analytics/rate-limiting
+    const requestHeaders = new Headers(request.headers);
+    const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
+    requestHeaders.set('x-forwarded-for', ip);
+    requestHeaders.set('x-real-ip', ip);
+
+    return NextResponse.rewrite(apiUrl, {
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   return NextResponse.next();
