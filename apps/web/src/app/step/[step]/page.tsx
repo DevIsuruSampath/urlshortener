@@ -63,8 +63,8 @@ export default function StepPage() {
         router.push(`/step/${step + 1}?session_id=${sessionId}`);
       } else {
         // All steps done — redirect to verification page (on short domain)
-        const shortDomain = process.env.NEXT_PUBLIC_SHORT_DOMAIN || "exa.com";
-        const verifyBase = `https://${shortDomain}`;
+        const shortDomain = process.env.SHORT_DOMAIN || "exa.com";
+        const verifyBase = `//${shortDomain}`;
         window.location.href = `${verifyBase}/verify?session_id=${sessionId}`;
       }
     } catch {

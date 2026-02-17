@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// Domains - adjust these or load from env
-const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'localhost:3000';
-const ADMIN_DOMAIN = process.env.NEXT_PUBLIC_ADMIN_DOMAIN || 'admin.localhost:3000';
-const AUTH_DOMAIN = process.env.NEXT_PUBLIC_AUTH_DOMAIN || 'auth.localhost:3000';
-const ADS_DOMAIN = process.env.NEXT_PUBLIC_ADS_DOMAIN || 'ads.localhost:3000';
-const SHORT_DOMAIN = process.env.NEXT_PUBLIC_SHORT_DOMAIN || 'short.localhost:3000';
+// Domains
+const APP_DOMAIN = process.env.APP_DOMAIN || 'localhost:3000';
+const ADMIN_DOMAIN = process.env.ADMIN_DOMAIN || 'admin.localhost:3000';
+const AUTH_DOMAIN = process.env.AUTH_DOMAIN || 'auth.localhost:3000';
+const ADS_DOMAIN = process.env.ADS_DOMAIN || 'ads.localhost:3000';
+const SHORT_DOMAIN = process.env.SHORT_DOMAIN || 'short.localhost:3000';
 
 // Internal API for rewriting
-const INTERNAL_API_HOST = process.env.INTERNAL_API_HOST || process.env.NEXT_PUBLIC_API_BASE || 'http://api:8000';
+const INTERNAL_API_HOST = process.env.INTERNAL_API_HOST || process.env.API_BASE || 'http://api:8000';
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
@@ -37,8 +37,7 @@ export function middleware(request: NextRequest) {
 
     // Redirect Login/Register to AUTH Domain
     if (pathname === '/login' || pathname === '/register') {
-        const targetPath = pathname === '/register' ? '/login' : pathname;
-       return NextResponse.redirect(new URL(targetPath, `http://${AUTH_DOMAIN}`));
+       return NextResponse.redirect(new URL(pathname, `http://${AUTH_DOMAIN}`));
     }
 
     // Handle legacy /admin paths -> Redirect to clean paths
@@ -60,18 +59,17 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Register page is disabled -> Redirect to Login
-    if (pathname === '/register') {
-       return NextResponse.redirect(new URL('/login', request.url));
-    }
-
     // Allow Admin Login
     if (pathname === '/login') {
        return NextResponse.next();
     }
 
+    // Register page is disabled -> Redirect to Login
+    if (pathname === '/register') {
+       return NextResponse.redirect(new URL('/login', request.url));
+    }
+
     // All other paths (including root) show Maintenance (Normal User Auth)
-    // We rewrite to /auth/page.tsx which is the "Coming Soon" page
     return NextResponse.rewrite(new URL('/auth', request.url));
   }
 
