@@ -9,7 +9,7 @@ def bootstrap_admin(db: Session):
 
     # Generate random credentials
     password = "".join(secrets.choice(string.ascii_letters + string.digits) for _ in range(16))
-    email = "admin@local"
+    email = "admin@example.com"
     
     try:
         user, codes = create_admin_user_once(db, email=email, password=password)
