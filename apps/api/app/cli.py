@@ -34,6 +34,11 @@ def reset_admin_password() -> int:
             print("Admin user not found. Run /admin/setup first.", file=sys.stderr)
             return 1
 
+        # Check if email is valid (contains .), if not, fix it to default
+        if "." not in user.email:
+            print(f"Fixing invalid email: {user.email} -> admin@example.com")
+            user.email = "admin@example.com"
+
         new_password = _generate_password()
         user.password_hash = hash_password(new_password)
         log_security_event(
@@ -44,7 +49,10 @@ def reset_admin_password() -> int:
         )
         db.commit()
 
-    print(f"New admin password: {new_password} (copy this)")
+    print(f"\n==============================================")
+    print(f"Admin Email: {user.email}")
+    print(f"New Password: {new_password}")
+    print(f"==============================================\n")
     return 0
 
 
