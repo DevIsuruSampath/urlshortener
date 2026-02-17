@@ -20,6 +20,7 @@ Aenean sagittis. Praesent id justo in neque elementum ultrices. Class aptent tac
 Nulla facilisi. Sed pulvinar, felis id consequat commodo, nibh augue pretium tellus, sed varius turpis turpis sit amet elit. Donec at pede. Etiam vel neque nec dui dignissim bibendum. Vivamus id enim. Phasellus neque orci, porta a, aliquet quis, semper a, massa. Phasellus purus. Pellentesque tristique imperdiet tortor. Nam euismod tellus id erat.`;
 
 const TOTAL_STEPS = 3;
+const PROJECT_NAME = process.env.NEXT_PUBLIC_PROJECT_NAME || "PaidLink";
 
 export default function StepPage() {
   const params = useParams();
@@ -80,7 +81,7 @@ export default function StepPage() {
       
       {/* Header */}
       <header style={styles.header}>
-        <p style={styles.brand}>PaidLink</p>
+        <p style={styles.brand}>{PROJECT_NAME}</p>
         <p style={styles.stepIndicator}>
           Step {step} of {TOTAL_STEPS}
         </p>

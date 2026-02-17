@@ -4,10 +4,12 @@ import type { ReactNode } from "react";
 import { SiteFooter } from "@/components/public/SiteFooter";
 import { SiteHeader } from "@/components/public/SiteHeader";
 
+const PROJECT_NAME = process.env.NEXT_PUBLIC_PROJECT_NAME || "PaidLink";
+
 export const metadata: Metadata = {
   title: {
-    default: "PaidLink | Secure Paid-Link Shortener",
-    template: "%s | PaidLink",
+    default: `${PROJECT_NAME} | Secure Paid-Link Shortener`,
+    template: `%s | ${PROJECT_NAME}`,
   },
   description: "Monetized URL shortener with server-validated steps, anti-bypass controls, and payout-safe tracking.",
 };
