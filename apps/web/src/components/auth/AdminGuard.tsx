@@ -19,7 +19,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         if (!alive) return;
 
         if (!status.initialized) {
-          window.location.href = `${protocol}//${AUTH_DOMAIN}/login`;
+          window.location.href = `${protocol}//${AUTH_DOMAIN}`;
           return;
         }
 
@@ -29,11 +29,11 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         if (!alive) return;
 
         if (error instanceof ApiError && error.status === 403) {
-          window.location.href = `${protocol}//${AUTH_DOMAIN}/login`;
+          window.location.href = `${protocol}//${AUTH_DOMAIN}`;
           return;
         }
 
-        window.location.href = `${protocol}//${AUTH_DOMAIN}/login`;
+        window.location.href = `${protocol}//${AUTH_DOMAIN}`;
       }
     }
 

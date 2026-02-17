@@ -59,18 +59,23 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Allow Admin Login
+    // Rewrite Root '/' to Login (Single Page Auth)
+    if (pathname === '/') {
+       return NextResponse.rewrite(new URL('/login', request.url));
+    }
+
+    // Allow direct access to /login if needed, but root handles it now
     if (pathname === '/login') {
        return NextResponse.next();
     }
 
-    // Register page is disabled -> Redirect to Login
+    // Register is disabled (log-based setup)
     if (pathname === '/register') {
-       return NextResponse.redirect(new URL('/login', request.url));
+       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // All other paths (including root) show Maintenance (Normal User Auth)
-    return NextResponse.rewrite(new URL('/auth', request.url));
+    // All other paths -> Redirect to Root (Login)
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
   // 4. Ads Domain (adsexample.com) - AD FLOW
