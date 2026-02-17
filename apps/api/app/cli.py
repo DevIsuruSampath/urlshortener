@@ -48,9 +48,12 @@ def reset_admin_password() -> int:
             details={"source": "cli"},
         )
         db.commit()
+        
+        # Capture email before session closes to avoid DetachedInstanceError
+        final_email = user.email
 
     print(f"\n==============================================")
-    print(f"Admin Email: {user.email}")
+    print(f"Admin Email: {final_email}")
     print(f"New Password: {new_password}")
     print(f"==============================================\n")
     return 0
