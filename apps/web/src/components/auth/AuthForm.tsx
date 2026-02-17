@@ -55,10 +55,10 @@ export function AuthForm() {
       });
       window.location.href = "/admin";
     } catch (err) {
-      if (err instanceof ApiError && err.status === 403) {
-        window.location.href = "/register";
-        return;
-      }
+      // if (err instanceof ApiError && err.status === 403) {
+      //   window.location.href = "/register";
+      //   return;
+      // }
       setError(friendlyAuthError(err));
     } finally {
       setLoading(false);

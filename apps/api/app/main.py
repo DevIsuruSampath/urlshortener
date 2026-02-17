@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +8,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.core.config import settings
 from app.core.deps import get_current_admin
+from app.core.bootstrap import bootstrap_admin
+from app.db.session import SessionLocal
 from app.routers import public_api, redirect, visitor
 from app.routers.admin import auth as admin_auth
 from app.routers.admin import links as admin_links
@@ -14,7 +17,17 @@ from app.routers.admin import security_events as admin_security_events
 from app.routers.admin import settings as admin_settings
 from app.routers.admin import stats as admin_stats
 
-app = FastAPI(title="PaidLink API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Bootstrap admin user if needed
+    db = SessionLocal()
+    try:
+        bootstrap_admin(db)
+    finally:
+        db.close()
+    yield
+
+app = FastAPI(title="PaidLink API", version="0.1.0", lifespan=lifespan)
 
 raw_cors = os.getenv("CORS_ORIGINS", "")
 if raw_cors.strip():

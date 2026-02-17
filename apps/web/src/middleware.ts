@@ -37,7 +37,8 @@ export function middleware(request: NextRequest) {
 
     // Redirect Login/Register to AUTH Domain
     if (pathname === '/login' || pathname === '/register') {
-       return NextResponse.redirect(new URL(pathname, `http://${AUTH_DOMAIN}`));
+        const targetPath = pathname === '/register' ? '/login' : pathname;
+       return NextResponse.redirect(new URL(targetPath, `http://${AUTH_DOMAIN}`));
     }
 
     // Handle legacy /admin paths -> Redirect to clean paths
@@ -59,8 +60,13 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Allow Admin Login & Register pages
-    if (pathname === '/login' || pathname === '/register') {
+    // Register page is disabled -> Redirect to Login
+    if (pathname === '/register') {
+       return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    // Allow Admin Login
+    if (pathname === '/login') {
        return NextResponse.next();
     }
 
