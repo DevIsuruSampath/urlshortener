@@ -102,7 +102,18 @@ function authHeaders(contentType = false): HeadersInit {
 async function parseError(res: Response): Promise<ApiError> {
   try {
     const data = await res.json();
-    return new ApiError(res.status, data?.detail || data?.message || "Request failed");
+    let msg = data?.detail || data?.message || "Request failed";
+
+    if (typeof msg !== "string") {
+      // Handle FastAPI validation errors (array of objects)
+      if (Array.isArray(msg) && msg.length > 0 && msg[0].msg) {
+        msg = msg[0].msg;
+      } else {
+        msg = JSON.stringify(msg);
+      }
+    }
+
+    return new ApiError(res.status, msg);
   } catch {
     try {
       const text = (await res.text()).trim();
