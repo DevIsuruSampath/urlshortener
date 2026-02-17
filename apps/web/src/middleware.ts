@@ -9,7 +9,8 @@ const SHORT_DOMAIN = process.env.NEXT_PUBLIC_SHORT_DOMAIN || 'short.localhost:30
 
 // Internal API for rewriting
 // If running in Dokploy separately, set this to "http://api.example.com" or the internal IP/DNS
-const INTERNAL_API_HOST = process.env.INTERNAL_API_HOST || 'http://api:8000';
+// Falls back to NEXT_PUBLIC_API_BASE if not set
+const INTERNAL_API_HOST = process.env.INTERNAL_API_HOST || process.env.NEXT_PUBLIC_API_BASE || 'http://api:8000';
 
 export function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
