@@ -8,6 +8,7 @@ const ADS_DOMAIN = process.env.NEXT_PUBLIC_ADS_DOMAIN || 'ads.localhost:3000';
 const SHORT_DOMAIN = process.env.NEXT_PUBLIC_SHORT_DOMAIN || 'short.localhost:3000';
 
 // Internal API for rewriting
+// If running in Dokploy separately, set this to "http://api.example.com" or the internal IP/DNS
 const INTERNAL_API_HOST = process.env.INTERNAL_API_HOST || 'http://api:8000';
 
 export function middleware(request: NextRequest) {
@@ -33,11 +34,18 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
+    // Redirect login/register to main site (since they don't exist on admin subdomain)
+    if (pathname === '/login' || pathname === '/register') {
+       return NextResponse.redirect(new URL(pathname, `http://${APP_DOMAIN}`));
+    }
+
+    // Handle legacy /admin paths -> Redirect to clean paths
     if (pathname.startsWith('/admin')) {
        const cleanPath = pathname.replace(/^\/admin/, '') || '/';
        return NextResponse.redirect(new URL(cleanPath, request.url));
     }
 
+    // Rewrite clean paths to internal file structure (/admin/*)
     if (pathname === '/') {
         return NextResponse.rewrite(new URL('/admin', request.url));
     }
