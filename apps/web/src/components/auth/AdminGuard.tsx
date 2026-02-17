@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 
 import { adminMe, adminStatus, ApiError } from "@/lib/api";
 
+const AUTH_DOMAIN = process.env.NEXT_PUBLIC_AUTH_DOMAIN || "auth.localhost:3000";
+
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
+    const protocol = window.location.protocol;
 
     async function run() {
       try {
@@ -16,7 +19,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         if (!alive) return;
 
         if (!status.initialized) {
-          window.location.href = "/register";
+          window.location.href = `${protocol}//${AUTH_DOMAIN}/register`;
           return;
         }
 
@@ -26,11 +29,11 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
         if (!alive) return;
 
         if (error instanceof ApiError && error.status === 403) {
-          window.location.href = "/register";
+          window.location.href = `${protocol}//${AUTH_DOMAIN}/register`;
           return;
         }
 
-        window.location.href = "/login";
+        window.location.href = `${protocol}//${AUTH_DOMAIN}/login`;
       }
     }
 
