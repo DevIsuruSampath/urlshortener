@@ -5,8 +5,8 @@ export type DashboardNavItem = {
 };
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
-  { href: "/admin", label: "Overview", icon: "🏠" },
-  { href: "/admin/links", label: "Links", icon: "🔗" },
-  { href: "/admin/stats", label: "Quality", icon: "📊" },
-  { href: "/admin/settings", label: "Settings", icon: "⚙️" },
+  { href: "/", label: "Overview", icon: "🏠" },
+  { href: "/links", label: "Links", icon: "🔗" },
+  { href: "/stats", label: "Quality", icon: "📊" },
+  { href: "/settings", label: "Settings", icon: "⚙️" },
 ];

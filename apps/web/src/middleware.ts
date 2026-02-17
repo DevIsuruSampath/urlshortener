@@ -18,7 +18,10 @@ export function middleware(request: NextRequest) {
   // 1. Example Domain (example.com) - MAIN SITE
   if (hostname === APP_DOMAIN || hostname === `www.${APP_DOMAIN}`) {
     if (pathname.startsWith('/admin')) {
-      return NextResponse.redirect(new URL(`/admin`, `http://${ADMIN_DOMAIN}`));
+      // Redirect /admin/* to admin.example.com/* (stripping /admin prefix)
+      // e.g. /admin/links -> admin.example.com/links
+      const newPath = pathname.replace(/^\/admin/, '') || '/';
+      return NextResponse.redirect(new URL(newPath, `http://${ADMIN_DOMAIN}`));
     }
     if (pathname.startsWith('/step') || pathname.startsWith('/verify')) {
       return NextResponse.redirect(new URL('/', request.url));
@@ -28,10 +31,30 @@ export function middleware(request: NextRequest) {
 
   // 2. Admin Domain (admin.example.com) - DASHBOARD
   if (hostname === ADMIN_DOMAIN) {
-    if (pathname === '/') {
-      return NextResponse.redirect(new URL('/admin', request.url));
+    // Allow Next.js internals
+    if (pathname.startsWith('/_next') || pathname.startsWith('/static') || pathname === '/favicon.ico') {
+      return NextResponse.next();
     }
-    return NextResponse.next();
+
+    // Handle legacy /admin paths -> Redirect to clean paths
+    // e.g. /admin/links -> /links
+    if (pathname.startsWith('/admin')) {
+       const cleanPath = pathname.replace(/^\/admin/, '') || '/';
+       return NextResponse.redirect(new URL(cleanPath, request.url));
+    }
+
+    // Rewrite clean paths to internal file structure (/admin/*)
+    // / -> /admin/page.tsx (Overview)
+    // /links -> /admin/links/page.tsx
+    // /settings -> /admin/settings/page.tsx
+    
+    // Check if path is root
+    if (pathname === '/') {
+        return NextResponse.rewrite(new URL('/admin', request.url));
+    }
+    
+    // Otherwise rewrite to /admin + pathname
+    return NextResponse.rewrite(new URL(`/admin${pathname}`, request.url));
   }
 
   // 3. Ads Domain (adsexample.com) - AD FLOW
@@ -57,8 +80,6 @@ export function middleware(request: NextRequest) {
     }
     
     // Proxy short codes to API container
-    // Rewriting to external URL is supported in Next.js 13+ (middleware)
-    // This allows the Next.js server to fetch from API and return response
     const apiUrl = new URL(`${pathname}${search}`, INTERNAL_API_HOST);
     return NextResponse.rewrite(apiUrl);
   }
