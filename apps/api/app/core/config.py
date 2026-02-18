@@ -67,10 +67,10 @@ class Settings(BaseModel):
     database_auto_create: bool = _parse_bool(os.getenv("DATABASE_AUTO_CREATE"), True)
     run_migrations: bool = _parse_bool(os.getenv("RUN_MIGRATIONS"), True)
 
-    public_web_base_url: str = os.getenv("PUBLIC_WEB_BASE_URL", "http://localhost")
-    public_api_base_url: str = os.getenv("PUBLIC_API_BASE_URL", "http://localhost/api")
-    short_link_domain: str = os.getenv("SHORT_LINK_DOMAIN", "exa.com")
-    interstitial_domain: str = os.getenv("INTERSTITIAL_DOMAIN", "adsexample.com")
+    public_web_base_url: str = os.getenv("PUBLIC_WEB_BASE_URL", os.getenv("APP_DOMAIN", "http://localhost"))
+    public_api_base_url: str = os.getenv("PUBLIC_API_BASE_URL", os.getenv("API_BASE", "http://localhost/api"))
+    short_link_domain: str = os.getenv("SHORT_DOMAIN", os.getenv("SHORT_LINK_DOMAIN", "exa.com"))
+    interstitial_domain: str = os.getenv("ADS_DOMAIN", os.getenv("INTERSTITIAL_DOMAIN", "adsexample.com"))
 
     admin_api_tokens: list[str] = (
         _parse_csv(os.getenv("ADMIN_API_TOKENS"))
