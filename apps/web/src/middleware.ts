@@ -18,6 +18,11 @@ export function middleware(request: NextRequest) {
 
   // 1. Example Domain (example.com) - MAIN SITE (Maintenance)
   if (hostname === APP_DOMAIN || hostname === `www.${APP_DOMAIN}`) {
+    // Redirect /login to Auth Domain
+    if (pathname === '/login') {
+       return NextResponse.redirect(new URL('/', `http://${AUTH_DOMAIN}`));
+    }
+
     if (pathname.startsWith('/admin')) {
       const newPath = pathname.replace(/^\/admin/, '') || '/';
       return NextResponse.redirect(new URL(newPath, `http://${ADMIN_DOMAIN}`));
