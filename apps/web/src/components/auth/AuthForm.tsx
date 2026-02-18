@@ -19,8 +19,9 @@ function friendlyAuthError(error: unknown): string {
   return error.message || "Request failed. Please try again.";
 }
 
+const ADMIN_DOMAIN = process.env.NEXT_PUBLIC_ADMIN_DOMAIN || "admin.localhost:3000";
+
 export function AuthForm() {
-  const [role, setRole] = useState<"admin" | "user">("admin");
   const [mode, setMode] = useState<"password" | "recovery">("password");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,7 +55,9 @@ export function AuthForm() {
         password: mode === "password" ? password : undefined,
         recovery_code: mode === "recovery" ? recoveryCode : undefined,
       });
-      window.location.href = "/admin";
+      // Redirect to Admin Dashboard (Absolute URL)
+      const protocol = window.location.protocol;
+      window.location.href = `${protocol}//${ADMIN_DOMAIN}`;
     } catch (err) {
       setError(friendlyAuthError(err));
     } finally {
@@ -64,114 +67,86 @@ export function AuthForm() {
 
   return (
     <section className="card auth-card">
-      <h1 style={{ marginBottom: 24 }}>Welcome back</h1>
+      <h1 style={{ marginBottom: 8 }}>Admin Login</h1>
+      <p className="muted" style={{ marginBottom: 24 }}>Single-user admin access.</p>
 
-      {/* Role Toggle */}
-      <div className="auth-mode-toggle" style={{ marginBottom: 24 }}>
+      <div className="auth-mode-toggle">
         <button
           type="button"
-          className={`btn btn-ghost ${role === "admin" ? "is-active" : ""}`}
-          onClick={() => setRole("admin")}
+          className={`btn btn-ghost ${mode === "password" ? "is-active" : ""}`}
+          onClick={() => {
+            setMode("password");
+            setError("");
+          }}
         >
-          Admin
+          Password
         </button>
         <button
           type="button"
-          className={`btn btn-ghost ${role === "user" ? "is-active" : ""}`}
-          onClick={() => setRole("user")}
+          className={`btn btn-ghost ${mode === "recovery" ? "is-active" : ""}`}
+          onClick={() => {
+            setMode("recovery");
+            setError("");
+          }}
         >
-          User
+          Recovery code
         </button>
       </div>
 
-      {role === "user" ? (
-        <div style={{ textAlign: "center", padding: "40px 0" }}>
-          <p className="muted">User login is currently under maintenance.</p>
-          <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>Please check back later.</p>
-        </div>
-      ) : (
-        <>
-          <p className="muted" style={{ marginBottom: 16 }}>Single-user admin access.</p>
+      <form className="auth-form" onSubmit={onSubmit}>
+        <label>
+          <span>Email</span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            placeholder="admin@example.com"
+            required
+          />
+        </label>
 
-          <div className="auth-mode-toggle">
-            <button
-              type="button"
-              className={`btn btn-ghost ${mode === "password" ? "is-active" : ""}`}
-              onClick={() => {
-                setMode("password");
-                setError("");
-              }}
-            >
-              Password
-            </button>
-            <button
-              type="button"
-              className={`btn btn-ghost ${mode === "recovery" ? "is-active" : ""}`}
-              onClick={() => {
-                setMode("recovery");
-                setError("");
-              }}
-            >
-              Recovery code
-            </button>
-          </div>
+        {mode === "password" ? (
+          <label>
+            <span>Password</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
+              placeholder="••••••••"
+              required
+            />
+          </label>
+        ) : (
+          <label>
+            <span>Recovery code</span>
+            <input
+              type="text"
+              value={recoveryCode}
+              onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
+              autoComplete="off"
+              placeholder="ABCD-EFGH-IJKL"
+              required
+            />
+          </label>
+        )}
 
-          <form className="auth-form" onSubmit={onSubmit}>
-            <label>
-              <span>Email</span>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                placeholder="admin@example.com"
-                required
-              />
-            </label>
+        {error ? <p className="auth-error">{error}</p> : null}
 
-            {mode === "password" ? (
-              <label>
-                <span>Password</span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  required
-                />
-              </label>
-            ) : (
-              <label>
-                <span>Recovery code</span>
-                <input
-                  type="text"
-                  value={recoveryCode}
-                  onChange={(e) => setRecoveryCode(e.target.value.toUpperCase())}
-                  autoComplete="off"
-                  placeholder="ABCD-EFGH-IJKL"
-                  required
-                />
-              </label>
-            )}
+        <button className="btn" disabled={loading} type="submit">
+          {loading ? "Please wait..." : mode === "password" ? "Login" : "Login with recovery code"}
+        </button>
+      </form>
 
-            {error ? <p className="auth-error">{error}</p> : null}
-
-            <button className="btn" disabled={loading} type="submit">
-              {loading ? "Please wait..." : mode === "password" ? "Login" : "Login with recovery code"}
-            </button>
-          </form>
-
-          <div className="auth-help muted">
-            <p><strong>Lost your password?</strong></p>
-            <p>Use a saved recovery code above, or reset via server terminal.</p>
-            <p>Find container id:</p>
-            <code>docker ps</code>
-            <p>Run reset command:</p>
-            <code>docker exec -it &lt;container-id&gt; bash -c "./start.sh reset-admin-password"</code>
-          </div>
-        </>
-      )}
+      <div className="auth-help muted">
+        <p><strong>Lost your password?</strong></p>
+        <p>Use a saved recovery code above, or reset via server terminal.</p>
+        <p>Find container id:</p>
+        <code>docker ps</code>
+        <p>Run reset command:</p>
+        <code>docker exec -it &lt;container-id&gt; bash -c "./start.sh reset-admin-password"</code>
+      </div>
     </section>
   );
 }
