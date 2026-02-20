@@ -14,9 +14,9 @@ export default function LandingPage() {
         
         {/* Hidden/Subtle Admin Login for Owner */}
         <div style={{ marginTop: 40, opacity: 0.5 }}>
-          <Link href="/login" className="btn btn-ghost btn-sm">
+          <a href="https://admin.example.com/login" className="btn btn-ghost btn-sm">
             Admin Login
-          </Link>
+          </a>
         </div>
       </section>
     </div>

@@ -19,25 +19,9 @@ function friendlyAuthError(error: unknown): string {
   return error.message || "Request failed. Please try again.";
 }
 
-// Derive admin domain from current auth domain
-// auth.example.com -> admin.example.com
-// auth.localhost:3000 -> admin.localhost:3000
-function getAdminDomain(): string {
-  const currentHost = window.location.hostname;
-  const currentPort = window.location.port ? `:${window.location.port}` : '';
-  
-  // If it's localhost development
-  if (currentHost === 'localhost' || currentHost.includes('localhost')) {
-    return `admin.localhost${currentPort}`;
-  }
-  
-  // Convert auth.domain.com to admin.domain.com
-  if (currentHost.startsWith('auth.')) {
-    return `admin.${currentHost.substring(5)}`;
-  }
-  
-  // Fallback: try environment variable or default
-  return process.env.NEXT_PUBLIC_ADMIN_DOMAIN || `admin.${currentHost}${currentPort}`;
+// Simple redirect to dashboard after login
+function redirectToDashboard() {
+  window.location.href = '/';
 }
 
 export function AuthForm() {
@@ -74,10 +58,8 @@ export function AuthForm() {
         password: mode === "password" ? password : undefined,
         recovery_code: mode === "recovery" ? recoveryCode : undefined,
       });
-      // Redirect to Admin Dashboard (Absolute URL)
-      const protocol = window.location.protocol;
-      const adminDomain = getAdminDomain();
-      window.location.href = `${protocol}//${adminDomain}`;
+      // Redirect to Admin Dashboard
+      redirectToDashboard();
     } catch (err) {
       setError(friendlyAuthError(err));
     } finally {

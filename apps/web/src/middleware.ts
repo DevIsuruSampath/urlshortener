@@ -4,7 +4,6 @@ import type { NextRequest } from 'next/server'
 // Domains
 const APP_DOMAIN = process.env.APP_DOMAIN || 'localhost:3000';
 const ADMIN_DOMAIN = process.env.ADMIN_DOMAIN || 'admin.localhost:3000';
-const AUTH_DOMAIN = process.env.AUTH_DOMAIN || 'auth.localhost:3000';
 const ADS_DOMAIN = process.env.ADS_DOMAIN || 'ads.localhost:3000';
 const SHORT_DOMAIN = process.env.SHORT_DOMAIN || 'short.localhost:3000';
 
@@ -18,9 +17,9 @@ export function middleware(request: NextRequest) {
 
   // 1. Example Domain (example.com) - MAIN SITE (Maintenance)
   if (hostname === APP_DOMAIN || hostname === `www.${APP_DOMAIN}`) {
-    // Redirect /login to Auth Domain
+    // Redirect /login to Admin Domain login page
     if (pathname === '/login') {
-       return NextResponse.redirect(new URL('/', `http://${AUTH_DOMAIN}`));
+       return NextResponse.redirect(new URL('/login', `http://${ADMIN_DOMAIN}`));
     }
 
     if (pathname.startsWith('/admin')) {
@@ -34,15 +33,20 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Admin Domain (admin.example.com) - DASHBOARD ONLY
+  // 2. Admin Domain (admin.example.com) - DASHBOARD WITH LOGIN
   if (hostname === ADMIN_DOMAIN) {
     if (pathname.startsWith('/_next') || pathname.startsWith('/static') || pathname === '/favicon.ico') {
       return NextResponse.next();
     }
 
-    // Redirect Login/Register to AUTH Domain (root, not /login)
-    if (pathname === '/login' || pathname === '/register') {
-       return NextResponse.redirect(new URL('/', `http://${AUTH_DOMAIN}`));
+    // Login page at /login (not redirected)
+    if (pathname === '/login') {
+      return NextResponse.next();
+    }
+
+    // Register is disabled
+    if (pathname === '/register') {
+       return NextResponse.redirect(new URL('/login', request.url));
     }
 
     // Handle legacy /admin paths -> Redirect to clean paths
@@ -58,32 +62,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.rewrite(new URL(`/admin${pathname}`, request.url));
   }
 
-  // 3. Auth Domain (auth.example.com) - AUTH PORTAL
-  if (hostname === AUTH_DOMAIN) {
-    if (pathname.startsWith('/_next') || pathname.startsWith('/static') || pathname === '/favicon.ico') {
-      return NextResponse.next();
-    }
-
-    // Root '/' shows auth page directly (no /login path)
-    if (pathname === '/') {
-       return NextResponse.next();
-    }
-
-    // Redirect /login to root (clean URL)
-    if (pathname === '/login') {
-       return NextResponse.redirect(new URL('/', request.url));
-    }
-
-    // Register is disabled (log-based setup)
-    if (pathname === '/register') {
-       return NextResponse.redirect(new URL('/', request.url));
-    }
-
-    // All other paths -> Redirect to Root
-    return NextResponse.redirect(new URL('/', request.url));
-  }
-
-  // 4. Ads Domain (adsexample.com) - AD FLOW
+  // 3. Ads Domain (adsexample.com) - AD FLOW
   if (hostname === ADS_DOMAIN) {
     if (
       pathname.startsWith('/step') ||
@@ -96,7 +75,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', `http://${APP_DOMAIN}`));
   }
 
-  // 5. Short Domain (exa.com) - SHORT LINKS & VERIFY
+  // 4. Short Domain (exa.com) - SHORT LINKS & VERIFY
   if (hostname === SHORT_DOMAIN) {
     if (pathname.startsWith('/verify')) {
       return NextResponse.next();
