@@ -40,9 +40,9 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Redirect Login/Register to AUTH Domain
+    // Redirect Login/Register to AUTH Domain (root, not /login)
     if (pathname === '/login' || pathname === '/register') {
-       return NextResponse.redirect(new URL(pathname, `http://${AUTH_DOMAIN}`));
+       return NextResponse.redirect(new URL('/', `http://${AUTH_DOMAIN}`));
     }
 
     // Handle legacy /admin paths -> Redirect to clean paths
@@ -64,14 +64,14 @@ export function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Rewrite Root '/' to Login (Single Page Auth)
+    // Root '/' shows auth page directly (no /login path)
     if (pathname === '/') {
-       return NextResponse.rewrite(new URL('/login', request.url));
+       return NextResponse.next();
     }
 
-    // Allow direct access to /login if needed, but root handles it now
+    // Redirect /login to root (clean URL)
     if (pathname === '/login') {
-       return NextResponse.next();
+       return NextResponse.redirect(new URL('/', request.url));
     }
 
     // Register is disabled (log-based setup)
@@ -79,7 +79,7 @@ export function middleware(request: NextRequest) {
        return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // All other paths -> Redirect to Root (Login)
+    // All other paths -> Redirect to Root
     return NextResponse.redirect(new URL('/', request.url));
   }
 
