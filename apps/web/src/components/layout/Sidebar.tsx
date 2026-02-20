@@ -34,8 +34,10 @@ export function Sidebar() {
           </Link>
         ))}
         
+        <div className="dash-nav-spacer" />
+        
         <button onClick={handleLogout} className="dash-nav-item logout-btn" type="button">
-          <span aria-hidden>🚪</span>
+          <span aria-hidden>↩</span>
           <span>Logout</span>
         </button>
       </nav>
