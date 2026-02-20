@@ -19,12 +19,14 @@ export function middleware(request: NextRequest) {
   if (hostname === APP_DOMAIN || hostname === `www.${APP_DOMAIN}`) {
     // Redirect /login to Admin Domain login page
     if (pathname === '/login') {
-       return NextResponse.redirect(new URL('/login', `http://${ADMIN_DOMAIN}`));
+      const protocol = hostname.includes('localhost') ? 'http:' : 'https:';
+       return NextResponse.redirect(new URL('/login', `${protocol}//${ADMIN_DOMAIN}`));
     }
 
     if (pathname.startsWith('/admin')) {
       const newPath = pathname.replace(/^\/admin/, '') || '/';
-      return NextResponse.redirect(new URL(newPath, `http://${ADMIN_DOMAIN}`));
+      const protocol = hostname.includes('localhost') ? 'http:' : 'https:';
+      return NextResponse.redirect(new URL(newPath, `${protocol}//${ADMIN_DOMAIN}`));
     }
     // Block ads/verify
     if (pathname.startsWith('/step') || pathname.startsWith('/verify')) {
