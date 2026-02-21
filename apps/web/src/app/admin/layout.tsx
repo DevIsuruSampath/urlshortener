@@ -9,7 +9,11 @@ import { AppShell } from "@/components/layout/AppShell";
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  if (pathname.startsWith("/admin/login") || pathname.startsWith("/admin/setup")) {
+  // Check if we're on a public admin page (login, setup)
+  // Note: /login is not under /admin prefix due to middleware rewriting
+  const isPublicPage = pathname === '/login' || pathname.startsWith('/admin/setup');
+
+  if (isPublicPage) {
     return <>{children}</>;
   }
 

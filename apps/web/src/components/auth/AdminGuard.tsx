@@ -4,36 +4,33 @@ import { useEffect, useState } from "react";
 
 import { adminMe, adminStatus, ApiError } from "@/lib/api";
 
-const AUTH_DOMAIN = process.env.AUTH_DOMAIN || "auth.localhost:3000";
-
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let alive = true;
-    const protocol = window.location.protocol;
 
     async function run() {
       try {
+        // Check if admin is initialized
         const status = await adminStatus();
         if (!alive) return;
 
         if (!status.initialized) {
-          window.location.href = `${protocol}//${AUTH_DOMAIN}`;
+          // Admin not setup yet, redirect to setup or show message
+          // For now, redirect to login (setup happens via API)
+          window.location.href = '/login';
           return;
         }
 
+        // Check if user is authenticated (cookie check)
         await adminMe();
         if (alive) setLoading(false);
       } catch (error) {
         if (!alive) return;
 
-        if (error instanceof ApiError && error.status === 403) {
-          window.location.href = `${protocol}//${AUTH_DOMAIN}`;
-          return;
-        }
-
-        window.location.href = `${protocol}//${AUTH_DOMAIN}`;
+        // Any error (401, 403, network) → redirect to login
+        window.location.href = '/login';
       }
     }
 
