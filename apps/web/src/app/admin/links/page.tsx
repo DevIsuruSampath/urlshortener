@@ -2,7 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { adminListLinks, adminCreateLink, AdminLinkResponse, ApiError } from "@/lib/api";
+import { 
+  adminListLinks, 
+  adminCreateLink, 
+  adminEditLink,
+  adminDeleteLink,
+  adminToggleLink,
+  AdminLinkResponse, 
+  ApiError 
+} from "@/lib/api";
+import { useToast } from "@/components/ui/Toast";
 
 type LinkStatus = "active" | "paused" | "blocked";
 
@@ -69,12 +78,16 @@ function formatCreatedVia(createdVia: string): string {
 }
 
 export default function LinksPage() {
+  const { push: toast } = useToast();
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<LinkStatus | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [editingLink, setEditingLink] = useState<LinkItem | null>(null);
+  const [editUrl, setEditUrl] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -109,42 +122,83 @@ export default function LinksPage() {
     }
   }
 
-  async function handleEdit(linkId: string) {
-    // TODO: Implement edit functionality
-    console.log("Edit link:", linkId);
-    // Could open a modal or navigate to edit page
+  function openEditModal(link: LinkItem) {
+    setEditingLink(link);
+    setEditUrl(link.destination);
+    setIsEditing(true);
+  }
+
+  function closeEditModal() {
+    setEditingLink(null);
+    setEditUrl("");
+    setIsEditing(false);
+  }
+
+  async function handleEditSubmit() {
+    if (!editingLink || !editUrl.trim()) return;
+    
+    try {
+      // Call API to update link
+      await adminEditLink(editingLink.id, { destination_url: editUrl.trim() });
+      
+      // Update local state
+      setLinks(links.map(link => 
+        link.id === editingLink.id 
+          ? { ...link, destination: editUrl.trim() }
+          : link
+      ));
+      
+      // Close modal
+      closeEditModal();
+      
+      // Show success message
+      toast("Link updated successfully!", "success");
+    } catch (error) {
+      console.error("Failed to edit link:", error);
+      toast("Failed to update link", "error");
+    }
   }
 
   async function handleToggleStatus(linkId: string, currentStatus: LinkStatus) {
     try {
-      const newStatus = currentStatus === 'active' ? 'paused' : 'active';
-      // TODO: Call API to update link status
-      console.log(`Toggle link ${linkId} from ${currentStatus} to ${newStatus}`);
+      // Call API to toggle link status
+      await adminToggleLink(linkId);
       
       // Update local state
       setLinks(links.map(link => 
         link.id === linkId 
-          ? { ...link, status: newStatus }
+          ? { 
+              ...link, 
+              status: currentStatus === 'active' ? 'paused' : 'active' 
+            }
           : link
       ));
+      
+      // Show success message
+      toast(`Link ${currentStatus === 'active' ? 'paused' : 'started'}!`, "success");
     } catch (error) {
       console.error("Failed to toggle status:", error);
+      toast("Failed to update link status", "error");
     }
   }
 
   async function handleDelete(linkId: string) {
-    if (!confirm("Are you sure you want to delete this link?")) {
+    if (!confirm("Are you sure you want to delete this link? This action cannot be undone.")) {
       return;
     }
     
     try {
-      // TODO: Call API to delete link
-      console.log("Delete link:", linkId);
+      // Call API to delete link
+      await adminDeleteLink(linkId);
       
       // Update local state
       setLinks(links.filter(link => link.id !== linkId));
+      
+      // Show success message
+      toast("Link deleted successfully!", "success");
     } catch (error) {
       console.error("Failed to delete link:", error);
+      toast("Failed to delete link", "error");
     }
   }
 
@@ -312,7 +366,7 @@ export default function LinksPage() {
                           <CopyButton text={link.shortUrl} />
                           <button 
                             className="btn btn-sm btn-ghost"
-                            onClick={() => handleEdit(link.id)}
+                            onClick={() => openEditModal(link)}
                             title="Edit"
                           >
                             ✏️
@@ -365,6 +419,60 @@ export default function LinksPage() {
             )}
           </div>
         </>
+      )}
+
+      {/* Edit Link Modal */}
+      {isEditing && editingLink && (
+        <div className="modal-overlay" onClick={closeEditModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Edit Link</h3>
+              <button className="modal-close" onClick={closeEditModal}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Short Code</label>
+                <input 
+                  type="text" 
+                  value={editingLink.code} 
+                  readOnly 
+                  className="form-input"
+                  disabled
+                />
+                <small className="muted">Code cannot be changed</small>
+              </div>
+              <div className="form-group">
+                <label>Destination URL *</label>
+                <input 
+                  type="url" 
+                  value={editUrl} 
+                  onChange={(e) => setEditUrl(e.target.value)}
+                  placeholder="https://example.com"
+                  className="form-input"
+                  autoFocus
+                />
+              </div>
+              <div className="form-group">
+                <label>Current Short URL</label>
+                <div className="url-preview">
+                  {editingLink.shortUrl}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn btn-ghost" onClick={closeEditModal}>
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleEditSubmit}
+                disabled={!editUrl.trim()}
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );
