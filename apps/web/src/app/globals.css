@@ -57,6 +57,25 @@ a { color: inherit; text-decoration: none; }
   box-shadow: var(--shadow-sm);
 }
 
+.error-card {
+  border-color: var(--danger);
+  background: rgba(255, 127, 127, 0.05);
+}
+
+.error-card h3 {
+  color: var(--danger);
+  margin-top: 0;
+}
+
+.info-card {
+  border-color: #4a90e2;
+  background: rgba(74, 144, 226, 0.05);
+}
+
+.info-card p {
+  margin: 0;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;
