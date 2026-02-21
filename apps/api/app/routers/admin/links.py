@@ -90,7 +90,23 @@ def create_link(
 
 @router.get("")
 def list_links(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    rows = db.execute(select(Link).where(Link.user_id == user.id).order_by(Link.created_at.desc())).scalars().all()
+    from sqlalchemy import func
+    
+    # Get links with stats
+    stmt = (
+        select(
+            Link,
+            func.count(ClickSession.id).label("total_clicks"),
+            func.count(ClickSession.id).filter(ClickSession.status == "completed").label("valid_clicks"),
+            func.count(ClickSession.id).filter(ClickSession.status != "completed").label("invalid_clicks"),
+        )
+        .where(Link.user_id == user.id)
+        .outerjoin(ClickSession, ClickSession.link_id == Link.id)
+        .group_by(Link.id)
+        .order_by(Link.created_at.desc())
+    )
+    
+    results = db.execute(stmt).all()
     
     # Determine protocol
     base_domain = settings.short_link_domain or settings.public_web_base_url.rstrip('/').replace("https://", "").replace("http://", "")
@@ -101,18 +117,22 @@ def list_links(db: Session = Depends(get_db), user: User = Depends(get_current_u
 
     return [
         {
-            "id": str(r.id),
-            "code": r.code,
-            "short_url": f"{base_url}/{r.code}",
-            "destination_url": r.destination_url,
-            "tier": r.tier,
-            "web_steps": r.web_steps,
-            "app_steps": r.app_steps,
-            "is_active": r.is_active,
-            "created_via": r.created_via,
-            "created_at": r.created_at,
+            "id": str(link.id),
+            "code": link.code,
+            "short_url": f"{base_url}/{link.code}",
+            "destination_url": link.destination_url,
+            "tier": link.tier,
+            "web_steps": link.web_steps,
+            "app_steps": link.app_steps,
+            "is_active": link.is_active,
+            "created_via": link.created_via,
+            "created_at": link.created_at,
+            "total_clicks": total_clicks or 0,
+            "valid_clicks": valid_clicks or 0,
+            "invalid_clicks": invalid_clicks or 0,
+            "conversion_rate": round((valid_clicks / total_clicks * 100) if total_clicks > 0 else 0, 1),
         }
-        for r in rows
+        for link, total_clicks, valid_clicks, invalid_clicks in results
     ]
 
 

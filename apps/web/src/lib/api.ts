@@ -57,6 +57,10 @@ export type AdminLinkResponse = {
   is_active: boolean;
   created_via?: string;
   created_at?: string;
+  total_clicks?: number;
+  valid_clicks?: number;
+  invalid_clicks?: number;
+  conversion_rate?: number;
 };
 
 export type SecurityEventType =

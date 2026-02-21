@@ -77,10 +77,10 @@ export default function LinksPage() {
         shortUrl: link.short_url,
         destination: link.destination_url,
         status: link.is_active ? "active" : "paused",
-        clicks: 0, // TODO: Get from stats API when available
-        valid: 0, // TODO: Get from stats API when available
-        invalid: 0, // TODO: Get from stats API when available
-        conversion: "0%",
+        clicks: link.total_clicks || 0,
+        valid: link.valid_clicks || 0,
+        invalid: link.invalid_clicks || 0,
+        conversion: link.conversion_rate ? `${link.conversion_rate}%` : "0%",
         createdAt: link.created_at || new Date().toISOString(),
       }));
       setLinks(transformed);
@@ -89,6 +89,45 @@ export default function LinksPage() {
       setApiError(error?.message || "Failed to load links. Please check your connection.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleEdit(linkId: string) {
+    // TODO: Implement edit functionality
+    console.log("Edit link:", linkId);
+    // Could open a modal or navigate to edit page
+  }
+
+  async function handleToggleStatus(linkId: string, currentStatus: LinkStatus) {
+    try {
+      const newStatus = currentStatus === 'active' ? 'paused' : 'active';
+      // TODO: Call API to update link status
+      console.log(`Toggle link ${linkId} from ${currentStatus} to ${newStatus}`);
+      
+      // Update local state
+      setLinks(links.map(link => 
+        link.id === linkId 
+          ? { ...link, status: newStatus }
+          : link
+      ));
+    } catch (error) {
+      console.error("Failed to toggle status:", error);
+    }
+  }
+
+  async function handleDelete(linkId: string) {
+    if (!confirm("Are you sure you want to delete this link?")) {
+      return;
+    }
+    
+    try {
+      // TODO: Call API to delete link
+      console.log("Delete link:", linkId);
+      
+      // Update local state
+      setLinks(links.filter(link => link.id !== linkId));
+    } catch (error) {
+      console.error("Failed to delete link:", error);
     }
   }
 
@@ -151,15 +190,24 @@ export default function LinksPage() {
         <p className="muted">Manage your short links</p>
       </header>
 
-      {/* Debug info - remove in production */}
-      {links.length > 0 && (
-        <div className="card info-card" style={{ marginBottom: "var(--space-4)" }}>
-          <p className="text-sm muted">
-            <strong>Note:</strong> Stats (clicks, conversion) are not implemented yet. 
-            Short URLs come from backend API. If they show wrong domain, check backend SHORT_DOMAIN configuration.
-          </p>
+      {/* Create Methods Help */}
+      <div className="card info-card">
+        <h4>Create Links - 3 Methods:</h4>
+        <div className="create-methods">
+          <div className="method">
+            <strong>1. Web Form</strong>
+            <p>Use "Create Link" button above</p>
+          </div>
+          <div className="method">
+            <strong>2. GET API</strong>
+            <code className="code-block">GET /api/admin/links/create?url={encodeURIComponent("https://example.com")}</code>
+          </div>
+          <div className="method">
+            <strong>3. POST API</strong>
+            <code className="code-block">POST /api/admin/links<br/>{"{"}"destination_url": "https://example.com"{"}"}</code>
+          </div>
         </div>
-      )}
+      </div>
 
       {links.length === 0 ? (
         <EmptyState />
@@ -237,7 +285,30 @@ export default function LinksPage() {
                       <td data-label="Valid">{link.valid}</td>
                       <td data-label="Conversion">{link.conversion}</td>
                       <td data-label="Actions">
-                        <CopyButton text={link.shortUrl} />
+                        <div className="actions-group">
+                          <CopyButton text={link.shortUrl} />
+                          <button 
+                            className="btn btn-sm btn-ghost"
+                            onClick={() => handleEdit(link.id)}
+                            title="Edit"
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-ghost"
+                            onClick={() => handleToggleStatus(link.id, link.status)}
+                            title={link.status === 'active' ? 'Pause' : 'Start'}
+                          >
+                            {link.status === 'active' ? '⏸️' : '▶️'}
+                          </button>
+                          <button 
+                            className="btn btn-sm btn-ghost text-danger"
+                            onClick={() => handleDelete(link.id)}
+                            title="Delete"
+                          >
+                            🗑️
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
