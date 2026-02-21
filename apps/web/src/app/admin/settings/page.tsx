@@ -553,7 +553,7 @@ export default function SettingsPage() {
             <p className="muted">Base endpoint</p>
             <div className="settings-copy-row">
               <code className="settings-code">{developersApiBase}</code>
-              <CopyButton value={developersApiBase} label="Copy endpoint" />
+              <CopyButton text={developersApiBase} label="Copy endpoint" />
             </div>
           </div>
 
@@ -578,7 +578,7 @@ export default function SettingsPage() {
             {latestGeneratedToken ? (
               <div className="settings-copy-row">
                 <code className="settings-code">{latestGeneratedToken}</code>
-                <CopyButton value={latestGeneratedToken} label="Copy new token" />
+                <CopyButton text={latestGeneratedToken} label="Copy new token" />
               </div>
             ) : null}
           </div>
@@ -587,7 +587,7 @@ export default function SettingsPage() {
             <p className="muted">JSON example</p>
             <div className="settings-copy-row">
               <code className="settings-code">{sampleJsonRequest}</code>
-              <CopyButton value={sampleJsonRequest} label="Copy JSON request" />
+              <CopyButton text={sampleJsonRequest} label="Copy JSON request" />
             </div>
           </div>
 
@@ -595,7 +595,7 @@ export default function SettingsPage() {
             <p className="muted">TEXT example</p>
             <div className="settings-copy-row">
               <code className="settings-code">{sampleTextRequest}</code>
-              <CopyButton value={sampleTextRequest} label="Copy TEXT request" />
+              <CopyButton text={sampleTextRequest} label="Copy TEXT request" />
             </div>
           </div>
         </div>

@@ -35,7 +35,13 @@ export function CreateLinkForm({ onSuccess }: CreateLinkFormProps) {
 
   const onSubmit = async (data: LinkFormValues) => {
     try {
-      await createLinkMutation.mutateAsync(data);
+      // Map form data to API payload
+      const apiPayload = {
+        destination_url: data.destination,
+        tier: data.tier,
+      };
+      
+      await createLinkMutation.mutateAsync(apiPayload);
       
       toast("Link created successfully!", "success");
       reset();

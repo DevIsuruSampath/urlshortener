@@ -3,7 +3,7 @@ import {
   adminMe,
   adminListLinks,
   adminCreateLink,
-  adminUpdateLink,
+  adminEditLink,
   adminDeleteLink,
   adminStats,
   adminDeveloperTokenInfo,
@@ -15,7 +15,7 @@ import {
   adminSetup,
   adminStatus,
   type AdminLinkCreatePayload,
-  type AdminLinkUpdatePayload,
+  type AdminLinkEditPayload,
   type AdminChangePasswordPayload,
   type AdminLoginPayload,
   type AdminSetupPayload,
@@ -113,7 +113,7 @@ export function useLinkUpdate(id: string) {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (payload: AdminLinkUpdatePayload) => adminUpdateLink(id, payload),
+    mutationFn: (payload: AdminLinkEditPayload) => adminEditLink(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.links.list() });
       queryClient.invalidateQueries({ queryKey: queryKeys.links.detail(id) });
