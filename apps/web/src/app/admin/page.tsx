@@ -1,12 +1,13 @@
 import Link from "next/link";
 
 import { StatCard } from "@/components/ui/StatCard";
+import { TrafficChart } from "@/components/ui/TrafficChart";
 
 const overviewCards = [
   { label: "Today clicks", value: "2,184" },
   { label: "Valid completions", value: "1,602" },
-  { label: "Estimated revenue (today)", value: "$18.42" },
-  { label: "Estimated balance", value: "$143.00" },
+  { label: "Invalid / Blocked", value: "582" },
+  { label: "Avg completion time", value: "46s" },
 ];
 
 const invalidBreakdown = [
@@ -22,21 +23,12 @@ const qualitySignals = [
   { label: "Median completion time", value: "46s", hint: "Flow start → success" },
 ];
 
-const chartRows = [
-  { day: "Sat", clicks: 55, completions: 39 },
-  { day: "Sun", clicks: 40, completions: 28 },
-  { day: "Mon", clicks: 70, completions: 49 },
-  { day: "Tue", clicks: 60, completions: 42 },
-  { day: "Wed", clicks: 75, completions: 55 },
-  { day: "Thu", clicks: 82, completions: 59 },
-  { day: "Fri", clicks: 67, completions: 47 },
-];
 
 const topLinks = [
-  { code: "a9x3k", title: "Summer promo", clicks: 640, valid: 486, invalid: 96, estimatedRevenue: "$5.21", status: "active" },
-  { code: "pro77", title: "Product launch", clicks: 401, valid: 289, invalid: 78, estimatedRevenue: "$3.60", status: "active" },
-  { code: "mobi2", title: "Mobile burst", clicks: 311, valid: 245, invalid: 51, estimatedRevenue: "$2.94", status: "paused" },
-  { code: "dlp20", title: "Download gate", clicks: 268, valid: 198, invalid: 49, estimatedRevenue: "$2.41", status: "blocked" },
+  { code: "a9x3k", title: "Summer promo", clicks: 640, valid: 486, invalid: 96, conversion: "75.9%", status: "active" },
+  { code: "pro77", title: "Product launch", clicks: 401, valid: 289, invalid: 78, conversion: "72.1%", status: "active" },
+  { code: "mobi2", title: "Mobile burst", clicks: 311, valid: 245, invalid: 51, conversion: "78.8%", status: "paused" },
+  { code: "dlp20", title: "Download gate", clicks: 268, valid: 198, invalid: 49, conversion: "73.9%", status: "blocked" },
 ] as const;
 
 type LinkCode = (typeof topLinks)[number]["code"];
@@ -180,19 +172,12 @@ export default async function DashboardHome({ searchParams }: DashboardHomeProps
         </StatCard>
 
         <StatCard
-          label="Next payout threshold"
-          value={`$${threshold.toFixed(0)}`}
-          hint={`$${balance.toFixed(2)} / $${threshold.toFixed(0)}`}
+          label="All time clicks"
+          value="15,842"
+          hint="Since account creation"
           index={overviewCards.length + 1}
-        >
-          <div className="progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
-            <span style={{ width: `${progress}%` }} />
-          </div>
-        </StatCard>
+        />
       </section>
-      <p className="muted revenue-note">
-        Estimated revenue is based on configured RPM rates; actual ad network payout may differ.
-      </p>
 
       <section className="card section">
         <h2>Quality signals</h2>
@@ -205,22 +190,9 @@ export default async function DashboardHome({ searchParams }: DashboardHomeProps
       </section>
 
       <section className="card section">
-        <h2>Last 7 days: clicks vs completions</h2>
-        <div className="mini-chart">
-          {chartRows.map((row) => (
-            <div className="mini-chart-row" key={row.day}>
-              <span className="mini-chart-day">{row.day}</span>
-              <div className="mini-bar-wrap">
-                <span className="mini-bar clicks" style={{ width: `${row.clicks}%` }} title={`Clicks: ${row.clicks}`} />
-                <span
-                  className="mini-bar completions"
-                  style={{ width: `${row.completions}%` }}
-                  title={`Completions: ${row.completions}`}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+        <h2>Traffic Flow: Last 7 Days</h2>
+        <p className="muted">Visualize drop-off rates between clicks and completions</p>
+        <TrafficChart />
       </section>
 
       <section className="dash-two-col">
@@ -234,9 +206,9 @@ export default async function DashboardHome({ searchParams }: DashboardHomeProps
                   <th>Status</th>
                   <th>Clicks</th>
                   <th>Valid</th>
-                  <th>CVR</th>
+                  <th>Conversion</th>
                   <th>Invalid %</th>
-                  <th>Est. revenue</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,9 +220,13 @@ export default async function DashboardHome({ searchParams }: DashboardHomeProps
                     </td>
                     <td data-label="Clicks">{row.clicks}</td>
                     <td data-label="Valid">{row.valid}</td>
-                    <td data-label="CVR">{percent(row.valid, row.clicks)}</td>
+                    <td data-label="Conversion">{row.conversion}</td>
                     <td data-label="Invalid %">{percent(row.invalid, row.clicks)}</td>
-                    <td data-label="Est. revenue">{row.estimatedRevenue}</td>
+                    <td data-label="Actions">
+                      <button className="btn btn-sm btn-ghost" onClick={() => alert(`Copy: ${row.code}`)}>
+                        Copy
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
