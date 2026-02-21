@@ -17,6 +17,21 @@ export function middleware(request: NextRequest) {
 
   // 1. Example Domain (example.com) - MAIN SITE (Maintenance)
   if (hostname === APP_DOMAIN || hostname === `www.${APP_DOMAIN}`) {
+    // API requests should be rewritten to backend
+    if (pathname.startsWith('/api')) {
+      const apiUrl = new URL(`${pathname}${search}`, INTERNAL_API_HOST);
+      const requestHeaders = new Headers(request.headers);
+      const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
+      requestHeaders.set('x-forwarded-for', ip);
+      requestHeaders.set('x-real-ip', ip);
+
+      return NextResponse.rewrite(apiUrl, {
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    }
+
     // Redirect /login to Admin Domain login page
     if (pathname === '/login') {
       const protocol = hostname.includes('localhost') ? 'http:' : 'https:';
@@ -39,6 +54,21 @@ export function middleware(request: NextRequest) {
   if (hostname === ADMIN_DOMAIN) {
     if (pathname.startsWith('/_next') || pathname.startsWith('/static') || pathname === '/favicon.ico') {
       return NextResponse.next();
+    }
+
+    // API requests should be rewritten to backend
+    if (pathname.startsWith('/api')) {
+      const apiUrl = new URL(`${pathname}${search}`, INTERNAL_API_HOST);
+      const requestHeaders = new Headers(request.headers);
+      const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
+      requestHeaders.set('x-forwarded-for', ip);
+      requestHeaders.set('x-real-ip', ip);
+
+      return NextResponse.rewrite(apiUrl, {
+        request: {
+          headers: requestHeaders,
+        },
+      });
     }
 
     // Login page at /login (not redirected)
@@ -66,10 +96,24 @@ export function middleware(request: NextRequest) {
 
   // 3. Ads Domain (adsexample.com) - AD FLOW
   if (hostname === ADS_DOMAIN) {
+    // API requests should be rewritten to backend
+    if (pathname.startsWith('/api')) {
+      const apiUrl = new URL(`${pathname}${search}`, INTERNAL_API_HOST);
+      const requestHeaders = new Headers(request.headers);
+      const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
+      requestHeaders.set('x-forwarded-for', ip);
+      requestHeaders.set('x-real-ip', ip);
+
+      return NextResponse.rewrite(apiUrl, {
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    }
+
     if (
       pathname.startsWith('/step') ||
       pathname.startsWith('/_next') ||
-      pathname.startsWith('/api') ||
       pathname.startsWith('/static')
     ) {
       return NextResponse.next();
