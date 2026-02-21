@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { AuthForm } from "@/components/auth/AuthForm";
+import { LoginForm } from "@/components/forms/LoginForm";
 import { adminMe } from "@/lib/api";
 
 export default async function LoginPage() {
@@ -12,7 +12,13 @@ export default async function LoginPage() {
     // Not authenticated, show login form
     return (
       <main className="container auth-shell">
-        <AuthForm />
+        <div style={{ maxWidth: "400px", margin: "0 auto", paddingTop: "var(--space-6)" }}>
+          <LoginForm 
+            onSuccess={() => {
+              window.location.href = '/';
+            }}
+          />
+        </div>
       </main>
     );
   }

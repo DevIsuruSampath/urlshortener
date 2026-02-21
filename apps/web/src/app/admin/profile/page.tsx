@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { adminMe, adminChangePassword, adminDeveloperTokenInfo, adminRegenerateDeveloperToken, adminFinalizeDeveloperTokenRotation, ApiError } from "@/lib/api";
+import { adminMe, adminDeveloperTokenInfo, adminRegenerateDeveloperToken, adminFinalizeDeveloperTokenRotation, ApiError } from "@/lib/api";
+import { ChangePasswordForm } from "@/components/forms/ChangePasswordForm";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<{ email: string; user_id: string } | null>(null);
@@ -9,12 +10,8 @@ export default function ProfilePage() {
   const [tokenInfo, setTokenInfo] = useState<any>(null);
   
   // Change password form
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
-  const [changingPassword, setChangingPassword] = useState(false);
   
   // Token management
   const [regeneratingToken, setRegeneratingToken] = useState(false);
@@ -40,42 +37,10 @@ export default function ProfilePage() {
     }
   }
 
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
+  function handlePasswordChangeSuccess() {
+    setPasswordSuccess("Password changed successfully");
+    // Clear any previous errors
     setPasswordError("");
-    setPasswordSuccess("");
-
-    if (newPassword !== confirmPassword) {
-      setPasswordError("New password and confirmation do not match");
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      setPasswordError("Password must be at least 8 characters");
-      return;
-    }
-
-    setChangingPassword(true);
-    try {
-      await adminChangePassword({
-        current_password: currentPassword,
-        new_password: newPassword,
-        confirm_password: confirmPassword,
-      });
-      
-      setPasswordSuccess("Password changed successfully");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setPasswordError(error.message);
-      } else {
-        setPasswordError("Failed to change password");
-      }
-    } finally {
-      setChangingPassword(false);
-    }
   }
 
   async function handleRegenerateToken() {
@@ -166,65 +131,13 @@ export default function ProfilePage() {
           <h2>Security</h2>
           <p className="muted">Change your password</p>
           
-          <form onSubmit={handleChangePassword} className="password-form">
-            <div className="form-group">
-              <label htmlFor="currentPassword">Current Password</label>
-              <input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                required
-                disabled={changingPassword}
-              />
+          {passwordSuccess && (
+            <div className="form-success">
+              {passwordSuccess}
             </div>
-            
-            <div className="form-group">
-              <label htmlFor="newPassword">New Password</label>
-              <input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                disabled={changingPassword}
-                minLength={8}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="confirmPassword">Confirm New Password</label>
-              <input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={changingPassword}
-                minLength={8}
-              />
-            </div>
-            
-            {passwordError && (
-              <div className="form-error">
-                {passwordError}
-              </div>
-            )}
-            
-            {passwordSuccess && (
-              <div className="form-success">
-                {passwordSuccess}
-              </div>
-            )}
-            
-            <button 
-              type="submit" 
-              className="btn btn-primary"
-              disabled={changingPassword}
-            >
-              {changingPassword ? "Changing..." : "Change Password"}
-            </button>
-          </form>
+          )}
+          
+          <ChangePasswordForm onSuccess={handlePasswordChangeSuccess} />
         </section>
 
         {/* Developer Section */}
