@@ -273,17 +273,24 @@ export async function adminCreateLink(payload: AdminLinkCreatePayload): Promise<
 }
 
 export async function adminListLinks(): Promise<AdminLinkResponse[]> {
-  const res = await fetchAdminLinks({
-    method: "GET",
-    headers: authHeaders(),
-    credentials: "include",
-  });
+  try {
+    const res = await fetchAdminLinks({
+      method: "GET",
+      headers: authHeaders(),
+      credentials: "include",
+    });
 
-  if (!res.ok) {
-    throw await parseError(res);
+    if (!res.ok) {
+      throw await parseError(res);
+    }
+
+    return (await res.json()) as AdminLinkResponse[];
+  } catch (error) {
+    console.error("Failed to fetch admin links:", error);
+    console.error("ADMIN_LINKS_BASE:", ADMIN_LINKS_BASE);
+    console.error("env.apiBase:", env.apiBase);
+    throw error;
   }
-
-  return (await res.json()) as AdminLinkResponse[];
 }
 
 export async function adminListSecurityEvents(limit = 50): Promise<AdminSecurityEvent[]> {
