@@ -4,12 +4,13 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.deps import get_current_user
 from app.core.redis_client import redis_client
+from app.db.models.click_session import ClickSession
 from app.db.models.link import Link
 from app.db.models.user import User
 from app.db.session import get_db
