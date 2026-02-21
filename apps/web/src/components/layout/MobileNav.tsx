@@ -13,12 +13,15 @@ export function MobileNav() {
 
   return (
     <nav className="dash-bottom-nav" aria-label="Admin mobile navigation">
-      {MOBILE_NAV_ITEMS.map((item) => (
-        <Link key={item.href} href={item.href} className={`dash-bottom-item ${isActivePath(pathname, item.href) ? "active" : ""}`}>
-          <span aria-hidden>{item.icon}</span>
-          <span>{item.label}</span>
-        </Link>
-      ))}
+      {MOBILE_NAV_ITEMS.map((item) => {
+        const Icon = item.icon; // Capitalize to indicate React component
+        return (
+          <Link key={item.href} href={item.href} className={`dash-bottom-item ${isActivePath(pathname, item.href) ? "active" : ""}`}>
+            <span aria-hidden><Icon size={20} strokeWidth={1.5} /></span>
+            <span>{item.label}</span>
+          </Link>
+        );
+      })}
     </nav>
   );
 }

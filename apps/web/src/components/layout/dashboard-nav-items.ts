@@ -4,35 +4,36 @@ import {
   BarChart3, 
   Settings,
   User,
-  Shield
+  Shield,
+  LucideIcon
 } from 'lucide-react';
 
 export type DashboardNavItem = {
   href: string;
   label: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
 };
 
 export const DASHBOARD_NAV_ITEMS: DashboardNavItem[] = [
   { 
     href: "/", 
     label: "Overview", 
-    icon: <LayoutDashboard size={20} strokeWidth={1.5} /> 
+    icon: LayoutDashboard
   },
   { 
     href: "/links", 
     label: "Links", 
-    icon: <LinkIcon size={20} strokeWidth={1.5} /> 
+    icon: LinkIcon
   },
   { 
     href: "/stats", 
     label: "Quality", 
-    icon: <BarChart3 size={20} strokeWidth={1.5} /> 
+    icon: BarChart3
   },
   { 
     href: "/settings", 
     label: "Settings", 
-    icon: <Settings size={20} strokeWidth={1.5} /> 
+    icon: Settings
   },
 ];
 
@@ -41,11 +42,11 @@ export const PROFILE_NAV_ITEMS: DashboardNavItem[] = [
   { 
     href: "/profile", 
     label: "Profile", 
-    icon: <User size={20} strokeWidth={1.5} /> 
+    icon: User
   },
   { 
     href: "/admin/security", 
     label: "Security", 
-    icon: <Shield size={20} strokeWidth={1.5} /> 
+    icon: Shield
   },
 ];
