@@ -2,8 +2,7 @@ import { env } from "./env";
 
 export type AdminLoginPayload = {
   email: string;
-  password?: string;
-  recovery_code?: string;
+  password: string;
 };
 
 export type AdminLoginResponse = {

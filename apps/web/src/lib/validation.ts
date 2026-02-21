@@ -21,15 +21,8 @@ export type LinkFormValues = z.infer<typeof linkSchema>;
 // Authentication
 export const loginSchema = z.object({
   email: emailSchema,
-  password: passwordSchema.optional(),
-  recovery_code: z.string().min(6, { message: "Recovery code must be at least 6 characters." }).optional(),
-}).refine(
-  (data) => data.password || data.recovery_code,
-  {
-    message: "Either password or recovery code is required.",
-    path: ["password"],
-  }
-);
+  password: passwordSchema,
+});
 
 export type LoginFormValues = z.infer<typeof loginSchema>;
 

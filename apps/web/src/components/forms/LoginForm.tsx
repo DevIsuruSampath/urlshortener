@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LogIn, Key } from "lucide-react";
@@ -17,30 +16,24 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ onSuccess }: LoginFormProps) {
-  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const { push: toast } = useToast();
   const loginMutation = useLogin();
 
   const {
     register,
     handleSubmit,
-    reset,
     formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
-      recovery_code: "",
     },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
     try {
-      // Clean up data based on login method
-      const payload = useRecoveryCode
-        ? { email: data.email, recovery_code: data.recovery_code }
-        : { email: data.email, password: data.password };
+      const payload = { email: data.email, password: data.password };
 
       await loginMutation.mutateAsync(payload);
       
@@ -93,50 +86,31 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
         {...register("email")}
       />
 
-      {!useRecoveryCode ? (
-        <>
-          <FormInput
-            label="Password"
-            type="password"
-            placeholder="••••••••"
-            error={errors.password?.message}
-            required
-            {...register("password")}
-          />
-          
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => setUseRecoveryCode(true)}
-            style={{ marginTop: "var(--space-2)", fontSize: "var(--text-sm)" }}
-          >
-            <Key size={14} style={{ marginRight: "4px", verticalAlign: "middle" }} />
-            Use recovery code instead
-          </button>
-        </>
-      ) : (
-        <>
-          <FormInput
-            label="Recovery Code"
-            placeholder="XXXXXX"
-            error={errors.recovery_code?.message}
-            helperText="Enter your 6-digit recovery code"
-            required
-            {...register("recovery_code")}
-          />
-          
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => setUseRecoveryCode(false)}
-            style={{ marginTop: "var(--space-2)", fontSize: "var(--text-sm)" }}
-          >
-            Use password instead
-          </button>
-        </>
-      )}
+      <FormInput
+        label="Password"
+        type="password"
+        placeholder="••••••••"
+        error={errors.password?.message}
+        required
+        {...register("password")}
+      />
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "var(--space-2)" }}>
+        <button
+          type="button"
+          className="btn btn-ghost btn-sm"
+          onClick={() => {
+            toast("Password recovery feature coming soon!", "info");
+          }}
+          style={{ fontSize: "var(--text-sm)" }}
+        >
+          <Key size={14} style={{ marginRight: "4px", verticalAlign: "middle" }} />
+          Lost your password?
+        </button>
+      </div>
 
       <FormSubmitButton isLoading={isSubmitting || loginMutation.isPending}>
+        <LogIn size={18} style={{ marginRight: "8px", verticalAlign: "middle" }} />
         Sign In
       </FormSubmitButton>
     </form>
