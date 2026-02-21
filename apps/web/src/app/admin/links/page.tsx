@@ -58,6 +58,7 @@ export default function LinksPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<LinkStatus | "all">("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [apiError, setApiError] = useState<string | null>(null);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -67,6 +68,8 @@ export default function LinksPage() {
   async function loadLinks() {
     try {
       const data = await adminListLinks();
+      console.log("Loaded links from API:", data); // Debug log
+      
       // Transform API data to our format
       const transformed = data.map((link: AdminLinkResponse) => ({
         id: link.id,
@@ -74,15 +77,16 @@ export default function LinksPage() {
         shortUrl: link.short_url,
         destination: link.destination_url,
         status: link.is_active ? "active" : "paused",
-        clicks: 0, // TODO: Get from stats API
-        valid: 0, // TODO: Get from stats API
-        invalid: 0, // TODO: Get from stats API
+        clicks: 0, // TODO: Get from stats API when available
+        valid: 0, // TODO: Get from stats API when available
+        invalid: 0, // TODO: Get from stats API when available
         conversion: "0%",
         createdAt: link.created_at || new Date().toISOString(),
       }));
       setLinks(transformed);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to load links:", error);
+      setApiError(error?.message || "Failed to load links. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -118,12 +122,44 @@ export default function LinksPage() {
     );
   }
 
+  if (apiError) {
+    return (
+      <main className="dash-page">
+        <header className="dash-page-head">
+          <h1>Links</h1>
+          <p className="muted">Manage your short links</p>
+        </header>
+        <div className="card error-card">
+          <h3>⚠️ Error Loading Links</h3>
+          <p>{apiError}</p>
+          <button 
+            className="btn btn-primary" 
+            onClick={loadLinks}
+            style={{ marginTop: "var(--space-4)" }}
+          >
+            Try Again
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="dash-page">
       <header className="dash-page-head">
         <h1>Links</h1>
         <p className="muted">Manage your short links</p>
       </header>
+
+      {/* Debug info - remove in production */}
+      {links.length > 0 && (
+        <div className="card info-card" style={{ marginBottom: "var(--space-4)" }}>
+          <p className="text-sm muted">
+            <strong>Note:</strong> Stats (clicks, conversion) are not implemented yet. 
+            Short URLs come from backend API. If they show wrong domain, check backend SHORT_DOMAIN configuration.
+          </p>
+        </div>
+      )}
 
       {links.length === 0 ? (
         <EmptyState />
