@@ -4,6 +4,7 @@ from pydantic import BaseModel, HttpUrl
 class LinkCreateIn(BaseModel):
     destination_url: HttpUrl
     tier: str = "standard"
+    created_via: str = "dashboard"
 
 
 class LinkOut(BaseModel):

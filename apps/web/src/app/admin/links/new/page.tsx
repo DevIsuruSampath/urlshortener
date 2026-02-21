@@ -51,7 +51,11 @@ export default function NewLinkPage() {
     setError("");
 
     try {
-      const row = await adminCreateLink({ destination_url: destinationUrl.trim(), tier: "standard" });
+      const row = await adminCreateLink({ 
+        destination_url: destinationUrl.trim(), 
+        tier: "standard",
+        created_via: "dashboard"
+      });
       setCreated({
         title: title.trim() || `Link ${row.code}`,
         campaignTag: campaignTag.trim() || undefined,

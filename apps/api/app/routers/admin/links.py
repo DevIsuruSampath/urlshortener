@@ -63,7 +63,7 @@ def create_link(
             user_id=user.id,
             destination_url=destination_url,
             tier=payload.tier,
-            created_via="dashboard",
+            created_via=payload.created_via,
         )
     except RuntimeError as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
@@ -86,6 +86,70 @@ def create_link(
         "is_active": link.is_active,
         "created_via": link.created_via,
     }
+
+
+@router.get("/create")
+def create_link_via_get(
+    url: str,
+    db: Session = Depends(get_db), 
+    user: User = Depends(get_current_user)
+):
+    """
+    Create a short link via GET request.
+    Example: GET /api/admin/links/create?url=https://example.com
+    """
+    try:
+        # Validate URL
+        if not url.startswith(("http://", "https://")):
+            url = f"https://{url}"
+        
+        # Validate it's a public URL
+        validate_public_destination_url(url)
+        
+        # Create the link
+        link = create_link_record(
+            db=db,
+            user_id=user.id,
+            destination_url=url,
+            tier="standard",
+            created_via="api_get"
+        )
+        
+        # Clear cache
+        _clear_link_cache(link.code)
+        
+        # Log security event
+        log_security_event(
+            db=db,
+            user_id=user.id,
+            event_type="link_created",
+            details={"via": "api_get", "code": link.code, "destination": url}
+        )
+        
+        # Determine protocol for short URL
+        base_domain = settings.short_link_domain or settings.public_web_base_url.rstrip('/').replace("https://", "").replace("http://", "")
+        if "localhost" in base_domain:
+            base_url = f"http://{base_domain}"
+        else:
+            base_url = f"https://{base_domain}"
+        
+        return {
+            "id": str(link.id),
+            "code": link.code,
+            "short_url": f"{base_url}/{link.code}",
+            "destination_url": link.destination_url,
+            "tier": link.tier,
+            "web_steps": link.web_steps,
+            "app_steps": link.app_steps,
+            "is_active": link.is_active,
+            "created_via": link.created_via,
+            "created_at": link.created_at,
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create link: {str(e)}")
 
 
 @router.get("")

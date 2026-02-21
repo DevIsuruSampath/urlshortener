@@ -44,6 +44,7 @@ export type AdminSetupResponse = {
 export type AdminLinkCreatePayload = {
   destination_url: string;
   tier?: string;
+  created_via?: string;
 };
 
 export type AdminLinkResponse = {
