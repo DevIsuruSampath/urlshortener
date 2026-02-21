@@ -1,8 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { createContext, useCallback, useContext, useMemo, useState, useEffect } from "react";
 
 type ToastType = "info" | "success" | "error";
 
@@ -10,6 +9,7 @@ type ToastItem = {
   id: number;
   message: string;
   type: ToastType;
+  visible: boolean;
 };
 
 type ToastContextValue = {
@@ -20,7 +20,6 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const reduce = useReducedMotion();
 
   const remove = useCallback((id: number) => {
     setToasts((prev) => prev.filter((item) => item.id !== id));
@@ -29,8 +28,28 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const push = useCallback(
     (message: string, type: ToastType = "info") => {
       const id = Date.now() + Math.floor(Math.random() * 1000);
-      setToasts((prev) => [...prev, { id, message, type }]);
-      window.setTimeout(() => remove(id), 2800);
+      const newToast = { id, message, type, visible: false };
+      
+      setToasts((prev) => [...prev, newToast]);
+      
+      // Show animation
+      setTimeout(() => {
+        setToasts((prev) => 
+          prev.map(toast => 
+            toast.id === id ? { ...toast, visible: true } : toast
+          )
+        );
+      }, 10);
+      
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        setToasts((prev) => 
+          prev.map(toast => 
+            toast.id === id ? { ...toast, visible: false } : toast
+          )
+        );
+        setTimeout(() => remove(id), 300);
+      }, 2800);
     },
     [remove]
   );
@@ -41,21 +60,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
       <div className="toast-stack" aria-live="polite" aria-atomic>
-        <AnimatePresence initial={false}>
-          {toasts.map((toast) => (
-            <motion.div
-              key={toast.id}
-              className={`toast toast-${toast.type}`}
-              initial={reduce ? false : { opacity: 0, x: 18, scale: 0.98 }}
-              animate={reduce ? undefined : { opacity: 1, x: 0, scale: 1 }}
-              exit={reduce ? undefined : { opacity: 0, x: 18, scale: 0.98 }}
-              transition={reduce ? undefined : { duration: 0.2, ease: "easeOut" }}
-              layout
-            >
-              {toast.message}
-            </motion.div>
-          ))}
-        </AnimatePresence>
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`toast toast-${toast.type} ${toast.visible ? 'toast-visible' : 'toast-hidden'}`}
+          >
+            {toast.message}
+          </div>
+        ))}
       </div>
     </ToastContext.Provider>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import * as RDM from "@radix-ui/react-dropdown-menu";
-import { motion, useReducedMotion } from "framer-motion";
+import { useState } from "react";
 
 import { Button } from "./Button";
 
@@ -12,10 +12,10 @@ type Item = {
 };
 
 export function DropdownMenu({ label = "Actions", items }: { label?: string; items: Item[] }) {
-  const reduce = useReducedMotion();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <RDM.Root>
+    <RDM.Root onOpenChange={setIsOpen}>
       <RDM.Trigger asChild>
         <Button type="button" variant="secondary" className="btn-small">
           {label}
@@ -24,13 +24,7 @@ export function DropdownMenu({ label = "Actions", items }: { label?: string; ite
 
       <RDM.Portal>
         <RDM.Content asChild sideOffset={6} align="end">
-          <motion.div
-            className="ui-dropdown"
-            initial={reduce ? false : { opacity: 0, y: 4, scale: 0.98 }}
-            animate={reduce ? undefined : { opacity: 1, y: 0, scale: 1 }}
-            exit={reduce ? undefined : { opacity: 0, y: 2, scale: 0.98 }}
-            transition={reduce ? undefined : { duration: 0.16, ease: "easeOut" }}
-          >
+          <div className={`ui-dropdown ${isOpen ? 'ui-dropdown-open' : ''}`}>
             {items.map((item) => (
               <RDM.Item
                 key={item.label}
@@ -40,7 +34,7 @@ export function DropdownMenu({ label = "Actions", items }: { label?: string; ite
                 {item.label}
               </RDM.Item>
             ))}
-          </motion.div>
+          </div>
         </RDM.Content>
       </RDM.Portal>
     </RDM.Root>
