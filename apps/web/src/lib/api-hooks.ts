@@ -5,7 +5,6 @@ import {
   adminCreateLink,
   adminEditLink,
   adminDeleteLink,
-  adminStats,
   adminDeveloperTokenInfo,
   adminRegenerateDeveloperToken,
   adminFinalizeDeveloperTokenRotation,
@@ -133,22 +132,22 @@ export function useLinkDelete(id: string) {
   });
 }
 
-// Stats hooks
-export function useStatsOverview() {
-  return useQuery({
-    queryKey: queryKeys.stats.overview,
-    queryFn: () => adminStats("overview"),
-    staleTime: 60 * 1000, // 1 minute
-  });
-}
+// Stats hooks - TODO: Implement when adminStats API endpoint is available
+// export function useStatsOverview() {
+//   return useQuery({
+//     queryKey: queryKeys.stats.overview,
+//     queryFn: () => adminStats("overview"),
+//     staleTime: 60 * 1000, // 1 minute
+//   });
+// }
 
-export function useStatsQuality() {
-  return useQuery({
-    queryKey: queryKeys.stats.quality,
-    queryFn: () => adminStats("quality"),
-    staleTime: 60 * 1000, // 1 minute
-  });
-}
+// export function useStatsQuality() {
+//   return useQuery({
+//     queryKey: queryKeys.stats.quality,
+//     queryFn: () => adminStats("quality"),
+//     staleTime: 60 * 1000, // 1 minute
+//   });
+// }
 
 // Settings hooks
 export function useDeveloperTokenInfo() {
