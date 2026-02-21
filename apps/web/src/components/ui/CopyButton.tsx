@@ -2,26 +2,27 @@
 
 import { useState } from "react";
 
-import { useToast } from "./Toast";
+interface CopyButtonProps {
+  text: string;
+  label?: string;
+}
 
-export function CopyButton({ value, label = "Copy", className = "btn btn-ghost btn-small" }: { value: string; label?: string; className?: string }) {
+export function CopyButton({ text, label = "Copy" }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
-  const { push } = useToast();
 
-  async function onCopy() {
+  const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
-      push("Copied to clipboard", "success");
-      window.setTimeout(() => setCopied(false), 1400);
-    } catch {
-      push("Copy failed", "error");
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy:", err);
     }
-  }
+  };
 
   return (
-    <button type="button" className={className} onClick={onCopy}>
-      {copied ? "Copied" : label}
+    <button className="btn btn-sm btn-ghost" onClick={handleCopy}>
+      {copied ? "Copied!" : label}
     </button>
   );
 }

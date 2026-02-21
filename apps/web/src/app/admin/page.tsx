@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { StatCard } from "@/components/ui/StatCard";
 import { TrafficChart } from "@/components/ui/TrafficChart";
+import { CopyButton } from "@/components/ui/CopyButton";
 
 const overviewCards = [
   { label: "Today clicks", value: "2,184" },
@@ -223,9 +224,7 @@ export default async function DashboardHome({ searchParams }: DashboardHomeProps
                     <td data-label="Conversion">{row.conversion}</td>
                     <td data-label="Invalid %">{percent(row.invalid, row.clicks)}</td>
                     <td data-label="Actions">
-                      <button className="btn btn-sm btn-ghost" onClick={() => alert(`Copy: ${row.code}`)}>
-                        Copy
-                      </button>
+                      <CopyButton text={row.code} />
                     </td>
                   </tr>
                 ))}
