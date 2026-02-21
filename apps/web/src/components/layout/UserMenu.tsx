@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { adminLogout } from "@/lib/api";
+import { User, LogOut, ChevronDown, ChevronUp } from 'lucide-react';
+import { useLogout } from "@/lib/api-hooks";
 
 interface UserMenuProps {
   email: string;
@@ -23,13 +24,15 @@ export function UserMenu({ email }: UserMenuProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const logoutMutation = useLogout();
+
   async function handleLogout() {
     try {
-      await adminLogout();
+      await logoutMutation.mutateAsync();
+      window.location.href = "/login";
     } catch (error) {
       console.error("Logout failed:", error);
     }
-    window.location.href = "/login";
   }
 
   return (
@@ -41,14 +44,14 @@ export function UserMenu({ email }: UserMenuProps) {
         aria-label="User menu"
       >
         <div className="user-avatar">
-          <span aria-hidden>👤</span>
+          <User size={18} strokeWidth={1.5} />
         </div>
         <div className="user-info">
           <span className="user-email">{email}</span>
           <span className="user-role">Admin</span>
         </div>
         <span className="user-menu-chevron" aria-hidden>
-          {isOpen ? "▴" : "▾"}
+          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
       </button>
 
@@ -56,7 +59,7 @@ export function UserMenu({ email }: UserMenuProps) {
         <div className="user-menu-popover">
           <div className="user-menu-header">
             <div className="user-avatar">
-              <span aria-hidden>👤</span>
+              <User size={20} strokeWidth={1.5} />
             </div>
             <div>
               <p className="user-email">{email}</p>
@@ -67,12 +70,12 @@ export function UserMenu({ email }: UserMenuProps) {
           <div className="user-menu-divider" />
 
           <Link href="/admin/profile" className="user-menu-item" onClick={() => setIsOpen(false)}>
-            <span aria-hidden>👤</span>
+            <User size={18} strokeWidth={1.5} />
             <span>Profile</span>
           </Link>
 
           <button className="user-menu-item logout-item" onClick={handleLogout}>
-            <span aria-hidden>↩</span>
+            <LogOut size={18} strokeWidth={1.5} />
             <span>Log Out</span>
           </button>
         </div>

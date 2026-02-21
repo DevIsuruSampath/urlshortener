@@ -1,14 +1,15 @@
 import Link from "next/link";
+import { MousePointerClick, CheckCircle, XCircle, Clock, Shield, AlertTriangle, BarChart } from 'lucide-react';
 
 import { StatCard } from "@/components/ui/StatCard";
 import { TrafficChart } from "@/components/ui/TrafficChart";
 import { CopyButton } from "@/components/ui/CopyButton";
 
 const overviewCards = [
-  { label: "Today clicks", value: "2,184" },
-  { label: "Valid completions", value: "1,602" },
-  { label: "Invalid / Blocked", value: "582" },
-  { label: "Avg completion time", value: "46s" },
+  { label: "Today clicks", value: "2,184", icon: <MousePointerClick /> },
+  { label: "Valid completions", value: "1,602", icon: <CheckCircle /> },
+  { label: "Invalid / Blocked", value: "582", icon: <XCircle /> },
+  { label: "Avg completion time", value: "46s", icon: <Clock /> },
 ];
 
 const invalidBreakdown = [
@@ -19,9 +20,9 @@ const invalidBreakdown = [
 ] as const;
 
 const qualitySignals = [
-  { label: "Captcha required (today)", value: "38.4%", hint: "Higher can mean bot pressure" },
-  { label: "Duplicate blocked (today)", value: "187", hint: "24h dedupe hits" },
-  { label: "Median completion time", value: "46s", hint: "Flow start → success" },
+  { label: "Captcha required (today)", value: "38.4%", hint: "Higher can mean bot pressure", icon: <Shield /> },
+  { label: "Duplicate blocked (today)", value: "187", hint: "24h dedupe hits", icon: <AlertTriangle /> },
+  { label: "Median completion time", value: "46s", hint: "Flow start → success", icon: <Clock /> },
 ];
 
 
@@ -157,10 +158,10 @@ export default async function DashboardHome({ searchParams }: DashboardHomeProps
 
       <section className="dash-cards-grid">
         {overviewCards.map((card, index) => (
-          <StatCard key={card.label} label={card.label} value={card.value} index={index} />
+          <StatCard key={card.label} label={card.label} value={card.value} index={index} icon={card.icon} />
         ))}
 
-        <StatCard label="Invalid rate" value="26.6%" hint="Tap a reason to diagnose in Quality" index={overviewCards.length}>
+        <StatCard label="Invalid rate" value="26.6%" hint="Tap a reason to diagnose in Quality" index={overviewCards.length} icon={<AlertTriangle />}>
           <ul className="signal-breakdown">
             {invalidBreakdown.map((item) => (
               <li key={item.key}>
@@ -177,6 +178,7 @@ export default async function DashboardHome({ searchParams }: DashboardHomeProps
           value="15,842"
           hint="Since account creation"
           index={overviewCards.length + 1}
+          icon={<BarChart />}
         />
       </section>
 
@@ -185,7 +187,7 @@ export default async function DashboardHome({ searchParams }: DashboardHomeProps
         <p className="muted">Use these to quickly spot bot waves or flow UX regressions.</p>
         <div className="dash-cards-grid">
           {qualitySignals.map((card, index) => (
-            <StatCard key={card.label} label={card.label} value={card.value} hint={card.hint} index={index} />
+            <StatCard key={card.label} label={card.label} value={card.value} hint={card.hint} index={index} icon={card.icon} />
           ))}
         </div>
       </section>
