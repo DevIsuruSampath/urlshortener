@@ -13,11 +13,7 @@ export default async function LoginPage() {
     return (
       <main className="container auth-shell">
         <div style={{ maxWidth: "400px", margin: "0 auto", paddingTop: "var(--space-6)" }}>
-          <LoginForm 
-            onSuccess={() => {
-              window.location.href = '/';
-            }}
-          />
+          <LoginForm />
         </div>
       </main>
     );

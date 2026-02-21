@@ -13,7 +13,7 @@ export const linkSchema = z.object({
     .max(50, { message: "Custom alias cannot exceed 50 characters." })
     .regex(/^[a-zA-Z0-9_-]+$/, { message: "Custom alias can only contain letters, numbers, hyphens, and underscores." })
     .optional(),
-  tier: z.enum(["free", "premium"]).optional().default("free"),
+  tier: z.enum(["free", "premium"]).default("free"),
 });
 
 export type LinkFormValues = z.infer<typeof linkSchema>;

@@ -12,6 +12,7 @@ import { useLogin } from "@/lib/api-hooks";
 import { useToast } from "@/components/ui/Toast";
 
 interface LoginFormProps {
+  // Optional callback for custom success handling
   onSuccess?: () => void;
 }
 
@@ -44,6 +45,9 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       await loginMutation.mutateAsync(payload);
       
       toast("Login successful!", "success");
+      
+      // Redirect to admin dashboard on success
+      window.location.href = '/';
       
       if (onSuccess) {
         onSuccess();
