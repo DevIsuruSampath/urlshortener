@@ -52,9 +52,23 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
       if (onSuccess) {
         onSuccess();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
-      toast("Login failed. Please check your credentials.", "error");
+      
+      // Show more specific error messages
+      let errorMessage = "Login failed. Please check your credentials.";
+      
+      if (error?.status === 401) {
+        errorMessage = "Invalid email or password.";
+      } else if (error?.status === 403) {
+        errorMessage = "Admin setup is required before login.";
+      } else if (error?.status === 429) {
+        errorMessage = "Too many login attempts. Please wait and try again.";
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      toast(errorMessage, "error");
     }
   };
 
