@@ -17,6 +17,7 @@ interface LinkItem {
   invalid: number;
   conversion: string;
   createdAt: string;
+  createdVia: string;
 }
 
 function EmptyState() {
@@ -52,6 +53,21 @@ function CopyButton({ text }: { text: string }) {
   );
 }
 
+function formatCreatedVia(createdVia: string): string {
+  switch (createdVia) {
+    case "dashboard":
+      return "Web";
+    case "api_get":
+      return "GET API";
+    case "api_post":
+      return "POST API";
+    case "api":
+      return "API";
+    default:
+      return createdVia || "Web";
+  }
+}
+
 export default function LinksPage() {
   const [links, setLinks] = useState<LinkItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +98,7 @@ export default function LinksPage() {
         invalid: link.invalid_clicks || 0,
         conversion: link.conversion_rate ? `${link.conversion_rate}%` : "0%",
         createdAt: link.created_at || new Date().toISOString(),
+        createdVia: link.created_via || "dashboard",
       }));
       setLinks(transformed);
     } catch (error: any) {
@@ -259,6 +276,7 @@ export default function LinksPage() {
                     <th>Clicks</th>
                     <th>Valid</th>
                     <th>Conversion</th>
+                    <th>Created By</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -284,6 +302,11 @@ export default function LinksPage() {
                       <td data-label="Clicks">{link.clicks}</td>
                       <td data-label="Valid">{link.valid}</td>
                       <td data-label="Conversion">{link.conversion}</td>
+                      <td data-label="Created By">
+                        <span className={`created-via-badge ${link.createdVia}`}>
+                          {formatCreatedVia(link.createdVia)}
+                        </span>
+                      </td>
                       <td data-label="Actions">
                         <div className="actions-group">
                           <CopyButton text={link.shortUrl} />
