@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Menu, ChevronLeft, ChevronRight } from "lucide-react";
 
 type BarMeta = {
   title: string;
@@ -20,20 +21,52 @@ function getBarMeta(pathname: string): BarMeta {
   return { title: "Overview" };
 }
 
-export function TopBar() {
+interface TopBarProps {
+  onSidebarToggle?: () => void;
+  onMobileMenuToggle?: () => void;
+  isMobileMenuOpen?: boolean;
+}
+
+export function TopBar({ onSidebarToggle, onMobileMenuToggle, isMobileMenuOpen }: TopBarProps) {
   const pathname = usePathname();
   const meta = getBarMeta(pathname);
 
   return (
     <header className="dash-topbar card" aria-label="Admin page header">
-      <p className="dash-topbar-title">{meta.title}</p>
-      {meta.action ? (
-        <div className="dash-topbar-actions">
-          <Link href={meta.action.href} className="btn">
-            {meta.action.label}
-          </Link>
-        </div>
-      ) : null}
+      <div className="dash-topbar-left">
+        {/* Desktop Sidebar Toggle */}
+        <button
+          className="sidebar-toggle-btn"
+          onClick={onSidebarToggle}
+          aria-label="Toggle sidebar"
+          type="button"
+        >
+          {onSidebarToggle ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+        </button>
+        
+        <p className="dash-topbar-title">{meta.title}</p>
+      </div>
+      
+      <div className="dash-topbar-right">
+        {/* Mobile Menu Toggle (Hamburger) */}
+        <button
+          className={`mobile-menu-toggle ${isMobileMenuOpen ? 'active' : ''}`}
+          onClick={onMobileMenuToggle}
+          aria-label="Toggle mobile menu"
+          aria-expanded={isMobileMenuOpen}
+          type="button"
+        >
+          <Menu size={24} />
+        </button>
+        
+        {meta.action ? (
+          <div className="dash-topbar-actions">
+            <Link href={meta.action.href} className="btn">
+              {meta.action.label}
+            </Link>
+          </div>
+        ) : null}
+      </div>
     </header>
   );
 }
