@@ -25,9 +25,10 @@ interface TopBarProps {
   onSidebarToggle?: () => void;
   onMobileMenuToggle?: () => void;
   isMobileMenuOpen?: boolean;
+  isSidebarOpen?: boolean;
 }
 
-export function TopBar({ onSidebarToggle, onMobileMenuToggle, isMobileMenuOpen }: TopBarProps) {
+export function TopBar({ onSidebarToggle, onMobileMenuToggle, isMobileMenuOpen, isSidebarOpen = true }: TopBarProps) {
   const pathname = usePathname();
   const meta = getBarMeta(pathname);
 
@@ -39,9 +40,10 @@ export function TopBar({ onSidebarToggle, onMobileMenuToggle, isMobileMenuOpen }
           className="sidebar-toggle-btn"
           onClick={onSidebarToggle}
           aria-label="Toggle sidebar"
+          aria-expanded={!isSidebarOpen}
           type="button"
         >
-          {onSidebarToggle ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          {isSidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
         </button>
         
         <p className="dash-topbar-title">{meta.title}</p>

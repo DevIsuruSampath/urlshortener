@@ -1032,12 +1032,37 @@ a { color: inherit; text-decoration: none; }
   grid-template-columns: 230px minmax(0, 1fr);
   gap: var(--space-4);
   align-items: start;
-  padding-bottom: 84px;
-  transition: grid-template-columns 0.3s ease;
+  padding-bottom: var(--space-4);
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
-.dash-shell.sidebar-collapsed {
+.dash-shell.loaded {
+  opacity: 1;
+}
+
+.dash-shell.sidebar-closed {
   grid-template-columns: 70px minmax(0, 1fr);
+}
+
+.dash-shell.sidebar-open {
+  grid-template-columns: 230px minmax(0, 1fr);
+}
+
+.dash-shell.loaded .dash-content {
+  animation: none;
+}
+
+@keyframes contentExpand {
+  from {
+    transform: translateX(0);
+  }
+}
+
+@keyframes contentContract {
+  from {
+    transform: translateX(0);
+  }
 }
 
 .dash-content {
@@ -2012,26 +2037,12 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid rgba(239, 68, 68, 0.5);
 }
 
-.dash-bottom-nav {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 40;
-  display: none;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  padding: var(--space-2) var(--space-3) calc(var(--space-2) + env(safe-area-inset-bottom));
-  overflow-x: auto;
-  gap: var(--space-2);
-}
+/* Mobile bottom nav removed - using mobile sidebar drawer instead */
+
+/* Mobile bottom nav removed - using mobile sidebar drawer instead */
 
 .dash-bottom-item {
-  flex-direction: column;
-  min-width: 86px;
-  text-align: center;
-  font-size: 0.75rem;
-  line-height: 1.2;
+  /* Kept for backward compatibility but hidden */
 }
 
 .dash-page {
@@ -2532,7 +2543,7 @@ a { color: inherit; text-decoration: none; }
 
   .dash-shell {
     grid-template-columns: 1fr;
-    padding-bottom: 96px;
+    padding-bottom: var(--space-4);
   }
 
   .dash-sidebar {
@@ -2544,10 +2555,6 @@ a { color: inherit; text-decoration: none; }
   }
 
   .mobile-menu-toggle {
-    display: flex;
-  }
-
-  .dash-bottom-nav {
     display: flex;
   }
 

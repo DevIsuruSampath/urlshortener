@@ -47,7 +47,11 @@ export function useAuthMe() {
     queryKey: queryKeys.auth.me,
     queryFn: adminMe,
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    retryOnMount: false, // Don't retry on mount
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnReconnect: false, // Don't refetch on reconnect
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // Cache for 10 minutes
   });
 }
 
@@ -56,6 +60,11 @@ export function useAuthStatus() {
     queryKey: queryKeys.auth.status,
     queryFn: adminStatus,
     retry: false,
+    retryOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000,
   });
 }
 

@@ -4,45 +4,37 @@ import { SetupForm } from "@/components/forms/SetupForm";
 import { adminMe, adminStatus } from "@/lib/api";
 
 export default async function LoginPage() {
+  // Parallelize API calls to reduce loading time
+  const [authCheck, statusCheck] = await Promise.allSettled([
+    adminMe(),
+    adminStatus().catch(() => ({ initialized: true })), // Default to initialized if status check fails
+  ]);
+
   // Check if user is already logged in
-  try {
-    await adminMe();
-    // User is authenticated, redirect to admin dashboard
+  if (authCheck.status === 'fulfilled') {
     redirect('/');
-  } catch (error) {
-    // Not authenticated, check if admin is initialized
-    try {
-      const status = await adminStatus();
-      
-      if (!status.initialized) {
-        // Admin not initialized, show setup form
-        return (
-          <main className="container auth-shell">
-            <div style={{ maxWidth: "400px", margin: "0 auto", paddingTop: "var(--space-6)" }}>
-              <SetupForm />
-            </div>
-          </main>
-        );
-      }
-      
-      // Admin is initialized, show login form
-      return (
-        <main className="container auth-shell">
-          <div style={{ maxWidth: "400px", margin: "0 auto", paddingTop: "var(--space-6)" }}>
-            <LoginForm />
-          </div>
-        </main>
-      );
-    } catch (statusError) {
-      // Could not check status, show login form as fallback
-      console.error("Failed to check admin status:", statusError);
-      return (
-        <main className="container auth-shell">
-          <div style={{ maxWidth: "400px", margin: "0 auto", paddingTop: "var(--space-6)" }}>
-            <LoginForm />
-          </div>
-        </main>
-      );
-    }
   }
+
+  // Not authenticated, determine which form to show
+  const status = statusCheck.status === 'fulfilled' ? statusCheck.value : { initialized: true };
+  
+  if (!status.initialized) {
+    // Admin not initialized, show setup form
+    return (
+      <main className="container auth-shell">
+        <div style={{ maxWidth: "400px", margin: "0 auto", paddingTop: "var(--space-6)" }}>
+          <SetupForm />
+        </div>
+      </main>
+    );
+  }
+  
+  // Admin is initialized, show login form
+  return (
+    <main className="container auth-shell">
+      <div style={{ maxWidth: "400px", margin: "0 auto", paddingTop: "var(--space-6)" }}>
+        <LoginForm />
+      </div>
+    </main>
+  );
 }
